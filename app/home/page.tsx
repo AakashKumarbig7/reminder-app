@@ -6,15 +6,15 @@ import TaskStatus from "@/components/taskStatus";
 import Spaces from "@/components/spaces";
 import Teams from "@/components/teams";
 import Emoji from "@/components/emoji";
-import Footer from "@/components/footer/footer";
+import { fetchTasks } from "@/lib/data";
 
 interface Mention {
   id: number;
   name: string;
 }
 
-export default function HomePage() {
-
+export default async function HomePage() {
+  const tasks = await fetchTasks();
   return (
     <>
       <NavBar />

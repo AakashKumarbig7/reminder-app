@@ -19,8 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { MentionsInput, Mention } from 'react-mentions'
-import classNames from '../styles/example.module.css'
-import { Button } from './ui/button'
+import classNames from '@/styles/example.module.css'
+import { Button } from '@/components/ui/button'
 
 export function NewTask() {
 
