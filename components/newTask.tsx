@@ -1,8 +1,7 @@
-'use client'
+
 import React from 'react'
 import addicon from '@/public/images/Frame.png'
 import Image from "next/image"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Drawer,
   DrawerContent,
@@ -18,28 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { MentionsInput, Mention } from 'react-mentions'
-import classNames from '@/styles/example.module.css'
+
 import { Button } from '@/components/ui/button'
+import { MentionInput } from './mentionInput'
+import { createTasks } from '@/lib/data'
 
 export function NewTask() {
 
-  function fetchUsers(query: any, callback: any) {
-    if (!query) return
-    fetch(`https://api.github.com/search/users?q=${query}`)
-      .then(res => res.json())
-
-      // Transform the users to what react-mentions expects
-      .then(res =>
-        res.items.map((user: any) => ({ display: user.login, id: user.login }))
-      )
-      .then(callback)
+  async function createTask(formData: FormData) {
+    'use server'
+    console.log(formData)
+    await createTasks(formData)
   }
-
-  const [value, setValue] = React.useState('');
-  const onChange = ({ target }: { target: any }) => {
-    setValue(target.value);
-  };
 
   return (
     <Drawer>
@@ -48,37 +37,26 @@ export function NewTask() {
         New Task
       </DrawerTrigger>
       <DrawerContent className='pb-10'>
-        <DrawerHeader className='flex items-center justify-between'>
-          <DrawerTitle>New Task</DrawerTitle>
-          <Select defaultValue='todo' disabled>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todo">Todo</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="internal_feedback">Internal feedback</SelectItem>
-            </SelectContent>
-          </Select>
-        </DrawerHeader>
-        <DrawerDescription className='px-4'>
-          <MentionsInput
-            value={value}
-            onChange={onChange}
-            a11ySuggestionsListLabel={"Suggested mentions"}
-            classNames={classNames}
-            className="mentions"
-            placeholder='Enter your comments...'
-          >
-            <Mention
-              trigger="@"
-              displayTransform={(display) => `@${display}`}
-              data={fetchUsers}
-              className={classNames.mentions__mention}
-            />
-          </MentionsInput>
-        </DrawerDescription>
-        <Button className='bg-transparent text-[#14B8A6] hover:bg-transparent shadow-none'>Create Task</Button>
+        <form action={createTask}>
+          <DrawerHeader className='flex items-center justify-between'>
+            <DrawerTitle>New Task</DrawerTitle>
+            <Select name='status' defaultValue='todo'>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todo">Todo</SelectItem>
+                {/* <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="internal_feedback">Internal feedback</SelectItem> */}
+              </SelectContent>
+            </Select>
+          </DrawerHeader>
+          <DrawerDescription className='px-4'>
+            <MentionInput />
+          </DrawerDescription>
+          <Button type='submit' className='bg-transparent text-[#14B8A6] hover:bg-transparent shadow-none'>Create Task</Button>
+        </form>
+
       </DrawerContent>
     </Drawer>
 

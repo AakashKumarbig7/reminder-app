@@ -15,6 +15,7 @@ interface Mention {
 
 export default async function HomePage() {
   const tasks = await fetchTasks();
+  console.log(tasks)
   return (
     <>
       <NavBar />

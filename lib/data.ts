@@ -1,17 +1,92 @@
-import { sql } from '@vercel/postgres';
-import { Tasks } from './definitions';
 import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { } from "@/components/ui/toast";
+import { toast } from '@/hooks/use-toast';
+import { cookies } from 'next/headers';
 
-const cookieStore = cookies()
-const supabase = createClient(cookieStore)
+const cookieStore = cookies();
+
+type Session = {
+  access_token: string;
+  refresh_token: string;
+};
+
+type Data = {
+  session?: Session | null;
+};
+
+// Example function to set cookies
+export function setAuthCookies(data: Data) {
+  const cookieStore = cookies();
+
+  // Check if session exists before setting cookies
+  if (data?.session) {
+    cookieStore.set('sb-access-token', data.session.access_token);
+    cookieStore.set('sb-refresh-token', data.session.refresh_token);
+  }
+}
+
+export async function login({ email, password }: { email: string; password: string }) {
+  const supabase = createClient()
+  let { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password
+  })
+
+  if (error) {
+    console.error('Database Error:', error);
+    return
+  }
+  setAuthCookies(data)
+
+  revalidatePath('/', 'layout')
+  redirect('/admin')
+
+}
+
+
+export async function signup({ email, username, password }: { email: string; username: string; password: string }) {
+  const supabase = createClient()
+  let { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+    options: {
+      data: {
+        user_name: username,
+      },
+    },
+  })
+
+  if (error) {
+    console.error('Database Error:', error);
+    return
+  }
+  setAuthCookies(data)
+
+  revalidatePath('/', 'layout')
+  redirect('/admin')
+
+}
+
 
 export async function fetchTasks() {
+  const supabase = createClient()
   try {
     let { data: tasks, error } = await supabase
       .from('tasks')
       .select('*')
-    console.log('Data' + JSON.stringify(tasks));
+    if (error) throw error
+    return tasks;
+  } catch (error) {
+    console.error('Database Error:', error);
+  }
+}
+
+export async function createTasks(data: any) {
+  const supabase = createClient()
+  try {
+    let { data: tasks, error } = await supabase.from('tasks').insert(data)
     if (error) throw error
     return tasks;
   } catch (error) {
