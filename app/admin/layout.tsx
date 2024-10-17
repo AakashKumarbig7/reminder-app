@@ -2,7 +2,7 @@
 import ProtectedRoute from "@/components/auth/protectedRoute";
 import Footer from "@/components/footer/footer";
 
-export default function RootLayout({
+export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;

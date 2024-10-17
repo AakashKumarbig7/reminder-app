@@ -1,6 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+
+const userRoutes = [
+    "/user/:path*",
+];
+
+const adminRoutes = [
+    "/admin/:path*",
+];
+
+
 export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({
         request,
@@ -37,21 +47,35 @@ export async function updateSession(request: NextRequest) {
 
     if (
         !user &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        !request.nextUrl.pathname.startsWith('/signup')
+        !request.nextUrl.pathname.startsWith('/auth')
     ) {
         // // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone()
-        url.pathname = '/login'
+        url.pathname = '/auth'
         return NextResponse.redirect(url)
     }
+    if (user) {
+        const {
+            data: profiles } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user?.id)
+                .single();
 
-    // console.log('user' + user)
-    // if (user) {
-    //     const url = request.nextUrl.clone()
-    //     url.pathname = '/admin'
-    //     return NextResponse.redirect(url)
-    // }
+        const { role } = profiles
+
+        if (role === 'admin' && !request.nextUrl.pathname.startsWith('/admin')) {
+            const url = request.nextUrl.clone()
+            url.pathname = `/admin`
+            return Response.redirect(url)
+        }
+
+        if (role === 'user' && !request.nextUrl.pathname.startsWith('/user')) {
+            const url = request.nextUrl.clone()
+            url.pathname = `/user`
+            return Response.redirect(url)
+        }
+    }
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
     // creating a new response object with NextResponse.next() make sure to:
     // 1. Pass the request in it, like so:

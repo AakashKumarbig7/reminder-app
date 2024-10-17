@@ -26,7 +26,6 @@ export function NewTask() {
 
   async function createTask(formData: FormData) {
     'use server'
-    console.log(formData)
     await createTasks(formData)
   }
 
