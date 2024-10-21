@@ -6,12 +6,12 @@ import TaskStatus from "@/components/taskStatus";
 import Spaces from "@/components/spaces";
 import Teams from "@/components/teams";
 import Emoji from "@/components/emoji";
-import Footer from "@/components/footer/footer";
 
-interface Mention {
-  id: number;
-  name: string;
-}
+
+// interface Mention {
+//   id: number;
+//   name: string;
+// }
 
 export default function HomePage() {
 

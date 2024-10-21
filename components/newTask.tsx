@@ -2,7 +2,7 @@
 import React from 'react'
 import addicon from '@/public/images/Frame.png'
 import Image from "next/image"
-import { Textarea } from "@/components/ui/textarea"
+
 import {
   Drawer,
   DrawerContent,
@@ -43,7 +43,7 @@ export function NewTask() {
 
   return (
     <Drawer>
-      <DrawerTrigger className='w-full bg-[#14B8A6]  flex items-center justify-center text-white py-2 rounded-lg' >
+      <DrawerTrigger className='w-full  bg-teal-500  flex items-center justify-center text-white py-2 rounded-lg' >
         <Image src={addicon} alt="Add Icon" width={20} height={20} className="mr-2" />
         New Task
       </DrawerTrigger>
