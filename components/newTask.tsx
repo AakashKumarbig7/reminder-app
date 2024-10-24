@@ -43,31 +43,32 @@ export function NewTask() {
 
   return (
     <Drawer>
-      <DrawerTrigger className='w-full  bg-teal-500  flex items-center justify-center text-white py-2 rounded-lg' >
+      <DrawerTrigger className='w-full  bg-teal-500  flex items-center justify-center text-white py-2 
+      rounded-lg' >
         <Image src={addicon} alt="Add Icon" width={20} height={20} className="mr-2" />
         New Task
       </DrawerTrigger>
       <DrawerContent className='pb-10'>
         <DrawerHeader className='flex items-center justify-between'>
           <DrawerTitle>New Task</DrawerTitle>
-          <Select defaultValue='todo' disabled>
-            <SelectTrigger className="w-[180px]">
+          <Select defaultValue='todo' >
+            <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-center border-[#E2E2E2] bg-[#9B9B9B] rounded-[30px]">
               <SelectValue placeholder="status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className='text-[#9B9B9B]'>
               <SelectItem value="todo">Todo</SelectItem>
               <SelectItem value="in_progress">In Progress</SelectItem>
               <SelectItem value="internal_feedback">Internal feedback</SelectItem>
             </SelectContent>
           </Select>
         </DrawerHeader>
-        <DrawerDescription className='px-4'>
-          <MentionsInput
+        <DrawerDescription className="px-4 border-black  rounded-[10px]">
+          <MentionsInput 
             value={value}
             onChange={onChange}
             a11ySuggestionsListLabel={"Suggested mentions"}
             classNames={classNames}
-            className="mentions"
+            className="rounded "
             placeholder='Enter your comments...'
           >
             <Mention
@@ -78,7 +79,7 @@ export function NewTask() {
             />
           </MentionsInput>
         </DrawerDescription>
-        <Button className='bg-transparent text-[#14B8A6] hover:bg-transparent shadow-none'>Create Task</Button>
+        <Button className='bg-transparent text-[#14B8A6] hover:bg-transparent text-center shadow-none'>Create Task</Button>
       </DrawerContent>
     </Drawer>
 

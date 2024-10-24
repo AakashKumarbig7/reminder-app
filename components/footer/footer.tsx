@@ -1,40 +1,44 @@
-import { FiHome,  FiUsers } from "react-icons/fi";
+"use client";
+import { FiHome, FiUsers } from "react-icons/fi";
 import Link from "next/link";
-import { ListChecks } from 'lucide-react';
-import { BellDot } from 'lucide-react';
+import { usePathname } from "next/navigation"; // Use usePathname from next/navigation
+import { ListChecks, BellDot } from 'lucide-react';
+import styles from '@/styles/footer.module.css'; // Import the CSS module
+
 export default function Footer() {
+  const pathname = usePathname(); // Get the current pathname
+
+  const getLinkClasses = (path: string) =>
+    pathname === path ? `${styles['footer-link']} ${styles['footer-link-active']}` : styles['footer-link'];
+
   return (
-    <footer className="fixed bottom-0 inset-x-0 bg-[#182B29] shadow-md pt-[9px] pr-[18px] pb-[30px] pl-[18px] w-full h-[83px]  flex justify-between align z-50">
-      <Link
-        href="/home"
-        className="flex flex-col items-center text-white gap-[5px] hover:text-teal-500 transition  duration-300"
-      >
-        <FiHome className="w-[22px] h-[22px] " />
-        <p className="text-xs">Home</p>
+    <footer className={styles.footer}>
+      <Link href="/home" className={getLinkClasses("/home")}>
+        <div className="flex flex-col items-center">
+          <FiHome className={styles['footer-link-icon']} />
+          <p className={styles['footer-link-text']}>Home</p>
+        </div>
       </Link>
 
-      <Link
-        href="/tasks"
-        className="flex flex-col items-center hover:text-teal-500 transition  duration-300 text-white gap-[5px]"
-      >
-        <ListChecks  className="w-[22px] h-[22px]"/>
-        <p className="text-xs">Task</p>
+      <Link href="/task" className={getLinkClasses("/tasks")}>
+        <div className="flex flex-col items-center">
+          <ListChecks className={styles['footer-link-icon']} />
+          <p className={styles['footer-link-text']}>Task</p>
+        </div>
       </Link>
 
-      <Link
-        href="/members"
-        className="flex flex-col items-center text-white hover:text-teal-500 transition  duration-300 gap-[5px]"
-      >
-        <FiUsers className="w-[22px] h-[22px]" />
-        <p className="text-xs">Members</p>
+      <Link href="/members" className={getLinkClasses("/members")}>
+        <div className="flex flex-col items-center">
+          <FiUsers className={styles['footer-link-icon']} />
+          <p className={styles['footer-link-text']}>Members</p>
+        </div>
       </Link>
 
-      <Link
-        href="/notifications"
-        className="flex flex-col items-center hover:text-teal-500 transition  duration-300 text-white gap-[5px]"
-      >
-        <BellDot className="w-[22px] h-[22px]" />
-        <p className="text-xs">Notification</p>
+      <Link href="/notifications" className={getLinkClasses("/notifications")}>
+        <div className="flex flex-col items-center">
+          <BellDot className={styles['footer-link-icon']} />
+          <p className={styles['footer-link-text']}>Notification</p>
+        </div>
       </Link>
     </footer>
   );

@@ -5,8 +5,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+ 
+ 
 } from "@/components/ui/carousel";
 
 export default function OverDue () {
@@ -53,7 +53,7 @@ export default function OverDue () {
                 <Card>
                   <CardContent className="aspect-square p-[18px] w-full h-[156px]">
                     {/* <div className="bg-white shadow-md p-4 rounded-lg w-full"> */}
-                      <div className="bg-[#f4f4f8] text-[#737373] text-[12px] font-semibold border-gray-300 rounded-full inline-block px-2 py-1">
+                      <div className="bg-navbg text-[#737373] text-[12px] font-semibold border-gray-300 rounded-full inline-block px-2 py-1">
                         Wordpress Team
                       </div>
                       <p className="text-[#000000] mt-2">

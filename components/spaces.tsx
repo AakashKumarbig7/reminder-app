@@ -18,6 +18,7 @@ export default function Spaces() {
         <p className="text-base text-greyblack">Solution22</p> 
         </button>
       </div>
+      
     </div>
   );
 }

@@ -6,7 +6,7 @@ import activelogo from "@/public/images/Ellipse 6.png";
 export default function NavBar() {
   return (
     <>
-      <header className="flex justify-between items-center bg-[#f4f4f8] p-[18px] ">
+      <header className="flex justify-between items-center bg-navbg p-[18px] ">
         {/* User Profile */}
         <div className="flex items-center">
           <Image
@@ -23,7 +23,7 @@ export default function NavBar() {
           </div>
         </div>
         {/* Company Logo */}
-        <Image src={logo} className="w-[89.872px] h-[44]" alt="Company Logo" />
+        <Image src={logo} className="w-[89.872px] h-11" alt="Company Logo" />
       </header>
     </>
   );
