@@ -13,9 +13,14 @@ const config: Config = {
            
 			greyblack: "#393939",
 			bgwhite:"#FFF",
-			teambg:"#e5f4f2",
-			navbg:"#f4f4f8",
-
+			ashgrey:"#A7A7AB",
+			bgmain:"#f4f4f8",
+			shadeblack:"#000000",
+			shadeorange:"#EE5A5A",
+			lightskyblue:"#E5F4F2",
+			greyborder:"#BEBEBE",
+			greyshade:"#A6A6A7",
+			blackish:"#272727",
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

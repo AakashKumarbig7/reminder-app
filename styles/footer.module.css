@@ -23,6 +23,8 @@
 .footer-link-active {
   color: #14B8A6;
   filter: brightness(1.5) drop-shadow(0px 0px 8px #14B8A6);
+  height: 22px;
+  width: 22px;
 }
 
 .footer-link-icon {
