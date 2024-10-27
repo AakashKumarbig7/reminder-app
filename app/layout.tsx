@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
 import Footer from "@/components/footer/footer";
+import { GeistSans } from "geist/font/sans";
 
 // const geistSans = localFont({
 //   src: "../public/fonts/GeistVF.woff",
@@ -24,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={GeistSans.className}>
       <body
       >
         {children}
