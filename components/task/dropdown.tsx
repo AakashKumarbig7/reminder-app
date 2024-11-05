@@ -55,12 +55,12 @@ export default function DropDown() {
             <DrawerTitle className="pt-[18px] px-5">Teams</DrawerTitle>
             <Command>
               <CommandList>
-                <ul className="mt-4 space-y-5 px-5 pt-3">
+                <ul className="mt-4 space-y-3 py-5 px-5 pt-3">
                   {Teams.map((team) => (
                     <li
                       key={team}
                       onClick={() => handleSelect(team)}
-                      className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
+                      className={`flex items-center   border-b-[1px] border-zinc-300 cursor-pointer ${
                         selectedTeam === team
                           ? "text-zinc-950 font-semibold"
                           : "text-blackish"
@@ -73,7 +73,7 @@ export default function DropDown() {
                           <span className="w-4 h-4" />
                         )}
                       </span>
-                      <p className="text-sm pt-[12px] pr-[10px]">{team}</p>
+                      <p className="text-sm pt-[12px] pr-[10px] flex items-center ">{team}</p>
                     </li>
                   ))}
                 </ul>

@@ -1,3 +1,4 @@
+"use client";
 import {
   Drawer,
   DrawerContent,
@@ -6,13 +7,25 @@ import {
  
 } from "@/components/ui/drawer";
 import { Command, CommandList } from "@/components/ui/command";
-
+import{useState}from 'react';
+import { FaCheck } from "react-icons/fa6";
 export default function Tasks() {
+const [selectedFilter,setSelectedFilter]= useState();
+
+  const Filters = [
+    "To Do",
+    "Inprogress",
+    "Internal Feedback"
+  ];
+  const handleSelect = (status: any) => {
+    setSelectedFilter(status);
+    console.log("Selected status:", status);
+  };
   return (
     <>
       <div className="bg-white space-y-2 py-3 rounded-[10px] w-[339px] h-32 px-4">
        <div className=""> 
-        <p className="text-greyshade font-[geist] text-[12px] px-3 ">20 Aug 2024</p>
+        <p className="text-greyshade font-[geist] text-[12px]  ">20 Aug 2024</p>
         </div>
         <p className="text-[#000000] text-[16px] font-[geist]">Pugazh need to talk reg reminder app ui<br></br> design</p>
 
@@ -30,11 +43,31 @@ export default function Tasks() {
             {/* <DrawerDescription></DrawerDescription> */}
             <Command>
               <CommandList>
-                <ul>
-                  <div  className="mt-[18px] border w-[243px]  border-black h-10">
+                {/* <ul>
+                 
                   <li className="">Compilation Status</li>
-                  </div>
-                </ul>
+                  {Filters.map((status:any) => (
+                    <li
+                      key={status}
+                      onClick={() => handleSelect(status)}
+                      className={`flex items-center border-b-[1px]  border-zinc-300 cursor-pointer 
+                        ${
+                          selectedFilter === status
+                            ? "text-zinc-950 font-semibold"
+                            : "text-blackish"
+                        }`}
+                    >
+                      <span className="w-4 h-4 mr-2 flex justify-center items-center">
+                        {selectedFilter === status ? (
+                          <FaCheck className="text-blackish" />
+                        ) : (
+                          <span className="w-4 h-4" />
+                        )}
+                      </span>
+                      <p className="text-sm pt-[10px] pr-[10px]">{status}</p>
+                    </li>
+
+                </ul> */}
               </CommandList>
             </Command>
           </DrawerContent>

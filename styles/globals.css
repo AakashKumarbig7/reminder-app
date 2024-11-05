@@ -17,6 +17,17 @@ body {
   font-family: 'Geist', Arial, sans-serif;
 }
 
+#task_select{
+  font-family: 'Geist', Arial, sans-serif;
+  position: relative;
+}
+#task_select::after{
+  content: 'h1';
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

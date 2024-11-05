@@ -17,9 +17,9 @@ import {
 } from "@/components/ui/command";
 
 export default function NavBar() {
-  const [selectedSpace, setSelectedSpace] = useState("");
+  const [selectedSpace, setSelectedSpace] = useState("Solution22");
 
-  const spaces = [
+  const initialSpaces = [
     "Solution22",
     "Big7Solution",
     "Grafity",
@@ -28,10 +28,19 @@ export default function NavBar() {
     "Family",
     "Add new Team",
   ];
+  const [spacesList, setSpacesList] = useState(initialSpaces);
 
-  const handleSelect = (space:any) => {
-    setSelectedSpace(space);
-    console.log("Selected Space:", space);
+  const handleSelected = (space:any) => {
+    if (space === "Add new Team") {
+      const newSpace = prompt("Enter a new space name:");
+       if (newSpace && !spacesList.includes(newSpace)) {
+        setSpacesList([...spacesList.slice(0, -1), newSpace, "Add new Team"]);
+        setSelectedSpace(newSpace);
+        console.log(newSpace)
+      }
+    } else {
+      setSelectedSpace(space);
+    }
   };
 
   return (
@@ -52,10 +61,10 @@ export default function NavBar() {
             <Command>
               <CommandList>
                 <ul className="mt-4 space-y-5 px-5 pt-3">
-                  {spaces.map((space) => (
+                  {spacesList.map((space) => (
                     <li
                       key={space}
-                      onClick={() => handleSelect(space)}
+                      onClick={() => handleSelected(space)}
                       className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
                         selectedSpace === space ? "text-zinc-950 font-semibold" : "text-blackish"
                       }`}
@@ -84,7 +93,7 @@ export default function NavBar() {
 
         {/* Space Title */}
         <div className="w-[180px] h-6 text-center">
-          <h2 className="text-lg text-blackish text-center">{selectedSpace || "Solution22"}</h2>
+          <h2 className="text-lg text-blackish text-center">{selectedSpace}</h2>
         </div>
 
         {/* Profile Image */}
