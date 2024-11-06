@@ -18,7 +18,7 @@ export default function HomePage() {
   return (
     <>
       <NavBar />
-      <div className="flex flex-col bg-bgmain px-[18px] pb-[100px] space-y-[18px]">
+      <div className="flex flex-col bg-[#f4f4f8] px-[18px] pb-[100px] space-y-[18px]">
         <SearchBar />
         <NewTask />
         <TaskStatus />

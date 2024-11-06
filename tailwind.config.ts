@@ -9,18 +9,17 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+		fontFamily: {
+			geist : ["Geist", "sans-serif"],
+			inter : ["Inter", "sans-serif"],
+		},
   		colors: {
            
 			greyblack: "#393939",
 			bgwhite:"#FFF",
-			ashgrey:"#A7A7AB",
-			bgmain:"#f4f4f8",
-			shadeblack:"#000000",
-			shadeorange:"#EE5A5A",
-			lightskyblue:"#E5F4F2",
-			greyborder:"#BEBEBE",
-			greyshade:"#A6A6A7",
-			blackish:"#272727",
+			teambg:"#e5f4f2",
+			navbg:"#f4f4f8",
+
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
