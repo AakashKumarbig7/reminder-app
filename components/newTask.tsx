@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "./ui/button";
-import styles from "../styles/newtask.module.css"
+import styles from "../styles/newtask.module.css";
 import axios from "axios";
 
 type User = {
