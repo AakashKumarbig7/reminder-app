@@ -61,7 +61,7 @@ export default function MentionInput() {
 					cursorPosition += node.textContent?.length ?? 0;
 				}
 			}
-			console.log('cursorPosition', cursorPosition);
+			// console.log('cursorPosition', cursorPosition);
 
 			// console.log("mentionStartIndex" + " == " + mentionStartIndex)
 			// console.log("selection" + " == " + window.getSelection()?.focusOffset)
@@ -84,7 +84,7 @@ export default function MentionInput() {
 				// 	return
 				// }
 				// console.log("mentionText" + " == " + mentionText)
-				console.log("mentionQuery" + " == " + mentionQuery)
+				// console.log("mentionQuery" + " == " + mentionQuery)
 
 				const filteredSuggestions = mentionableEntities.filter((entity) =>
 					entity.name.toLowerCase().startsWith(mentionQuery.toLowerCase().trim())
@@ -133,7 +133,7 @@ export default function MentionInput() {
 					} else if (!isBefore && charCount >= atIndex + 1) {
 						newText = text; // Keep entire text node if entirely after '@'
 					} else if (isBefore && endCount > atIndex) {
-						newText = text.slice(0, atIndex - charCount); // Only take part before '@'
+						newText = text.slice(0, atIndex - endCount); // Only take part before '@'
 					} else if (!isBefore && charCount < atIndex + 1) {
 						newText = text.slice(atIndex - charCount).replace(/^@\S*/, '') // Only take part after '@'
 					}
