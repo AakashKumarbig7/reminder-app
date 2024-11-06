@@ -213,7 +213,7 @@ export default function MentionInput() {
 					offset += node.textContent?.length ?? 0;
 				}
 			}
-			console.log('Offset after including span:', offset);
+			// console.log('Offset after including span:', offset);
 			setMentionStartIndex(offset ?? null);
 		}
 
