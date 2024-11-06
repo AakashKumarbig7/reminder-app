@@ -35,7 +35,7 @@ export default function MentionInput() {
 	const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(
 		null
 	);
-	const [popupPosition, setPopupPosition] = useState({ top: 50, left: 0 });
+	const [popupPosition, setPopupPosition] = useState({ top: -50, left: 0 });
 
 	const editableRef = useRef<HTMLDivElement | null>(null);
 
@@ -43,16 +43,51 @@ export default function MentionInput() {
 	const handleInput = (e: any) => {
 		if (editableRef.current) {
 			const plainText = editableRef.current.innerText || '';
-
+			const selection = window.getSelection()
 			// Check if we're in mention mode based on the cursor position
-			let cursorPosition = (mentionStartIndex! + window.getSelection()?.focusOffset!) ?? 0;
+			let cursorPosition = 0;
+			const childNodes = Array.from(editableRef.current!.childNodes);
+
+			for (const node of childNodes) {
+				if (node === selection?.focusNode) {
+					// If we are at the focus node, add the focusOffset and stop
+					cursorPosition += selection?.focusOffset;
+					break;
+				} else if (node.nodeType === Node.TEXT_NODE) {
+					// If the node is a text node, add its length
+					cursorPosition += node.textContent?.length ?? 0;
+				} else if (node.nodeType === Node.ELEMENT_NODE) {
+					// If the node is an element (like a <span>), include its length
+					cursorPosition += node.textContent?.length ?? 0;
+				}
+			}
+			console.log('cursorPosition', cursorPosition);
+
+			// console.log("mentionStartIndex" + " == " + mentionStartIndex)
+			// console.log("selection" + " == " + window.getSelection()?.focusOffset)
+
 			if (mentionStartIndex !== null && cursorPosition > mentionStartIndex) {
+
+				// const mentionText = plainText.slice(
+				// 	mentionStartIndex,
+				// 	cursorPosition
+				// );
+
 				const mentionQuery = plainText.slice(
 					mentionStartIndex + 1,
 					cursorPosition
 				);
-				const filteredSuggestions = mentionQuery.trim() && mentionableEntities.filter((entity) =>
-					entity.name.toLowerCase().startsWith(mentionQuery.toLowerCase())
+
+				// if (!mentionText.startsWith("@")) {
+				// 	setSuggestions([]);
+				// 	setMentionStartIndex(null);
+				// 	return
+				// }
+				// console.log("mentionText" + " == " + mentionText)
+				console.log("mentionQuery" + " == " + mentionQuery)
+
+				const filteredSuggestions = mentionableEntities.filter((entity) =>
+					entity.name.toLowerCase().startsWith(mentionQuery.toLowerCase().trim())
 				);
 
 				const range = window.getSelection()?.getRangeAt(0);
@@ -67,7 +102,6 @@ export default function MentionInput() {
 			} else {
 				setSuggestions([]);
 				setMentionStartIndex(null);
-				cursorPosition = 0
 			}
 		}
 	};
@@ -82,7 +116,6 @@ export default function MentionInput() {
 			tempDiv.innerHTML = originalHTML;
 
 			// Step 2: Extract text content and find the position of '@'
-			const textContent = tempDiv.textContent || '';
 			const atIndex = mentionStartIndex;
 			if (atIndex === -1) return; // Exit if there's no '@' symbol
 
@@ -141,8 +174,8 @@ export default function MentionInput() {
 				.join('');
 
 			// Output the HTML content before and after '@'
-			console.log('Before @:', beforeHTML);
-			console.log('After @:', afterHTML);
+			// console.log('Before @:', beforeHTML);
+			// console.log('After @:', afterHTML);
 
 			// Insert mention with a colored span
 			const newContent = `${beforeHTML}<span contentEditable='false' style="color: ${entityTypeColors[entity.type]
@@ -162,6 +195,7 @@ export default function MentionInput() {
 
 		if (e.key === '@') {
 			let offset = 0;
+
 			// Ensure the contentEditableRef and its current property are defined
 			// if (!editableRef.current) return 0;
 			const childNodes = Array.from(editableRef.current!.childNodes);
@@ -185,43 +219,59 @@ export default function MentionInput() {
 
 	};
 
+	// Group the items by type
+	const groupedData = suggestions.reduce((acc, item) => {
+		if (!acc[item.type]) {
+			acc[item.type] = [];
+		}
+		acc[item.type].push(item);
+		return acc;
+	}, {} as Record<string, typeof suggestions>);
+
+	// Capitalize the first letter of each type for display
+	const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
 	return (
 		<div style={{ position: 'relative', width: '100%' }}>
-			{/* Suggestions dropdown */}
-			{suggestions.length > 0 && (
-				<ul
-					style={{
-						listStyle: 'none',
-						padding: '0',
-						margin: '5px 0',
-						border: '1px solid #ddd',
-						borderRadius: '5px',
-						maxWidth: '300px',
-						backgroundColor: '#f9f9f9',
-						position: 'absolute',
-						zIndex: 10,
-						top: popupPosition.top, left: popupPosition.left
-					}}
-				>
-					{suggestions.map((entity) => (
-						<li
-							key={entity.id}
-							onClick={() => selectMention(entity)}
-							style={{
-								padding: '5px 10px',
-								cursor: 'pointer',
-								color: entityTypeColors[entity.type],
-							}}
-						>
-							{entity.name}{' '}
-							<span style={{ fontSize: '0.8em', color: '#666' }}>
-								({entity.type})
-							</span>
-						</li>
+			{suggestions.length > 0 &&
+				< div style={{
+					listStyle: 'none',
+					padding: '10px',
+					margin: '5px 0',
+					border: '1px solid #ddd',
+					borderRadius: '5px',
+					maxWidth: '360px',
+					width: '100%',
+					backgroundColor: '#f9f9f9',
+					position: 'absolute',
+					zIndex: 10,
+					bottom: '100px', left: popupPosition.left,
+					textAlign: 'left'
+				}}>
+					{Object.keys(groupedData).map((type) => (
+						<div key={type}>
+							{/* Display the group title */}
+							<h3 style={{ textTransform: 'capitalize', color: '#333', fontSize: '18px' }}>
+								{capitalize(type)}
+							</h3>
+							<ul>
+								{groupedData[type].map((entity) => (
+									<li key={entity.id}
+										onClick={() => selectMention(entity)}
+										style={{
+											padding: '5px 10px',
+											cursor: 'pointer',
+											color: entityTypeColors[entity.type],
+											fontSize: '16px'
+										}}>
+										{entity.name}
+									</li>
+								))}
+							</ul>
+						</div>
 					))}
-				</ul>
-			)}
-
+				</div>
+			}
 			{/* Main contenteditable div for styled input */}
 			<div
 				contentEditable
