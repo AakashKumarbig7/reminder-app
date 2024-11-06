@@ -20,6 +20,7 @@ import {
 import { Button } from "./ui/button";
 import styles from "../styles/newtask.module.css";
 import axios from "axios";
+import MentionInput from "./mentionInput";
 
 type User = {
   id: number;
@@ -34,7 +35,7 @@ type PopupProps = {
 
 const Popup: React.FC<PopupProps> = ({ data, position, onSelect }) => (
   <div
-    
+
     style={{
       top: position.top,
       left: position.left,
@@ -81,7 +82,7 @@ export function NewTask() {
 
     getEmployees();
   }, []);
- 
+
 
   const Popup: React.FC<PopupProps> = ({ data, position, onSelect }) => {
     return (
@@ -185,7 +186,7 @@ export function NewTask() {
     if (styledInput) {
       let text = styledInput.innerText || '';
       const atIndex = text.lastIndexOf('@');
-      const newText = text.substring(0, atIndex) +  `@${user.name}` ;
+      const newText = text.substring(0, atIndex) + `@${user.name}`;
       styledInput.innerText = newText;
       styledInput.dispatchEvent(new Event('input'));
       setPopupVisible(false);
@@ -203,29 +204,28 @@ export function NewTask() {
 
   return (
     <>
-   
-    <Drawer>
-      <DrawerTrigger className="w-full bg-teal-500 flex items-center justify-center text-white py-2 rounded-lg">
-        <Image src={addicon} alt="Add Icon" width={20} height={20} className="mr-2" />
-        New Task
-      </DrawerTrigger>
-      <DrawerContent className="pb-10">
-        <DrawerHeader className="flex items-center justify-between">
-          <DrawerTitle>New Task</DrawerTitle>
-          <Select defaultValue="todo">
-            <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-[#9B9B9B] text-center border-[#E2E2E2] bg-[#E2E2E2] rounded-[30px]">
-              <SelectValue placeholder="status" />
-            </SelectTrigger>
-            <SelectContent className="text-[#9B9B9B]">
-              <SelectItem value="todo">To Do</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="internal_feedback">Internal feedback</SelectItem>
-            </SelectContent>
-          </Select>
-        </DrawerHeader>
-        <DrawerDescription className="px-4 border-black rounded-[10px]">
-          <div>
-            <div
+
+      <Drawer>
+        <DrawerTrigger className="w-full bg-teal-500 flex items-center justify-center text-white py-2 rounded-lg">
+          <Image src={addicon} alt="Add Icon" width={20} height={20} className="mr-2" />
+          New Task
+        </DrawerTrigger>
+        <DrawerContent className="pb-10">
+          <DrawerHeader className="flex items-center justify-between">
+            <DrawerTitle>New Task</DrawerTitle>
+            <Select defaultValue="todo">
+              <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-[#9B9B9B] text-center border-[#E2E2E2] bg-[#E2E2E2] rounded-[30px]">
+                <SelectValue placeholder="status" />
+              </SelectTrigger>
+              <SelectContent className="text-[#9B9B9B]">
+                <SelectItem value="todo">To Do</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="internal_feedback">Internal feedback</SelectItem>
+              </SelectContent>
+            </Select>
+          </DrawerHeader>
+          <div className="px-4 border-black rounded-[10px] text-center">
+            {/* <div
               contentEditable="true"
               ref={styledInputRef}
               id="styledInput"
@@ -239,20 +239,18 @@ export function NewTask() {
                 onSelect={handleUserSelect}
                 // className="absolute bg-white border border-gray-300 z-10 max-h-52 overflow-y-auto w-[150px]"
               />
-            )}
-            {/* {taskError && (
-              <span className="text-red-500 py-1 text-sm">Please enter a task</span>
             )} */}
+            <MentionInput />
+            <Button
+              className="bg-transparent text-[#14B8A6] hover:bg-transparent font-semibold text-base text-center shadow-none"
+              onClick={handleCreateTask}
+            >
+              Create Task
+            </Button>
           </div>
-        </DrawerDescription>
-        <Button
-          className="bg-transparent text-[#14B8A6] hover:bg-transparent font-semibold text-base text-center shadow-none"
-          onClick={handleCreateTask}
-        >
-          Create Task
-        </Button>
-      </DrawerContent>
-    </Drawer>
+
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
