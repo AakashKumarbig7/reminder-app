@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "./ui/button";
 import styles from "@/styles/newtask.module.css";
+import axios from "axios";
 
 type User = {
   id: number;
@@ -47,12 +48,41 @@ const Popup: React.FC<PopupProps> = ({ data, position, onSelect }) => (
   </div>
 );
 
+const fetchEmployeeList = async () => {
+  try {
+    const response = await axios.get("https://portal.solution22.com.au/api/employees", {
+      headers: {
+        Authorization: `Bearer Ng4J6u194xccX9kbZxrBOEpZHWjQI5g5Ao7LccMf`,
+      },
+    });
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching employee list:", error);
+    return null;
+  }
+};
+
 export function NewTask() {
   const styledInputRef = useRef<HTMLDivElement>(null);
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [taskError, setTaskError] = useState(false);
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    const getEmployees = async () => {
+      const data = await fetchEmployeeList();
+      if (data) {
+        setEmployees(data);
+      }
+    };
+
+    getEmployees();
+  }, []);
+ 
+
   const Popup: React.FC<PopupProps> = ({ data, position, onSelect }) => {
     return (
       <div className="popup" style={{ top: position.top, left: position.left }}>
