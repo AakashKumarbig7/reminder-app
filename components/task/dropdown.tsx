@@ -25,7 +25,7 @@ export default function DropDown() {
     "WordPress Team",
     "Management",
 
-    "Add new Team",
+    // "Add new Team",
   ];
   const Sorting = [
     "None",
@@ -107,11 +107,12 @@ export default function DropDown() {
             <Command>
               <CommandList>
                 <ul className="mt-4 space-y-5 px-5 pt-3">
+               
                   {Sorting.map((sort) => (
                     <li
                       key={sort}
                       onClick={() => handleSelected(sort)}
-                      className={`flex items-center border-b-[1px]  border-zinc-300 cursor-pointer 
+                      className={`flex items-center border-b-[1px] pt-[10px] pr-[10px] border-zinc-300 cursor-pointer 
                         ${
                           selectedSorting === sort
                             ? "text-zinc-950 font-semibold"
@@ -125,9 +126,12 @@ export default function DropDown() {
                           <span className="w-4 h-4" />
                         )}
                       </span>
-                      <p className="text-sm pt-[10px] pr-[10px]">{sort}</p>
+                      <p className="text-sm ">{sort}</p>
+                      <li>Add New Team</li>
                     </li>
+                     
                   ))}
+                  
                 </ul>
               </CommandList>
             </Command>

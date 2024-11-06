@@ -89,7 +89,7 @@ export function NewTask() {
     if (!styledInput) return;
 
     const handleInput = () => {
-      let text = styledInput.innerText || '';
+      let text = styledInput.innerText || "";
       const atCount = (text.match(/@/g) || []).length;
 
       if (atCount === 1) {
@@ -99,7 +99,7 @@ export function NewTask() {
       } else if (atCount === 3) {
         PopupList = Employee;
       }
-      const atIndex = text.lastIndexOf('@');
+      const atIndex = text.lastIndexOf("@");
       if (atIndex !== -1) {
         const substring = text.substring(atIndex + 1);
         const matches = PopupList.filter((user) =>
@@ -125,16 +125,16 @@ export function NewTask() {
         setPopupVisible(false);
       }
 
-      text = text.replace(/(@\w+)/g, '<span>$1</span>');
+      text = text.replace(/(@\w+)/g, "<span>$1</span>");
       styledInput.innerHTML = text;
 
-      document.querySelectorAll('#styledInput span').forEach((span, index) => {
+      document.querySelectorAll("#styledInput span").forEach((span, index) => {
         if (index === 0) {
-          (span as HTMLElement).style.color = '#df478e';
+          (span as HTMLElement).style.color = "#df478e";
         } else if (index === 1) {
-          (span as HTMLElement).style.color = '#8692ee';
+          (span as HTMLElement).style.color = "#8692ee";
         } else if (index === 2) {
-          (span as HTMLElement).style.color = '#62e78a';
+          (span as HTMLElement).style.color = "#62e78a";
         }
       });
 
@@ -153,11 +153,11 @@ export function NewTask() {
   const handleUserSelect = (user: User) => {
     const styledInput = styledInputRef.current;
     if (styledInput) {
-      let text = styledInput.innerText || '';
-      const atIndex = text.lastIndexOf('@');
-      const newText = text.substring(0, atIndex) +  `@${user.name}` ;
+      let text = styledInput.innerText || "";
+      const atIndex = text.lastIndexOf("@");
+      const newText = text.substring(0, atIndex) + `@${user.name}`;
       styledInput.innerText = newText;
-      styledInput.dispatchEvent(new Event('input'));
+      styledInput.dispatchEvent(new Event("input"));
       setPopupVisible(false);
     }
   };
@@ -174,7 +174,13 @@ export function NewTask() {
   return (
     <Drawer>
       <DrawerTrigger className="w-full bg-teal-500 flex items-center justify-center text-white py-2 rounded-lg">
-        <Image src={addicon} alt="Add Icon" width={20} height={20} className="mr-2" />
+        <Image
+          src={addicon}
+          alt="Add Icon"
+          width={20}
+          height={20}
+          className="mr-2"
+        />
         New Task
       </DrawerTrigger>
       <DrawerContent className="pb-10">
@@ -187,7 +193,9 @@ export function NewTask() {
             <SelectContent className="text-[#9B9B9B]">
               <SelectItem value="todo">To Do</SelectItem>
               <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="internal_feedback">Internal feedback</SelectItem>
+              <SelectItem value="internal_feedback">
+                Internal feedback
+              </SelectItem>
             </SelectContent>
           </Select>
         </DrawerHeader>
@@ -197,13 +205,14 @@ export function NewTask() {
               contentEditable="true"
               ref={styledInputRef}
               id="styledInput"
-              className={styles.styledInput}
+              className="p-2.5 border-2 border-gray-300 rounded-lg text-base font-sans text-gray-800 bg-gray-100 outline-none h-15 w-full focus:border-gray-400 focus:bg-white"
             ></div>
             {popupVisible && (
               <Popup
                 data={suggestedUsers}
                 position={popupPosition}
                 onSelect={handleUserSelect}
+                // className="absolute bg-white border border-gray-300 z-10 max-h-52 overflow-y-auto w-[150px]"
               />
             )}
             {/* {taskError && (
