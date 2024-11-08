@@ -20,6 +20,8 @@ import {
 import { Button } from "./ui/button";
 import styles from "../styles/newtask.module.css";
 import axios from "axios";
+import MentionInput from "./mentionInput";
+import { supabase } from "@/lib/supabase/client";
 
 type User = {
   id: number;
@@ -34,7 +36,6 @@ type PopupProps = {
 
 const Popup: React.FC<PopupProps> = ({ data, position, onSelect }) => (
   <div
-    
     style={{
       top: position.top,
       left: position.left,
@@ -50,11 +51,14 @@ const Popup: React.FC<PopupProps> = ({ data, position, onSelect }) => (
 
 const fetchEmployeeList = async () => {
   try {
-    const response = await axios.get("https://portal.solution22.com.au/api/employees", {
-      headers: {
-        Authorization: `Bearer Ng4J6u194xccX9kbZxrBOEpZHWjQI5g5Ao7LccMf`,
-      },
-    });
+    const response = await axios.get(
+      "https://portal.solution22.com.au/api/employees",
+      {
+        headers: {
+          Authorization: `Bearer Ng4J6u194xccX9kbZxrBOEpZHWjQI5g5Ao7LccMf`,
+        },
+      }
+    );
     console.log(response.data);
     return response.data;
   } catch (error) {
@@ -70,6 +74,9 @@ export function NewTask() {
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [taskError, setTaskError] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [text, setText] = useState<string>("");
+  const [taskStatus, setTaskStatus] = useState<string>("In Progress");
+  const [taskErrorMessage, setTaskErrorMessage] = useState(false);
 
   useEffect(() => {
     const getEmployees = async () => {
@@ -81,7 +88,6 @@ export function NewTask() {
 
     getEmployees();
   }, []);
- 
 
   const Popup: React.FC<PopupProps> = ({ data, position, onSelect }) => {
     return (
@@ -119,7 +125,7 @@ export function NewTask() {
     if (!styledInput) return;
 
     const handleInput = () => {
-      let text = styledInput.innerText || '';
+      let text = styledInput.innerText || "";
       const atCount = (text.match(/@/g) || []).length;
 
       if (atCount === 1) {
@@ -129,7 +135,7 @@ export function NewTask() {
       } else if (atCount === 3) {
         PopupList = Employee;
       }
-      const atIndex = text.lastIndexOf('@');
+      const atIndex = text.lastIndexOf("@");
       if (atIndex !== -1) {
         const substring = text.substring(atIndex + 1);
         const matches = PopupList.filter((user) =>
@@ -155,16 +161,16 @@ export function NewTask() {
         setPopupVisible(false);
       }
 
-      text = text.replace(/(@\w+)/g, '<span>$1</span>');
+      text = text.replace(/(@\w+)/g, "<span>$1</span>");
       styledInput.innerHTML = text;
 
-      document.querySelectorAll('#styledInput span').forEach((span, index) => {
+      document.querySelectorAll("#styledInput span").forEach((span, index) => {
         if (index === 0) {
-          (span as HTMLElement).style.color = '#df478e';
+          (span as HTMLElement).style.color = "#df478e";
         } else if (index === 1) {
-          (span as HTMLElement).style.color = '#8692ee';
+          (span as HTMLElement).style.color = "#8692ee";
         } else if (index === 2) {
-          (span as HTMLElement).style.color = '#62e78a';
+          (span as HTMLElement).style.color = "#62e78a";
         }
       });
 
@@ -183,49 +189,100 @@ export function NewTask() {
   const handleUserSelect = (user: User) => {
     const styledInput = styledInputRef.current;
     if (styledInput) {
-      let text = styledInput.innerText || '';
-      const atIndex = text.lastIndexOf('@');
-      const newText = text.substring(0, atIndex) +  `@${user.name}` ;
+      let text = styledInput.innerText || "";
+      const atIndex = text.lastIndexOf("@");
+      const newText = text.substring(0, atIndex) + `@${user.name}`;
       styledInput.innerText = newText;
-      styledInput.dispatchEvent(new Event('input'));
+      styledInput.dispatchEvent(new Event("input"));
       setPopupVisible(false);
     }
   };
-  const handleCreateTask = () => {
-    const styledInput = styledInputRef.current;
-    if (!styledInput?.innerText.trim()) {
-      setTaskError(true);
-      return;
+
+  const formatDate = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    };
+
+    return date.toLocaleDateString("en-GB", options); // 'en-GB' gives the format "23 Aug 2024"
+  };
+
+  const handleCreateTask = async () => {
+    const mentions = text.match(/@\w+/g) || []; // Find all mentions
+    const content = text.replace(/@\w+/g, "").trim();
+    console.log(content.length, "content");
+    console.log(typeof content, " content type");
+
+    console.log(text, "text");
+
+    // Check if both content and mentions are non-empty
+    if (content.length > 0 && mentions.length > 0) {
+      setTaskErrorMessage(false);
+      console.log(mentions + " " + content, "text");
+
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert({
+          task_content: content,
+          mentions: mentions,
+          time: formatDate(new Date()),
+          status: taskStatus,
+        });
+
+      if (error) throw error;
+
+      console.log(data, " added task");
+
+      const styledInput = styledInputRef.current;
+      if (!styledInput?.innerText.trim()) {
+        setTaskError(true);
+        return;
+      }
+
+      console.log("Task:", styledInput.innerText);
+      styledInput.innerText = ""; // Clear the content
+      setText(""); // Clear the text state
+    } else {
+      setTaskErrorMessage(true);
+      console.log("Please enter both content and mentions.");
     }
-    console.log("Task:", styledInput.innerText);
-    styledInput.innerText = "";
   };
 
   return (
     <>
-   
-    <Drawer>
-      <DrawerTrigger className="w-full bg-teal-500 flex items-center justify-center text-white py-2 rounded-lg">
-        <Image src={addicon} alt="Add Icon" width={20} height={20} className="mr-2" />
-        New Task
-      </DrawerTrigger>
-      <DrawerContent className="pb-10">
-        <DrawerHeader className="flex items-center justify-between">
-          <DrawerTitle>New Task</DrawerTitle>
-          <Select defaultValue="todo">
-            <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-[#9B9B9B] text-center border-[#E2E2E2] bg-[#E2E2E2] rounded-[30px]">
-              <SelectValue placeholder="status" />
-            </SelectTrigger>
-            <SelectContent className="text-[#9B9B9B]">
-              <SelectItem value="todo">To Do</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="internal_feedback">Internal feedback</SelectItem>
-            </SelectContent>
-          </Select>
-        </DrawerHeader>
-        <DrawerDescription className="px-4 border-black rounded-[10px]">
-          <div>
-            <div
+      <Drawer>
+        <DrawerTrigger className="w-full bg-teal-500 flex items-center justify-center text-white py-2 rounded-lg">
+          <Image
+            src={addicon}
+            alt="Add Icon"
+            width={20}
+            height={20}
+            className="mr-2"
+          />
+          New Task
+        </DrawerTrigger>
+        <DrawerContent className="pb-10">
+          <DrawerHeader className="flex items-center justify-between">
+            <DrawerTitle>New Task</DrawerTitle>
+            <Select
+              defaultValue="In progress"
+              onValueChange={(value) => setTaskStatus(value)}
+            >
+              <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-[#9B9B9B] text-center border-[#E2E2E2] bg-[#E2E2E2] rounded-[30px]">
+                <SelectValue placeholder="status" />
+              </SelectTrigger>
+              <SelectContent className="text-[#9B9B9B]">
+                <SelectItem value="todo">To Do</SelectItem>
+                <SelectItem value="In progress">In Progress</SelectItem>
+                <SelectItem value="Internal feedback">
+                  Internal feedback
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </DrawerHeader>
+          <div className="px-4 border-black rounded-[10px] text-center">
+            {/* <div
               contentEditable="true"
               ref={styledInputRef}
               id="styledInput"
@@ -239,20 +296,24 @@ export function NewTask() {
                 onSelect={handleUserSelect}
                 // className="absolute bg-white border border-gray-300 z-10 max-h-52 overflow-y-auto w-[150px]"
               />
-            )}
-            {/* {taskError && (
-              <span className="text-red-500 py-1 text-sm">Please enter a task</span>
             )} */}
+            <MentionInput
+              text={text}
+              setText={setText}
+              setTaskErrorMessage={setTaskErrorMessage}
+            />
+            <p className="text-red-500 text-left my-1">
+              {taskErrorMessage && "Please fill the message with mentions"}
+            </p>
+            <Button
+              className="bg-transparent text-[#14B8A6] hover:bg-transparent font-semibold text-base text-center shadow-none"
+              onClick={handleCreateTask}
+            >
+              Create Task
+            </Button>
           </div>
-        </DrawerDescription>
-        <Button
-          className="bg-transparent text-[#14B8A6] hover:bg-transparent font-semibold text-base text-center shadow-none"
-          onClick={handleCreateTask}
-        >
-          Create Task
-        </Button>
-      </DrawerContent>
-    </Drawer>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
