@@ -17,9 +17,9 @@ export default function NavBar() {
             className="rounded"
           />
           <Image src={activelogo} alt="" className="relative right-3  top-4" />
-          <div className="">
-            <h3 className="text-lg font-semibold">John Doe</h3>
-            <p className="text-sm text-black">@Solution22</p>
+          <div className="pr-[2px]">
+            <h3 className="text-sm font-semibold">John Doe</h3>
+            <p className="text-[10px] text-black">Solution22</p>
           </div>
         </div>
         {/* Company Logo */}

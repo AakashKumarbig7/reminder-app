@@ -49,9 +49,9 @@ export default function NavBar() {
         {/* Drawer Trigger */}
         <Drawer>
           <DrawerTrigger>
-            <button className="flex w-10 h-10 justify-center items-center rounded-[10px] border border-zinc-300 bg-bgwhite">
+            <div className="flex w-10 h-10 justify-center items-center rounded-[10px] border border-zinc-300 bg-bgwhite">
               <RiBarChartHorizontalLine className="text-black h-6 w-6" />
-            </button>
+            </div>
           </DrawerTrigger>
 
           {/* Drawer Content */}
@@ -83,11 +83,11 @@ export default function NavBar() {
               </CommandList>
             </Command>
 
-            <DrawerFooter>
+            {/* <DrawerFooter>
               <button className="mt-[18px] p-2 mb-10 border w-[340px] h-10 border-teal-500 text-teal-500 rounded-lg bg-lightskyblue">
                 Manage Teams
               </button>
-            </DrawerFooter>
+            </DrawerFooter> */}
           </DrawerContent>
         </Drawer>
 
