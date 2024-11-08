@@ -98,9 +98,9 @@ export default function DropDown() {
 
         <Drawer>
           <DrawerTrigger>
-            <button className="flex w-10 h-10  p-[8px_12px] justify-center items-center gap-[6px] rounded-lg border border-zinc-300 bg-white">
+            <div className="flex w-10 h-10  p-[8px_12px] justify-center items-center gap-[6px] rounded-lg border border-zinc-300 bg-white">
               <FaEllipsisH className="h-4 w-6" />
-            </button>
+            </div>
           </DrawerTrigger>
           <DrawerContent className="h-[70%]">
             <DrawerTitle className="pt-[18px] px-5">Sorting</DrawerTitle>
@@ -127,11 +127,12 @@ export default function DropDown() {
                         )}
                       </span>
                       <p className="text-sm ">{sort}</p>
-                      <li>Add New Team</li>
+                     
                     </li>
                      
+                     
                   ))}
-                  
+                  <li className="border-b-[1px] pt-[10px] text-[14px] pr-[40px]  border-zinc-300 cursor-pointer ">  Add New Team</li>
                 </ul>
               </CommandList>
             </Command>
