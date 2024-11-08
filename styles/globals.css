@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Geist&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Geist&display=swap'); */
 /* @font-face {
   font-family: 'Geist';
   src: url('/fonts/Geist-Regular.woff2') format('woff2'),
@@ -13,12 +14,11 @@
 
 
 body {
-  /* font-family: Arial, Helvetica, sans-serif; */
-  font-family: 'Geist', Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
+  /* font-family: 'Geist', Arial, sans-serif; */
 }
 
 #task_select{
-  font-family: 'Geist', Arial, sans-serif;
   position: relative;
 }
 #task_select::after{
