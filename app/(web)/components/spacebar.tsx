@@ -1,412 +1,519 @@
-// import {
-//   AlertDialog,
-//   AlertDialogAction,
-//   AlertDialogCancel,
-//   AlertDialogContent,
-//   AlertDialogDescription,
-//   AlertDialogFooter,
-//   AlertDialogHeader,
-//   AlertDialogTitle,
-//   AlertDialogTrigger,
-// } from "@/components/ui/alert-dialog";
-// import { Button } from "@/components/ui/button";
-// import { Plus, Trash2 } from "lucide-react";
-// import { useState } from "react";
+"use client";
+import { supabase } from "@/lib/supabase/client";
+import { CirclePlus, CircleX, Plus, Trash2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import Image from "next/image";
+import toast, { Toaster } from 'react-hot-toast';
 
-// const WebSpacebar = () => {
-//   const [selectedCity, setSelectedCity] = useState("");
-//   const [selectedService, setSelectedService] = useState("");
-//   const [isEditor, setIsEditor] = useState(false);
-//   const [editingServiceIndex, setEditingServiceIndex] = useState(-1);
-//   const [inputValue, setInputValue] = useState("");
-//   const [services, setServices] = useState<string[]>([]);
+interface Tab {
+  id: number;
+  space_name: string;
+  email: string;
+  username: string;
+  designation: string;
+  role: string;
+  department: string;
+}
 
-//   const handleServiceChange1 = (service: string, index: number) => {
-//     setSelectedService(service);
-//     setIsEditor(true);
-//     setEditingServiceIndex(index);
-//   };
-//   const handleKeyDown = (value: string) => {
-//     if (value === "") {
-//       setSelectedService("");
-//       setIsEditor(false);
-//       setEditingServiceIndex(-1);
-//     } else {
-//       setInputValue(value);
-//     }
-//   };
-// //   const services = ["To Do", "In Progress", "Internal Feedback", "Completed"];
+const notify = (message: string, success: boolean) =>
+  toast[success ? "success" : "error"](message, {
+    style: {
+      borderRadius: "10px",
+      background: "#fff",
+      color: "#000",
+    },
+    position: "top-right",
+    duration: 3000,
+  });
 
-//   const handleDeleteService = async (index: number) => {
-//     // Store the original data in local storage before deletion
-//     localStorage.removeItem("DeleteServiceData");
+const SpaceBar = () => {
+  const [tabs, setTabs] = useState<Tab[]>([]);
+  const [activeTab, setActiveTab] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState<number | null>(null);
+  const [emailInput, setEmailInput] = useState<string>("");
+  const [matchingUsers, setMatchingUsers] = useState<Tab[]>([]);
+  const [noUserFound, setNoUserFound] = useState<boolean>(false);
+  const [addedMembers, setAddedMembers] = useState<Tab[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [teamName, setTeamName] = useState<string>("");
+  const [memberAddDialogOpen, setMemberAddDialogOpen] = useState(false);
+  const [teamNameError, setTeamNameError] = useState(false);
+  const [teamMemberError, setTeamMemberError] = useState(false);
 
-//     const servicesWithCityBeforeDelete = [...servicesWithCity];
-//     const serviceDetailsBeforeDelete = { ...serviceDetails };
-//     const cityTotalsBeforeDelete = { ...cityTotals };
-//     const serviceTotalsBeforeDelete = { ...serviceTotals };
-//     const servicesBeforeDelete = [...services];
-//     const serviceToDelete = services[index];
-//     const activeService =
-//       typeof services[index - 1] === "undefined"
-//         ? services.length > 1
-//           ? services[index + 1]
-//           : null
-//         : services[index - 1];
+  useEffect(() => {
+    fetchSpaces();
+  }, []);
 
-//     localStorage.setItem(
-//       "DeleteServiceData",
-//       JSON.stringify({
-//         servicesWithCityBeforeDelete,
-//         serviceDetailsBeforeDelete,
-//         cityTotalsBeforeDelete,
-//         serviceTotalsBeforeDelete,
-//         servicesBeforeDelete,
-//         serviceToDelete,
-//       })
-//     );
+  // Fetch spaces from database
+  const fetchSpaces = async () => {
+    const { data, error } = await supabase.from("spaces").select("*");
+
+    if (error) {
+      console.error("Error fetching spaces:", error);
+      return;
+    }
+
+    if (data) {
+      setTabs(data);
+      if (data.length > 0) {
+        setActiveTab(data[0].id); // Set the first tab as active initially
+      }
+    }
+  };
+
+  // Handle clicking a tab
+  const handleTabClick = (id: number) => {
+    setActiveTab(id);
+    setIsEditing(null);
+  };
+
+  // Handle double-clicking a tab for editing
+  const handleTabDoubleClick = (id: number) => {
+    setIsEditing(id);
+  };
+
+  // Update tab name in database and UI
+  const handleInputChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    id: number
+  ) => {
+    const newName = event.target.value;
+    const { error } = await supabase
+      .from("spaces")
+      .update({ space_name: newName })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating space name:", error);
+      return;
+    }
+
+    setTabs((prevTabs) =>
+      prevTabs.map((tab) =>
+        tab.id === id ? { ...tab, space_name: newName } : tab
+      )
+    );
+  };
+
+  // Add a new tab in database and UI
+  const addNewTab = async () => {
+    const { data, error } = await supabase
+      .from("spaces")
+      .insert({ space_name: "New Space" })
+      .select();
+
+    if (error) {
+      console.error("Error adding new space:", error);
+      return;
+    }
+
+    if (data && data[0]) {
+      const newTab = data[0];
+      setTabs((prevTabs) => [...prevTabs, newTab]);
+      setActiveTab(newTab.id);
+      setIsEditing(newTab.id);
+    }
+  };
+
+  // Delete a tab from database and UI
+  const deleteTab = async (id: number) => {
+    const { error } = await supabase.from("spaces").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting space:", error);
+      return;
+    }
+
+    const newTabs = tabs.filter((tab) => tab.id !== id);
+    setTabs(newTabs);
+    if (newTabs.length > 0) {
+      setActiveTab(newTabs[0].id); // Set first tab as active if any left
+    } else {
+      setActiveTab(null);
+    }
+  };
+
+  const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmailInput(e.target.value);
+    console.log("Email input:", emailInput);
+
+    try {
+      // Fetch all users from the database
+      const { data, error } = await supabase.from("users").select("*");
+
+      if (error) {
+        console.error("Error fetching users:", error);
+        return;
+      }
+
+      // Filter users whose email includes the input value
+      const matchingUsers =
+        data?.filter((user) => user.email.includes(emailInput)) || [];
+
+      if (matchingUsers.length > 0 || emailInput === "") {
+        console.log("Matching users:", matchingUsers);
+        setMatchingUsers(matchingUsers);
+        setNoUserFound(false);
+      } else {
+        console.log("No users found matching this email input.");
+        setNoUserFound(true);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    }
+  };
+
+  const handleUserSelect = (user: Tab) => {
+    setTeamMemberError(false);
+    console.log(user, " selected user");
+    setAddedMembers((prevMembers) => [...prevMembers, user]);
+    console.log("Added members:", addedMembers);
+    setEmailInput("");
+    setHighlightedIndex(-1);
+  };
+
+  const removeMember = (user: Tab, index: number) => {
+    setAddedMembers((prevMembers) =>
+      prevMembers.filter((member: any, i: number) => !(member.id === user.id && i === index))
+    );
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (matchingUsers.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      // Move highlight down
+      setHighlightedIndex((prevIndex) =>
+        prevIndex < matchingUsers.length - 1 ? prevIndex + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      // Move highlight up
+      setHighlightedIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : matchingUsers.length - 1
+      );
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      setTeamMemberError(false);
+      // Select highlighted user on Enter
+      handleUserSelect(matchingUsers[highlightedIndex]);
+    }
+  };
+
+  const handleSaveMembers = async () => {
+    if (teamName === '') {
+      setTeamNameError(true)
+      return;
+    }
+    else if(addedMembers.length === 0) {
+      setTeamMemberError(true)
+      return;
+    }
+    else{
+      // Fetch selected user details based on `id`
+    const { data: fetchedMembers, error: fetchError } = await supabase
+    .from("users")
+    .select("*")
+    .in(
+      "id",
+      addedMembers.map((member) => member.id)
+    );
+
+  if (fetchError) {
+    console.error("Error fetching members:", fetchError);
+    return;
+  }
+
+  // Check if there are any members already in the team
+  // const { data: existingTeam, error: checkError } = await supabase
+  //   .from("teams")
+  //   .select("*")
+  //   .eq("team_name", teamName);
+
+  // if (checkError) {
+  //   console.error("Error checking existing team:", checkError);
+  //   return;
+  // }
+
+  // if (existingTeam && existingTeam.length > 0) {
+  //   console.log("Team already exists with these members:", existingTeam);
+  //   notify("Team already exists with these members", false);
+  //   return;
+  // }
 
 
 
-//     // Update services with city after deletion
-//     const servicesWithCityAfterDelete = servicesWithCity.map((cityDetail) => {
-//       if (cityDetail.city === selectedCity) {
-//         return {
-//           ...cityDetail,
-//           services: cityDetail.services.filter((service: string) => service !== serviceToDelete),
-//         };
-//       }
-//       return cityDetail;
-//     });
+  try {
+    // Insert selected user details as array of objects into the `teams` table
+    const { data: insertedData, error: insertError } = await supabase
+      .from("teams")
+      .insert({
+        team_name: teamName,
+        members: fetchedMembers.map((member) => ({
+          id: member.id,
+          name: member.username, // Assuming `name` is a field in your `users` table
+          role: member.role,
+          department: member.department,
+          designation: member.designation,
+          email: member.email, // Assuming `email` is a field in your `users` table
+        })),
+      });
 
-//     const updatedServices = services.filter((_, i) => i !== index);
+    if (insertError) {
+      console.error("Error saving members:", insertError);
+      return;
+    }
+    setTeamName("");
+    setAddedMembers([]);
+    setTeamNameError(false);
+    setTeamMemberError(false);
+    setMemberAddDialogOpen(false);
+    notify("Members saved successfully", true);
+  } catch (err) {
+    console.error("Unexpected error:", err);
+  }
+    }
+    
+  };
 
+  const handleClose = () => {
+    setMemberAddDialogOpen(false);
+    setTeamName("");
+    setAddedMembers([]);
+    setTeamNameError(false);
+    setTeamMemberError(false);
+  }
 
-//     // Define the structure of the service details per service
-//     interface ServiceDetailItem {
-//       due: number | string;
-//       paid: number | string;
-//       items: string | number;
-//       profit: number | string;
-//       quantity: number | string;
-//       actualcost: number | string;
-//       difference: number | string;
-//       estimation: number | string;
-//     }
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [highlightedIndex, matchingUsers]);
 
-//     interface ServiceDetails {
-//       [serviceName: string]: ServiceDetailItem[];
-//     }
+  return (
+    <div className="px-3">
+      <Toaster />
+      <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full">
+        <div className="flex gap-2 py-2.5 text-sm text-gray-400">
+          {tabs.map((tab) => (
+            <div
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              onDoubleClick={() => handleTabDoubleClick(tab.id)}
+              className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer ${
+                activeTab === tab.id
+                  ? "bg-[#1A56DB] text-white border-none"
+                  : "bg-white border-gray-300"
+              }`}
+            >
+              {isEditing === tab.id ? (
+                <input
+                  type="text"
+                  value={tab.space_name}
+                  onChange={(e) => handleInputChange(e, tab.id)}
+                  onBlur={() => setIsEditing(null)}
+                  className="h-full outline-none bg-transparent text-current py-1 pr-0"
+                  autoFocus
+                />
+              ) : (
+                <span>{tab.space_name || "Double-click to edit"}</span>
+              )}
 
-//     // Update service details after deletion
-//     const serviceDetailsAfterDelete: { [location: string]: ServiceDetails } = Object.keys(serviceDetails).reduce((acc, location) => {
-//       if (location === selectedCity) {
-//         acc[location] = Object.keys(serviceDetails[location]).reduce((innerAcc, service) => {
-//           if (service !== serviceToDelete) {
-//             innerAcc[service] = serviceDetails[location][service];
-//           }
-//           return innerAcc;
-//         }, {} as ServiceDetails);
-//       } else {
-//         acc[location] = serviceDetails[location];
-//       }
-//       return acc;
-//     }, {} as { [location: string]: ServiceDetails });
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteTab(tab.id);
+                }}
+                className={`absolute right-2 focus:outline-none space_delete_button ${
+                  activeTab === tab.id
+                    ? "text-white border-none"
+                    : "bg-white border-gray-300 text-gray-400"
+                }`}
+              >
+                <CircleX
+                  className="animate-bounce hover:animate-none"
+                  size={16}
+                />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={addNewTab}
+            className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2"
+            style={{ width: "max-content" }}
+          >
+            Add New Space <CirclePlus size={16} />
+          </button>
+        </div>
+        <div className="flex gap-2 py-2.5 text-sm text-gray-400 pl-20">
+          <Dialog open={memberAddDialogOpen} onOpenChange={setMemberAddDialogOpen}>
+            <DialogTrigger asChild>
+              <button className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2">
+                <span className="text-gray-600">
+                  <CirclePlus size={16} />
+                </span>{" "}
+                Add Team
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[534px] font-inter">
+              <DialogHeader className="text-gray-500 text-base font-semibold">
+                <DialogTitle className="text-base">TEAM SETTING</DialogTitle>
+              </DialogHeader>
+              <div className="py-2">
+                <label
+                  htmlFor="name"
+                  className="text-sm text-[#111928] font-medium"
+                >
+                  Team Name
+                </label>
+                <Input
+                  id="name"
+                  placeholder="Development Name"
+                  className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
+                  onChange={(e: any) => {setTeamName(e.target.value); setTeamNameError(false);}}
+                />
+                {
+                  teamNameError && <p className="text-red-500 text-sm mt-1">Please fill the field</p>
+                }
+                <div className="mt-8 relative">
+                  {matchingUsers.length > 0 &&
+                    emailInput.length > 0 &&
+                    !noUserFound && (
+                      <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
+                        {matchingUsers.length > 0 && (
+                          <ul>
+                            {matchingUsers.map((user, index) => (
+                              <li
+                                key={user.id}
+                                className={`p-2 cursor-pointer ${
+                                  index === highlightedIndex
+                                    ? "bg-gray-200"
+                                    : "hover:bg-gray-100"
+                                }`}
+                                onClick={() => handleUserSelect(user)}
+                                onMouseEnter={() => setHighlightedIndex(index)}
+                              >
+                                {user.email}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  {noUserFound && (
+                    <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
+                      <ul>
+                        <li className="p-2 cursor-pointer hover:bg-gray-100">
+                          No User Found
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
 
-//     // Function to calculate total for service items of the service to delete
-//     const calculateTotalForServiceToDelete = (serviceItems: ServiceDetailItem[] | null): ServiceDetailItem => {
-//       // Safeguard against null serviceItems
-//       if (!serviceItems) {
-//         return {
-//           due: 0,
-//           paid: 0,
-//           items: "",
-//           profit: 0,
-//           quantity: 0,
-//           actualcost: 0,
-//           difference: 0,
-//           estimation: 0,
-//         } as ServiceDetailItem;
-//       }
+                <div>
+                  <label
+                    htmlFor="members"
+                    className="text-sm text-[#111928] font-medium"
+                  >
+                    Members
+                  </label>
+                  <Input
+                    id="members"
+                    placeholder="Add guest email"
+                    className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
+                    onChange={getUserData}
+                  />
+                  
+                  {/* <Button className="absolute right-[30px] bottom-[38px] rounded-[10px] border border-zinc-300 bg-primaryColor-700 text-white text-xs font-medium hover:bg-primaryColor-700">
+                    <Plus size={16} />
+                    Add
+                  </Button> */}
+                </div>
+                {
+                  teamMemberError && <p className="text-red-500 text-sm mt-1">Please fill the field</p>
+                }
+                {addedMembers.length > 0 && (
+                  <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
+                    {addedMembers.map((member, index) => (
+                      <div
+                        key={member.id}
+                        className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
+                      >
+                        <div className="flex items-center gap-1">
+                          {/* <Image
+                            src="/public/images/Subtract.png"
+                            alt="user image"
+                            width={36}
+                            height={36}
+                            className="w-6 h-6 rounded-full"
+                          /> */}
+                          <span>{member.username}</span>
+                        </div>
+                        <span
+                          className={`${
+                            member.role === "superadmin"
+                              ? "text-[#0E9F6E]"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {member.designation?.length > 25
+                            ? `${member.designation?.slice(0, 26)}...`
+                            : member.designation}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMember(member, index);
+                          }}
+                          className="focus:outline-none space_delete_button text-gray-400"
+                        >
+                          <Trash2 className="text-black" size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <DialogFooter className="flex items-center w-full">
+                <Button
+                  type="submit"
+                  variant={"outline"}
+                  className="w-1/2 border border-gray-200 text-gray-800 font-medium"
+                  onClick={handleClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="w-1/2 bg-primaryColor-700"
+                  onClick={handleSaveMembers}
+                >
+                  Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+      <div className="pt-3">
+        <div className="mt-2 rounded flex justify-center items-center h-full">
+          {tabs.find((tab) => tab.id === activeTab)?.space_name ||
+            "No content available"}
+        </div>
+      </div>
+    </div>
+  );
+};
 
-//       return serviceItems.reduce((acc, item) => {
-//         // Aggregate quantities and financial metrics
-//         acc.quantity = (Number(acc.quantity) || 0) + (Number(item.quantity) || 0);
-//         acc.actualcost = (Number(acc.actualcost) || 0) + (Number(item.actualcost) || 0);
-//         acc.paid = (Number(acc.paid) || 0) + (Number(item.paid) || 0);
-//         acc.estimation = (Number(acc.estimation) || 0) + (Number(item.estimation) || 0);
-
-//         // Calculate derived fields
-//         acc.due = acc.estimation - acc.paid;
-//         acc.profit = (Number(acc.estimation) || 0) - (Number(acc.actualcost) || 0);
-//         acc.difference = (Number(acc.estimation) || 0) - (Number(acc.actualcost) || 0);
-
-//         return acc;
-//       }, {
-//         due: 0,
-//         paid: 0,
-//         items: "",
-//         profit: 0,
-//         quantity: 0,
-//         actualcost: 0,
-//         difference: 0,
-//         estimation: 0,
-//       } as ServiceDetailItem);
-//     };
-
-//     // Calculate totals for the service to delete
-//     const serviceItemsToDelete = serviceDetails[selectedCity!]?.[serviceToDelete] || [];
-//     const totalsForService: ServiceDetailItem = calculateTotalForServiceToDelete(serviceItemsToDelete);
-
-//     const updateServiceTotalsAfterDelete = (
-//       serviceTotals: { [city: string]: { [service: string]: number } },
-//       selectedCity: string,
-//       serviceToDelete: string
-//     ) => {
-//       const updatedServiceTotals = { ...serviceTotals };
-
-//       // Check if the selected city exists in the serviceTotals
-//       if (updatedServiceTotals[selectedCity]) {
-//         // Remove the specified service from the selected city's totals
-//         delete updatedServiceTotals[selectedCity][serviceToDelete];
-//       }
-
-//       return updatedServiceTotals; // Return the updated totals
-//     };
-
-//     const updateSelectedCityTotals = (
-//       locationDetails: { [location: string]: { [key: string]: number } },
-//       selectedCity: string,
-//       totals: ServiceDetailItem
-//     ): { [key: string]: { [key: string]: number } } => {
-//       const cityDetails = locationDetails[selectedCity];
-
-//       if (cityDetails) {
-//         // Update city details by subtracting totalsForService
-//         locationDetails[selectedCity] = {
-//           due: cityDetails.due - Number(totals.due),
-//           paid: cityDetails.paid - Number(totals.paid),
-//           profit: cityDetails.profit - Number(totals.profit),
-//           quantity: cityDetails.quantity - Number(totals.quantity),
-//           actualcost: cityDetails.actualcost - Number(totals.actualcost),
-//           difference: cityDetails.difference - Number(totals.difference),
-//           estimation: cityDetails.estimation - Number(totals.estimation),
-//         };
-//       }
-
-//       return locationDetails;
-//     };
-
-//     const updatedLocationDetails = updateSelectedCityTotals(cityTotals, selectedCity!, totalsForService);
-
-
-//     try {
-//       const { error } = await supabase
-//         .from("events")
-//         .update({
-//           services: servicesWithCityAfterDelete,
-//         })
-//         .eq("id", params.id);
-
-//       if (error) throw error;
-
-//       const { error: error2 } = await supabase
-//         .from("service_details")
-//         .update({
-//           details: serviceDetailsAfterDelete,
-//           city_totals: updatedLocationDetails,
-//           service_totals: updateServiceTotalsAfterDelete(serviceTotals, selectedCity!, serviceToDelete),
-//         })
-//         .eq("event_id", params.id);
-
-//       if (error2) throw error2;
-
-//     } catch (error) {
-//       console.error("Error deleting service:", error);
-//     }
-//     setSelectedService(activeService);
-//     setServices(updatedServices);
-//     setServicesWithCity(servicesWithCityAfterDelete);
-//     setServiceDetails(serviceDetailsAfterDelete);
-//     setCityTotals(updatedLocationDetails);
-//     setServiceTotals(updateServiceTotalsAfterDelete(serviceTotals, selectedCity!, serviceToDelete));
-//     setServiceUndo(true);
-//   };
-
-//   const handleAddService = async () => {
-//     let nextServiceNumber = services.length ? services.length + 1 : 1;
-//     let newService = `Service ${nextServiceNumber}`;
-
-//     // Ensure the service name is unique by incrementing the number if it already exists
-//     while (services.includes(newService)) {
-//       nextServiceNumber += 1;
-//       newService = `Service ${nextServiceNumber}`;
-//     }
-
-//     const updatedServices = [...services, newService];
-//     setServices(updatedServices); // Update local state
-//     setSelectedService(newService); // Set the newly added service as active
-
-//     // Parse the JSONB column for service details
-//     const details = serviceDetails || {};
-
-//     // Check if selectedCity exists in the details
-//     if (!selectedCity) return;
-//     if (!details[selectedCity]) {
-//       details[selectedCity] = {};
-//     }
-
-//     // Add the new service to the city's details, with an empty array
-//     details[selectedCity][newService] = [{
-//       "due": 0,
-//       "paid": "",
-//       "items": "",
-//       "profit": 0,
-//       "quantity": "",
-//       "actualcost": "",
-//       "difference": 0,
-//       "estimation": ""
-//     }];
-
-//     // Update the database with the new service details
-//     const { error: updateError } = await supabase
-//       .from("service_details")
-//       .update({ details })
-//       .eq("event_id", params.id);
-
-//     if (updateError) {
-//       console.error("Error updating service details:", updateError);
-//     } else {
-//       setServiceDetails((prevServiceDetails) => ({
-//         ...prevServiceDetails,
-//         [selectedCity]: {
-//           ...prevServiceDetails[selectedCity],
-//           [newService]: [{
-//             "due": 0,
-//             "paid": "",
-//             "items": "",
-//             "profit": 0,
-//             "quantity": "",
-//             "actualcost": "",
-//             "difference": 0,
-//             "estimation": ""
-//           }],
-//         },
-//       }));
-//     }
-
-//     // Update services in the database
-//     await updateServicesInDatabase(updatedServices);
-//     setNewRowAdded(true); // Mark new row as added
-
-//     setRowAdded(true); // Mark row as added
-//   };
-
-//   return (
-//     <>
-//       {selectedCity && (
-//         <div className="mb-4 flex justify-between items-center text-center bg-[#E9ECF0] p-1 border-none rounded-[6px] overflow-x-auto max-w-full w-fit">
-//           <div className="flex  space-x-2">
-//             {services.map((service, index) => {
-//               return (
-//                 <div key={service} className="flex items-center space-x-2">
-//                   <button
-//                     onClick={() => {
-//                       handleServiceChange1(service, index);
-//                       if (editingServiceIndex !== index) {
-//                         setInputValue(service);
-//                       }
-//                     }}
-//                     className={`px-6 py-2 text-sm rounded flex items-center ${
-//                       selectedService === service
-//                         ? "bg-white text-primary-text_primary shadow-md text-sm font-semibold"
-//                         : "bg-[#E9ECF0] font-semibold text-gray-500"
-//                     }`}
-//                   >
-//                     {selectedService === service && isEditor ? (
-//                       <input
-//                         type="text"
-//                         value={
-//                           editingServiceIndex === index ? inputValue : service
-//                         }
-//                         onChange={(e) => setInputValue(e.target.value)}
-//                         onBlur={(e) => handleKeyDown(e.target.value)}
-//                         className="bg-transparent text-center focus-visible:border-none truncate px-2 min-w-[60px] max-w-[100px] text-sm "
-//                         style={{
-//                           width: `${
-//                             editingServiceIndex === index
-//                               ? inputValue.length
-//                               : service.length + 1
-//                           }ch`,
-//                         }}
-//                         placeholder="Edit service"
-//                         aria-label="Service name"
-//                       />
-//                     ) : (
-//                       <div
-//                         className={` 
-//         truncate max-w-[100px] px-2
-//       text-sm`}
-//                       >
-//                         {service}
-//                       </div>
-//                     )}
-
-//                     {selectedService === service && isEditor && (
-//                       <AlertDialog>
-//                         <AlertDialogTrigger>
-//                           <button
-//                             className=""
-//                             aria-label="Delete Selected Items"
-//                           >
-//                             <Trash2 size={18} className="-mb-1" />
-//                           </button>
-//                         </AlertDialogTrigger>
-//                         <AlertDialogContent className="bg-white border rounded-[10px]">
-//                           <AlertDialogHeader>
-//                             <AlertDialogTitle className="text-lg">
-//                               Delete {selectedService}
-//                             </AlertDialogTitle>
-//                             <AlertDialogDescription>
-//                               Are you sure you want to delete this service?
-//                             </AlertDialogDescription>
-//                           </AlertDialogHeader>
-//                           <AlertDialogFooter>
-//                             <AlertDialogCancel className="px-8 py-2 border border-[#D4D4D8] rounded hover:bg-blue-50 text-primary-text_primary">
-//                               Cancel
-//                             </AlertDialogCancel>
-//                             <AlertDialogAction
-//                               className="px-8 py-2 border border-[#1A80F4] bg-[#1A80F4] text-white rounded hover:bg-[#32A0FF]"
-//                               onClick={() => handleDeleteService(index)}
-//                             >
-//                               Delete
-//                             </AlertDialogAction>
-//                           </AlertDialogFooter>
-//                         </AlertDialogContent>
-//                       </AlertDialog>
-//                     )}
-//                   </button>
-//                 </div>
-//               );
-//             })}
-
-//             {isEditor && (
-//               <Button
-//                 type="button"
-//                 onClick={handleAddService}
-//                 className="py-0 px-4 border rounded-[4px] text-sm text-gray-500 whitespace-nowrap flex items-center gap-2 border-gray-100"
-//               >
-//                 <div className="w-5 h-5 flex  items-center justify-center bg-gray-100 text-[#A1A1AA] rounded-full border-[#A1A1AA] border-[1px]">
-//                   <Plus size={14} />
-//                 </div>
-//                 Add Service
-//               </Button>
-//             )}
-//           </div>
-//         </div>
-//       )}
-//     </>
-//   );
-// };
-
-// export default WebSpacebar;
+export default SpaceBar;

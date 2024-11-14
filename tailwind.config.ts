@@ -20,6 +20,7 @@ const config: Config = {
 			teambg:"#e5f4f2",
 			navbg:"#f4f4f8",
 			webbg:'#E5ECF6',
+			primaryColor: { 700: '#1A56DB',},
 
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
