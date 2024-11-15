@@ -9,7 +9,7 @@ export default function TaskPage()
     return (
         <>
         <NavBar/>
-        <div className="flex flex-col bg-bgmain px-[18px]  space-y-[18px] font-geist">
+        <div className="flex flex-col bg-navbg px-[18px] min-h-screen space-y-[18px] font-geist">
         <DropDown/>
         <AllTask/>
         <Tasks/>

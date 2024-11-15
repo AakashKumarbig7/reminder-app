@@ -1,9 +1,10 @@
 .footer {
   background-color: #182B29;
   padding: 9px 18px 30px;
-  height: 83px;
+  height: 75px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap:31px;
   position: fixed;
   bottom: 0;
   width: 100%;

@@ -28,7 +28,7 @@ export default function Footer() {
         </div>
       </Link>
 
-      <Link href="/members" className={getLinkClasses("/members")}>
+      {/* <Link href="/members" className={getLinkClasses("/members")}>
         <div className="flex flex-col items-center">
           <FiUsers className={`${pathname}==="/members"&& footer-link-active `}size={"22px"} />
           <p className={styles['footer-link-text']}>Members</p>
@@ -40,7 +40,7 @@ export default function Footer() {
           <BellDot className={`${pathname}==="/notifications"&& footer-link-active `} size={"22px"}/>
           <p className={styles['footer-link-text']}>Notification</p>
         </div>
-      </Link>
+      </Link> */}
     </footer>
   );
 }

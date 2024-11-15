@@ -1,6 +1,6 @@
 
 import ProtectedRoute from "@/components/auth/protectedRoute";
-import Footer from "@/components/footer/footer";
+import Footer from "@/app/(mob)/footer/footer";
 
 export default function Layout({
   children,

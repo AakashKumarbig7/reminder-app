@@ -47,7 +47,7 @@ export default function OverDue () {
           {Array.from({ length: 5 }).map((_, index) => (
             <CarouselItem
               key={index}
-              className="basis-[62%] md:basis-1/2 lg:basis-1/3"
+              className="basis-[62%] md:basis-1/2 lg:basis-1/3 flex-none"
             >
               <div className="p-1 w-[217px]">
                 <Card>
@@ -63,7 +63,7 @@ export default function OverDue () {
                         <span className="text-red-500 font-bold text-sm">
                           Today
                         </span>
-                        <span className="border bg-[#F8DADA] rounded-3xl text-shadeorange text-sm font-bold py-1 px-2">
+                        <span className="border bg-[#F8DADA] text-reddish rounded-3xl text-shadeorange text-sm font-bold py-1 px-2">
                           To Do
                         </span>
                       </div>
@@ -78,3 +78,4 @@ export default function OverDue () {
     </div>
   );
 }
+

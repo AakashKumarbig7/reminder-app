@@ -17,6 +17,10 @@ import { Command, CommandList } from "@/components/ui/command";
 export default function DropDown() {
   const [selectedTeam, setSelectedTeam] = useState("");
   const [selectedSorting, setSelectedSorting] = useState("");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerOpen1, setIsDrawerOpen1] = useState(false);
+
+
 
   const Teams = [
     "Design Team",
@@ -37,19 +41,22 @@ export default function DropDown() {
   const handleSelected = (sort: any) => {
     setSelectedSorting(sort);
     console.log("Selected Space:", sort);
+    setIsDrawerOpen(false);
   };
   const handleSelect = (team: any) => {
     setSelectedTeam(team);
     console.log("Selected Space:", team);
+    setIsDrawerOpen1(false);
+    
   };
   return (
     <>
       <div className="flex  justify-between ">
-        <Drawer>
-          <DrawerTrigger>
-            <button className="bg-white py-3  rounded-xl border h-[40px] w-[243px] border-gray-300 px-[18px] ">
+        <Drawer open={isDrawerOpen1} onOpenChange={setIsDrawerOpen1}>
+          <DrawerTrigger >
+            <div className="bg-white py-3  rounded-xl border h-[40px] w-[243px] border-gray-300 px-[18px] ">
               <RiArrowDropDownLine className="w-[18px] h-[18px]  text-black ml-auto  " />
-            </button>
+            </div>
           </DrawerTrigger>
           <DrawerContent className="h-[70%]">
             <DrawerTitle className="pt-[18px] px-5">Teams</DrawerTitle>
@@ -80,11 +87,11 @@ export default function DropDown() {
               </CommandList>
             </Command>
 
-            <DrawerFooter>
+            {/* <DrawerFooter>
               <button className="mt-[18px] p-2 mb-10 border w-[340px] h-10 border-teal-500 text-teal-500 rounded-lg bg-lightskyblue">
                 Manage Teams
               </button>
-            </DrawerFooter>
+            </DrawerFooter> */}
           </DrawerContent>
         </Drawer>
 
@@ -96,8 +103,8 @@ export default function DropDown() {
           />
         </div>
 
-        <Drawer>
-          <DrawerTrigger>
+        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <DrawerTrigger onClick={() => setIsDrawerOpen(true)}>
             <div className="flex w-10 h-10  p-[8px_12px] justify-center items-center gap-[6px] rounded-lg border border-zinc-300 bg-white">
               <FaEllipsisH className="h-4 w-6" />
             </div>
@@ -132,7 +139,7 @@ export default function DropDown() {
                      
                      
                   ))}
-                  <li className="border-b-[1px] pt-[10px] text-[14px] pr-[40px]  border-zinc-300 cursor-pointer ">  Add New Team</li>
+                  
                 </ul>
               </CommandList>
             </Command>
