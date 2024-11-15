@@ -19,9 +19,9 @@ const config: Config = {
 			bgwhite:"#FFF",
 			teambg:"#e5f4f2",
 			navbg:"#f4f4f8",
+			reddish:"#EE5A5A",
 			webbg:'#E5ECF6',
-			primaryColor: { 700: '#1A56DB',},
-
+			
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -73,3 +73,4 @@ const config: Config = {
   plugins: [require("tailwindcss-animate")],
 };
 export default config;
+

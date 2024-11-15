@@ -17,18 +17,18 @@ export default function Teams() {
       <div className="space-y-1">
       <Carousel opts={{ align: "start" }} className="w-full max-w-sm  ">
         <div className="flex  items-center space-y-3 ">
-          <CarouselContent className="">
+          <CarouselContent className="space-y-2">
             <div>
-          <button className="rounded-[10px] border border-teal-500 bg-lightskyblue flex items-center justify-center  w-[142px] h-10 px-4 text-base font-medium">
+          {/* <button className="rounded-[10px] border border-teal-500 bg-lightskyblue flex items-center justify-center  w-[142px] h-10 px-4 text-base font-medium">
             <CirclePlus className="text-greyblack h-6 w-6" />
             <p className="pl-1">New Team</p>
-          </button>
+          </button> */}
           </div>
           
             {Array.from({ length: 5 }).map((_, index) => (
               <CarouselItem
                 key={index}
-                className="flex-none"
+                className="flex-none "
               >
                 <button className="rounded-[10px] border border-teal-500 bg-white flex items-center justify-center  min-w-min h-10 px-4 text-base font-medium text-greyblack">
                   <p>Development Team</p>

@@ -18,6 +18,7 @@ import {
 
 export default function NavBar() {
   const [selectedSpace, setSelectedSpace] = useState("Solution22");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const initialSpaces = [
     "Solution22",
@@ -26,29 +27,21 @@ export default function NavBar() {
     "One Tusk Event",
     "Badminton Group",
     "Family",
-    "Add new Team",
+   
   ];
   const [spacesList, setSpacesList] = useState(initialSpaces);
 
   const handleSelected = (space:any) => {
-    if (space === "Add new Team") {
-      const newSpace = prompt("Enter a new space name:");
-       if (newSpace && !spacesList.includes(newSpace)) {
-        setSpacesList([...spacesList.slice(0, -1), newSpace, "Add new Team"]);
-        setSelectedSpace(newSpace);
-        console.log(newSpace)
-      }
-    } else {
-      setSelectedSpace(space);
-    }
+    setSelectedSpace(space);
+    setIsDrawerOpen(false);
   };
 
   return (
     <>
-      <header className="flex justify-between items-center bg-bgmain p-[18px] pt-2">
+      <header className="flex justify-between items-center bg-navbg p-[18px] pt-2">
         {/* Drawer Trigger */}
-        <Drawer>
-          <DrawerTrigger>
+        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}> 
+          <DrawerTrigger onClick={() => setIsDrawerOpen(true)}>
             <div className="flex w-10 h-10 justify-center items-center rounded-[10px] border border-zinc-300 bg-bgwhite">
               <RiBarChartHorizontalLine className="text-black h-6 w-6" />
             </div>
