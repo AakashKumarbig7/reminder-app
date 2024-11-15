@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
+import SpaceTeam from "./teams";
 
 interface Tab {
   id: number;
@@ -50,6 +51,7 @@ const SpaceBar = () => {
   const [memberAddDialogOpen, setMemberAddDialogOpen] = useState(false);
   const [teamNameError, setTeamNameError] = useState(false);
   const [teamMemberError, setTeamMemberError] = useState(false);
+  const [spaceId, setSpaceId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchSpaces();
@@ -57,7 +59,10 @@ const SpaceBar = () => {
 
   // Fetch spaces from database
   const fetchSpaces = async () => {
-    const { data, error } = await supabase.from("spaces").select("*");
+    const { data, error } = await supabase.from("spaces")
+    .select("*")
+    .order("space_name", { ascending: true })
+    ;
 
     if (error) {
       console.error("Error fetching spaces:", error);
@@ -73,7 +78,21 @@ const SpaceBar = () => {
   };
 
   // Handle clicking a tab
-  const handleTabClick = (id: number) => {
+  const handleTabClick = async (id: number) => {
+    const {data, error} = await supabase.from("spaces")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+    if (error) {
+      console.error("Error fetching space:", error);
+      return;
+    }
+
+    if (data) {
+      console.log(data, " space data");
+      setSpaceId(data.id);
+    }
     setActiveTab(id);
     setIsEditing(null);
   };
@@ -128,7 +147,18 @@ const SpaceBar = () => {
 
   // Delete a tab from database and UI
   const deleteTab = async (id: number) => {
+    console.log(id, " tab id");
     const { error } = await supabase.from("spaces").delete().eq("id", id);
+
+    const { error: deleteError } = await supabase
+      .from("teams")
+      .delete()
+      .eq("space_id", id);
+
+    if (deleteError) {
+      console.error("Error deleting tabs:", deleteError);
+      return;
+    }
 
     if (error) {
       console.error("Error deleting space:", error);
@@ -185,7 +215,9 @@ const SpaceBar = () => {
 
   const removeMember = (user: Tab, index: number) => {
     setAddedMembers((prevMembers) =>
-      prevMembers.filter((member: any, i: number) => !(member.id === user.id && i === index))
+      prevMembers.filter(
+        (member: any, i: number) => !(member.id === user.id && i === index)
+      )
     );
   };
 
@@ -209,80 +241,91 @@ const SpaceBar = () => {
     }
   };
 
+  const defaultSpaceData = async () => {
+    const { data, error } = await supabase.from("spaces").select("*").eq("id", activeTab).single();
+
+    if (error) {
+      console.error("Error fetching spaces:", error);
+      return;
+    }
+
+    if (data) {
+      console.log(data, " space data");
+      setSpaceId(data.id);
+    }
+  };
+
   const handleSaveMembers = async () => {
-    if (teamName === '') {
-      setTeamNameError(true)
+    if (teamName === "") {
+      setTeamNameError(true);
       return;
-    }
-    else if(addedMembers.length === 0) {
-      setTeamMemberError(true)
+    } else if (addedMembers.length === 0) {
+      setTeamMemberError(true);
       return;
-    }
-    else{
+    } else {
       // Fetch selected user details based on `id`
-    const { data: fetchedMembers, error: fetchError } = await supabase
-    .from("users")
-    .select("*")
-    .in(
-      "id",
-      addedMembers.map((member) => member.id)
-    );
+      const { data: fetchedMembers, error: fetchError } = await supabase
+        .from("users")
+        .select("*")
+        .in(
+          "id",
+          addedMembers.map((member) => member.id)
+        );
 
-  if (fetchError) {
-    console.error("Error fetching members:", fetchError);
-    return;
-  }
+      if (fetchError) {
+        console.error("Error fetching members:", fetchError);
+        return;
+      }
 
-  // Check if there are any members already in the team
-  // const { data: existingTeam, error: checkError } = await supabase
-  //   .from("teams")
-  //   .select("*")
-  //   .eq("team_name", teamName);
+      // Check if there are any members already in the team
+      // const { data: existingTeam, error: checkError } = await supabase
+      //   .from("teams")
+      //   .select("*")
+      //   .eq("team_name", teamName);
 
-  // if (checkError) {
-  //   console.error("Error checking existing team:", checkError);
-  //   return;
-  // }
+      // if (checkError) {
+      //   console.error("Error checking existing team:", checkError);
+      //   return;
+      // }
 
-  // if (existingTeam && existingTeam.length > 0) {
-  //   console.log("Team already exists with these members:", existingTeam);
-  //   notify("Team already exists with these members", false);
-  //   return;
-  // }
+      // if (existingTeam && existingTeam.length > 0) {
+      //   console.log("Team already exists with these members:", existingTeam);
+      //   notify("Team already exists with these members", false);
+      //   return;
+      // }
 
+      try {
+        // Insert selected user details as array of objects into the `teams` table
+        const { data: insertedData, error: insertError } = await supabase
+          .from("teams")
+          .insert({
+            team_name: teamName,
+            members: fetchedMembers.map((member) => ({
+              id: member.id,
+              name: member.username, // Assuming `name` is a field in your `users` table
+              role: member.role,
+              department: member.department,
+              designation: member.designation,
+              email: member.email, // Assuming `email` is a field in your `users` table
+            })),
+            space_id: activeTab,
+          });
 
-
-  try {
-    // Insert selected user details as array of objects into the `teams` table
-    const { data: insertedData, error: insertError } = await supabase
-      .from("teams")
-      .insert({
-        team_name: teamName,
-        members: fetchedMembers.map((member) => ({
-          id: member.id,
-          name: member.username, // Assuming `name` is a field in your `users` table
-          role: member.role,
-          department: member.department,
-          designation: member.designation,
-          email: member.email, // Assuming `email` is a field in your `users` table
-        })),
-      });
-
-    if (insertError) {
-      console.error("Error saving members:", insertError);
-      return;
+        if (insertError) {
+          console.error("Error saving members:", insertError);
+          return;
+        }
+        setTeamName("");
+        setAddedMembers([]);
+        setTeamNameError(false);
+        setTeamMemberError(false);
+        setMemberAddDialogOpen(false);
+        defaultSpaceData();
+        notify("Members saved successfully", true);
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      }
     }
-    setTeamName("");
-    setAddedMembers([]);
-    setTeamNameError(false);
-    setTeamMemberError(false);
-    setMemberAddDialogOpen(false);
-    notify("Members saved successfully", true);
-  } catch (err) {
-    console.error("Unexpected error:", err);
-  }
-    }
-    
   };
 
   const handleClose = () => {
@@ -291,7 +334,7 @@ const SpaceBar = () => {
     setAddedMembers([]);
     setTeamNameError(false);
     setTeamMemberError(false);
-  }
+  };
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -299,6 +342,11 @@ const SpaceBar = () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [highlightedIndex, matchingUsers]);
+
+
+  useEffect(() => {
+    defaultSpaceData();
+  }, [activeTab]);
 
   return (
     <div className="px-3">
@@ -341,7 +389,6 @@ const SpaceBar = () => {
                 }`}
               >
                 <CircleX
-                  className="animate-bounce hover:animate-none"
                   size={16}
                 />
               </button>
@@ -356,7 +403,10 @@ const SpaceBar = () => {
           </button>
         </div>
         <div className="flex gap-2 py-2.5 text-sm text-gray-400 pl-20">
-          <Dialog open={memberAddDialogOpen} onOpenChange={setMemberAddDialogOpen}>
+          <Dialog
+            open={memberAddDialogOpen}
+            onOpenChange={setMemberAddDialogOpen}
+          >
             <DialogTrigger asChild>
               <button className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2">
                 <span className="text-gray-600">
@@ -380,11 +430,16 @@ const SpaceBar = () => {
                   id="name"
                   placeholder="Development Name"
                   className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
-                  onChange={(e: any) => {setTeamName(e.target.value); setTeamNameError(false);}}
+                  onChange={(e: any) => {
+                    setTeamName(e.target.value);
+                    setTeamNameError(false);
+                  }}
                 />
-                {
-                  teamNameError && <p className="text-red-500 text-sm mt-1">Please fill the field</p>
-                }
+                {teamNameError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    Please fill the field
+                  </p>
+                )}
                 <div className="mt-8 relative">
                   {matchingUsers.length > 0 &&
                     emailInput.length > 0 &&
@@ -434,15 +489,17 @@ const SpaceBar = () => {
                     className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                     onChange={getUserData}
                   />
-                  
+
                   {/* <Button className="absolute right-[30px] bottom-[38px] rounded-[10px] border border-zinc-300 bg-primaryColor-700 text-white text-xs font-medium hover:bg-primaryColor-700">
                     <Plus size={16} />
                     Add
                   </Button> */}
                 </div>
-                {
-                  teamMemberError && <p className="text-red-500 text-sm mt-1">Please fill the field</p>
-                }
+                {teamMemberError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    Please fill the field
+                  </p>
+                )}
                 {addedMembers.length > 0 && (
                   <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
                     {addedMembers.map((member, index) => (
@@ -506,12 +563,13 @@ const SpaceBar = () => {
           </Dialog>
         </div>
       </div>
-      <div className="pt-3">
+      {/* <div className="pt-3">
         <div className="mt-2 rounded flex justify-center items-center h-full">
           {tabs.find((tab) => tab.id === activeTab)?.space_name ||
             "No content available"}
         </div>
-      </div>
+      </div> */}
+      <SpaceTeam spaceId={spaceId as number} />
     </div>
   );
 };
