@@ -32,6 +32,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
   const [taskErrorMessage, setTaskErrorMessage] = useState(false);
   const [taskStatus, setTaskStatus] = useState<string>("In Progress");
   const [createTask, setCreateTask] = useState(true);
+  const [taskStatusShow, setTaskStatusShow] = useState(false);
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -73,6 +74,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
 
     console.log(text, "text");
 
+    console.log(taskId === id, "taskId === id");
+
     // Check if both content and mentions are non-empty
     if (content.length > 0 && mentions.length > 0) {
       setTaskErrorMessage(false);
@@ -100,9 +103,10 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
       styledInput.innerText = ""; // Clear the content
       setText(""); // Clear the text state
       setCreateTask(false);
+      setTaskStatusShow(true);
     } else {
       setTaskErrorMessage(true);
-      setCreateTask(true);
+      // setCreateTask(true);
       console.log("Please enter both content and mentions.");
     }
   };
@@ -114,14 +118,16 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
           ? {
               ...team,
               tasks: [
+                { id: team.tasks.length + 1, inputValue: "" }, // Add the new task at the beginning
                 ...team.tasks,
-                { id: team.tasks.length + 1, inputValue: "" },
               ],
             }
           : team
       )
     );
+    console.log(teams.map((team) => team.id), "teams");
   };
+  
 
   const handleInputChange = (teamId: number, taskId: number, value: string) => {
     setTeams((prevTeams) =>
@@ -230,7 +236,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                                   Create
                                 </Button>
                               )}
-                              {!createTask && (
+                              {taskStatusShow && (
                                 <Select
                                   defaultValue="In progress"
                                   onValueChange={(value) =>

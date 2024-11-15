@@ -553,7 +553,7 @@ const SpaceBar = () => {
                 </Button>
                 <Button
                   type="submit"
-                  className="w-1/2 bg-primaryColor-700"
+                  className="w-1/2 bg-primaryColor-700 hover:bg-blue-600 text-white"
                   onClick={handleSaveMembers}
                 >
                   Save
