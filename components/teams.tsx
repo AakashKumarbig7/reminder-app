@@ -1,45 +1,69 @@
-import { CirclePlus } from "lucide-react";
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase/client";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import { Card, CardContent } from "@/components/ui/card";
+
 export default function Teams() {
+  const [teamNames, setTeamNames] = useState<string[]>([]);
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        let { data: teams, error } = await supabase
+          .from("teams")
+          .select("team_name");
+
+        if (error) {
+          throw error;
+        }
+
+        if (teams) {
+          const names = teams.map(
+            (team: { team_name: string }) => team.team_name
+          );
+          setTeamNames(names);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch team names.");
+      }
+    };
+
+    fetchTeams();
+  }, []); // Dependency array ensures this runs once
+
   return (
     <>
       <div className="flex justify-between items-center">
         <h4 className="text-lg font-semibold text-black">Teams</h4>
         <p className="text-teal-500 cursor-pointer">View all</p>
       </div>
-     
+
       <div className="space-y-1">
-      <Carousel opts={{ align: "start" }} className="w-full max-w-sm  ">
-        <div className="flex  items-center space-y-3 ">
-          <CarouselContent className="space-y-2">
-            <div>
-          {/* <button className="rounded-[10px] border border-teal-500 bg-lightskyblue flex items-center justify-center  w-[142px] h-10 px-4 text-base font-medium">
-            <CirclePlus className="text-greyblack h-6 w-6" />
-            <p className="pl-1">New Team</p>
-          </button> */}
+        <Carousel opts={{ align: "start" }} className="w-full max-w-sm">
+          <div className="flex items-center space-y-3">
+            <CarouselContent >
+              {teamNames.length > 0 ? (
+                teamNames.map((teamName, index) => (
+                  <CarouselItem key={index} className="flex-none">
+                    <button className="rounded-[10px] border border-teal-500 bg-white flex items-center justify-center min-w-min h-10 px-4 text-base font-medium text-greyblack">
+                      <p>{teamName}</p>
+                    </button>
+                  </CarouselItem>
+                ))
+              ) : (
+                <p className="text-gray-500">No teams available</p>
+              )}
+            </CarouselContent>
           </div>
-          
-            {Array.from({ length: 5 }).map((_, index) => (
-              <CarouselItem
-                key={index}
-                className="flex-none "
-              >
-                <button className="rounded-[10px] border border-teal-500 bg-white flex items-center justify-center  min-w-min h-10 px-4 text-base font-medium text-greyblack">
-                  <p>Development Team</p>
-                </button>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </div>
-      </Carousel>
+        </Carousel>
       </div>
-      
     </>
   );
 }

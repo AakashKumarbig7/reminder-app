@@ -266,7 +266,7 @@ export function NewTask() {
           <DrawerHeader className="flex items-center justify-between">
             <DrawerTitle>New Task</DrawerTitle>
             <Select
-              defaultValue="In progress"
+              defaultValue="To do"
               onValueChange={(value) => setTaskStatus(value)}
             >
               <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-[#9B9B9B] text-center border-[#E2E2E2] bg-[#E2E2E2] rounded-[30px]">

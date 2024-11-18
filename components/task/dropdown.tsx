@@ -4,7 +4,7 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import { FiSearch } from "react-icons/fi";
 import { FaEllipsisH } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa6";
-import { useState } from "react";
+import { useState, createContext, useContext } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -19,8 +19,6 @@ export default function DropDown() {
   const [selectedSorting, setSelectedSorting] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDrawerOpen1, setIsDrawerOpen1] = useState(false);
-
-
 
   const Teams = [
     "Design Team",
@@ -47,13 +45,13 @@ export default function DropDown() {
     setSelectedTeam(team);
     console.log("Selected Space:", team);
     setIsDrawerOpen1(false);
-    
   };
+
   return (
     <>
       <div className="flex  justify-between ">
         <Drawer open={isDrawerOpen1} onOpenChange={setIsDrawerOpen1}>
-          <DrawerTrigger >
+          <DrawerTrigger>
             <div className="bg-white py-3  rounded-xl border h-[40px] w-[243px] border-gray-300 px-[18px] ">
               <RiArrowDropDownLine className="w-[18px] h-[18px]  text-black ml-auto  " />
             </div>
@@ -80,7 +78,9 @@ export default function DropDown() {
                           <span className="w-4 h-4" />
                         )}
                       </span>
-                      <p className="text-sm pt-[12px] pr-[10px] flex items-center ">{team}</p>
+                      <p className="text-sm pt-[12px] pr-[10px] flex items-center ">
+                        {team}
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -114,7 +114,6 @@ export default function DropDown() {
             <Command>
               <CommandList>
                 <ul className="mt-4 space-y-5 px-5 pt-3">
-               
                   {Sorting.map((sort) => (
                     <li
                       key={sort}
@@ -134,12 +133,8 @@ export default function DropDown() {
                         )}
                       </span>
                       <p className="text-sm ">{sort}</p>
-                     
                     </li>
-                     
-                     
                   ))}
-                  
                 </ul>
               </CommandList>
             </Command>

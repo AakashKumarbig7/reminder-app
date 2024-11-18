@@ -15,6 +15,7 @@ export default function TaskPage()
         <Tasks/>
         <Emoji/>
         <NewTask/>
+        
         </div>
         </>
     )

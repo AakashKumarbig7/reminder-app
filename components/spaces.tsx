@@ -1,6 +1,8 @@
 "use client";
-import { CirclePlus } from "lucide-react";
 
+import { CirclePlus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase/client";
 import {
   Carousel,
   CarouselContent,
@@ -8,6 +10,34 @@ import {
 } from "@/components/ui/carousel";
 
 export default function Spaces() {
+  const [spaceNames, setSpaceNames] = useState<string[]>([]); // Updated state type
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    const fetchSpace = async () => {
+      try {
+        let { data: spaces, error } = await supabase
+          .from("spaces")
+          .select("space_name");
+
+        if (error) {
+          throw error;
+        }
+
+        if (spaces) {
+          // Extract only space names
+          const names = spaces.map((space: { space_name: string }) => space.space_name);
+          setSpaceNames(names);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch space names.");
+      }
+    };
+
+    fetchSpace();
+  }, []); // Add empty dependency array to run only once
+
   return (
     <>
       <div className="flex justify-between items-center">
@@ -16,26 +46,20 @@ export default function Spaces() {
       </div>
 
       <div className="space-y-1">
-        <Carousel
-          opts={{ align: "start" }}
-          className="w-full max-w-sm space-x-2 "
-        >
-          <div className="flex  items-center space-y-3 ">
-            <CarouselContent className="">
-              {/* <div>
-          <button className="rounded-[10px] border border-teal-500 bg-lightskyblue flex items-center justify-center w-[142px]  h-10 px-4 text-base ">
-            <CirclePlus className="text-greyblack h-6 w-6" />
-            <p className="pl-1">New Team</p>
-          </button>
-          </div> */}
-
-              {Array.from({ length: 5 }).map((_, index) => (
-                <CarouselItem key={index} className="flex-none">
-                  <button className="rounded-[10px] border border-teal-500 bg-white flex items-center justify-center  min-w-min h-10 px-4 text-base font-medium text-greyblack">
-                    <p>Solution22</p>
-                  </button>
-                </CarouselItem>
-              ))}
+        <Carousel opts={{ align: "start" }} className="w-full max-w-sm space-x-2">
+          <div className="flex items-center space-y-3">
+            <CarouselContent>
+              {spaceNames.length > 0 ? (
+                spaceNames.map((spaceName, index) => (
+                  <CarouselItem key={index} className="flex-none">
+                    <button className="rounded-[10px] border border-teal-500 bg-white flex items-center justify-center min-w-min h-10 px-4 text-base font-medium text-greyblack">
+                      <p>{spaceName}</p>
+                    </button>
+                  </CarouselItem>
+                ))
+              ) : (
+                <p className="text-gray-500">No spaces available</p>
+              )}
             </CarouselContent>
           </div>
         </Carousel>

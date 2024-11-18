@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
 import Footer from "@/app/(mob)/footer/footer";
-// import { GeistSans } from "geist/font/sans";
+// // import { GeistSans } from "geist/font/sans";
 
-// const geistSans = localFont({
-//   src: "../public/fonts/GeistVF.woff",
-//   variable: "--font-geist-sans",
-//   weight: "100 200 300 400 500 600 700 800 900",
-// });
-// const geistMono = localFont({
-//   src: "../public/fonts/GeistMonoVF.woff",
-//   variable: "--font-geist-mono",
-//   weight: "100 200 300 400 500 600 700 800 900",
-// });
+// // const geistSans = localFont({
+// //   src: "../public/fonts/GeistVF.woff",
+// //   variable: "--font-geist-sans",
+// //   weight: "100 200 300 400 500 600 700 800 900",
+// // });
+// // const geistMono = localFont({
+// //   src: "../public/fonts/GeistMonoVF.woff",
+// //   variable: "--font-geist-mono",
+// //   weight: "100 200 300 400 500 600 700 800 900",
+// // });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -34,3 +34,15 @@ export default function RootLayout({
     </html>
   );
 }
+
+// export default function RootLayout({
+//   children,
+// }: Readonly<{
+//   children: React.ReactNode;
+// }>) {
+//   return (
+//     <html lang="en">
+//       <body >{children}</body>
+//     </html>
+//   );
+// }
