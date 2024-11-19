@@ -221,7 +221,7 @@ const WebMentionInput: React.FC<Props> = ({
         // className={`${mentionColor} ? 'text-red-500' : 'text-black'`}
         style={{
           width: "100%",
-          minHeight: "100px",
+          minHeight: "65px",
           borderRadius: "5px",
           // border: "1px solid #ddd",
           whiteSpace: "pre-wrap",

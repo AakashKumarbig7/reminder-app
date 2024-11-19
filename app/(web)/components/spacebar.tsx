@@ -94,7 +94,7 @@ const SpaceBar = () => {
       setSpaceId(data.id);
     }
     setActiveTab(id);
-    setIsEditing(null);
+    // setIsEditing(null);
   };
 
   // Handle double-clicking a tab for editing

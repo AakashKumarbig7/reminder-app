@@ -22,7 +22,7 @@ interface SearchBarProps {
 interface Team {
   id: number;
   team_name: string;
-  tasks: { id: number; inputValue: string }[];
+  tasks: { inputValue: string }[];
 }
 
 const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
@@ -33,6 +33,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
   const [taskStatus, setTaskStatus] = useState<string>("In Progress");
   const [createTask, setCreateTask] = useState(true);
   const [taskStatusShow, setTaskStatusShow] = useState(false);
+  const [taskId, setTaskId] = useState(0);
+  const [allTasks, setAllTasks] = useState<any>([]);
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -81,17 +83,16 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
       setTaskErrorMessage(false);
       console.log(mentions + " " + content, "text");
 
-      const { data, error } = await supabase.from("tasks").insert({
-        task_content: content,
-        mentions: mentions,
-        time: formatDate(new Date()),
-        status: taskStatus,
-        team_id: id,
-      });
+      // const { data, error } = await supabase.from("tasks").update({
+      //   task_content: content,
+      //   mentions: mentions,
+      //   status: taskStatus,
+      //   team_id: id,
+      // });
 
-      if (error) throw error;
+      // if (error) throw error;
 
-      console.log(data, " added task");
+      // console.log(data, " added task");
 
       const styledInput = styledInputRef.current;
       if (!styledInput?.innerText.trim()) {
@@ -111,56 +112,111 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     }
   };
 
-  const handleAddTask = (teamId: number) => {
+  const handleAddTask = async (teamId: number) => {
     setTeams((prevTeams) =>
       prevTeams.map((team) =>
         team.id === teamId
           ? {
               ...team,
               tasks: [
-                { id: team.tasks.length + 1, inputValue: "" }, // Add the new task at the beginning
+                { inputValue: "" }, // Add the new task at the beginning
                 ...team.tasks,
               ],
             }
           : team
       )
     );
-    console.log(teams.map((team) => team.id), "teams");
-  };
-  
+    // console.log(teams.map((team) => team.tasks));
+    // console.log(randomId, " randomId");
+    if (true) {
+      const { data, error } = await supabase.from("tasks").insert({
+        time: formatDate(new Date()),
+        status: taskStatus,
+        team_id: teamId,
+      });
 
-  const handleInputChange = (teamId: number, taskId: number, value: string) => {
-    setTeams((prevTeams) =>
-      prevTeams.map((team) =>
-        team.id === teamId
-          ? {
-              ...team,
-              tasks: team.tasks.map((task) =>
-                task.id === taskId ? { ...task, inputValue: value } : task
-              ),
-            }
-          : team
-      )
-    );
+      if (error) throw error;
+
+      console.log(data, " added task");
+    }
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("team_id", teamId);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    if (data) {
+      console.log(data, " team data");
+      fetchTasks();
+    }
   };
 
-  const handleDeleteTask = (teamId: number, taskId: number) => {
-    console.log(teamId, " teamId");
-    console.log(taskId, " taskId");
-    setTeams((prevTeams) =>
-      prevTeams.map((team) =>
-        team.id === teamId
-          ? {
-              ...team,
-              tasks: team.tasks.filter((task) => task.id !== taskId),
-            }
-          : team
-      )
-    );
+  const handleDeleteTask = async (teamId: number, taskId: number) => {
+    // console.log(teamId, " teamId");
+    // console.log(taskId, " taskId");
+    // setTeams((prevTeams) =>
+    //   prevTeams.map((team) =>
+    //     team.id === teamId
+    //       ? {
+    //           ...team,
+    //           tasks: team.tasks.filter((task) => task.id !== taskId),
+    //         }
+    //       : team
+    //   )
+    // );
+    const { data, error } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("id", taskId);
+
+    if (error) throw error;
+
+    console.log(data, " deleted task");
+  };
+
+  const handleUpdateTask = async (teamId: number, taskId: number) => {
+    const mentions = text.match(/@\w+/g) || []; // Find all mentions
+    const content = text.replace(/@\w+/g, "").trim();
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({
+        mentions: mentions,
+        task_content: content,
+      })
+      .eq("id", taskId);
+
+    if (error) throw error;
+
+    console.log(data, " updated task");
+    
+    console.log(text, " text");
+    console.log(mentions, " mentions");
+    console.log(content, " content");
+  };
+
+  const fetchTasks = async () => {
+    const { data, error } = await supabase.from("tasks").select("*");
+
+    if (error) {
+      console.error("Error fetching tasks:", error);
+      return;
+    }
+
+    if (data) {
+      console.log(data, " all task data");
+      setAllTasks(data);
+    }
   };
 
   useEffect(() => {
     fetchTeams();
+    fetchTasks();
   }, [spaceId]);
 
   return (
@@ -185,82 +241,105 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                       <Button
                         variant={"outline"}
                         className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
-                        onClick={() => handleAddTask(team.id)}
+                        onClick={() => {
+                          console.log("Team ID:", team.id);
+                          handleAddTask(team.id);
+                        }}
                       >
                         <Plus size={18} />
                         Add Task
                       </Button>
-                      <div className="flex flex-col gap-2.5 mt-3">
-                        {team.tasks.map((task) => (
-                          <div
-                            key={task.id}
-                            className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist"
-                          >
-                            <div className="flex justify-between items-center">
-                              <p className="text-xs font-semibold text-[#A6A6A7]">
-                                {formatDate(new Date())}
-                              </p>
-                              <Trash2
-                                size={18}
-                                className="text-[#EC4949] cursor-pointer"
-                                onClick={() =>
-                                  handleDeleteTask(team.id, task.id)
-                                }
+                      {allTasks.map((task: any) => (
+                        task.team_id === team.id &&
+                        <div className="flex flex-col gap-2.5 mt-3">
+                          {/* {task.team_id === team.id && ( */}
+                            <div
+                              key={task.id}
+                              className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist"
+                            >
+                              <div className="flex justify-between items-center">
+                                {/* <p>{task.id}</p> */}
+                                <p className="text-xs font-semibold text-[#A6A6A7]">
+                                  {formatDate(new Date())}
+                                </p>
+                                <Trash2
+                                  size={18}
+                                  className="text-[#EC4949] cursor-pointer"
+                                  onClick={() => {
+                                    console.log(
+                                      "Deleting Task ID:",
+                                      task.id,
+                                      "for Team ID:",
+                                      team.id
+                                    );
+                                    handleDeleteTask(team.id, task.id);
+                                  }}
+                                />
+                              </div>
+                              <WebMentionInput
+                                text={text}
+                                setText={setText}
+                                taskErrorMessage={taskErrorMessage}
+                                setTaskErrorMessage={setTaskErrorMessage}
                               />
+                              <div className="flex justify-between items-center">
+                                <p className="text-xs font-semibold text-teal-500">
+                                  {formatDate(new Date())}
+                                </p>
+                                {createTask && (
+                                  <Button
+                                    variant={"outline"}
+                                    className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
+                                    onClick={() => {
+                                      console.log(
+                                        "Creating Task ID:",
+                                        task.id,
+                                        "for Team ID:",
+                                        team.id
+                                      );
+                                      handleUpdateTask(team.id, task.id);
+                                    }}
+                                  >
+                                    Create
+                                  </Button>
+                                )}
+                                {taskStatusShow && (
+                                  <Select
+                                    defaultValue="In progress"
+                                    onValueChange={(value) => {
+                                      console.log(
+                                        "Task Status Changed for Task ID:",
+                                        task.id,
+                                        "Team ID:",
+                                        team.id,
+                                        "New Status:",
+                                        value
+                                      );
+                                      setTaskStatus(value);
+                                    }}
+                                  >
+                                    <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-[#9B9B9B] text-center border-[#E2E2E2] bg-[#E2E2E2] rounded-[30px]">
+                                      <SelectValue placeholder="status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="text-[#9B9B9B]">
+                                      <SelectItem value="todo">
+                                        To Do
+                                      </SelectItem>
+                                      <SelectItem value="In progress">
+                                        In Progress
+                                      </SelectItem>
+                                      <SelectItem value="Internal feedback">
+                                        Internal feedback
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              </div>
                             </div>
-                            {/* <WebMentionInput
-                              text={task.inputValue}
-                              setText={(value) =>
-                                handleInputChange(team.id, task.id, value)
-                              }
-                              setTaskErrorMessage={setTaskErrorMessage}
-                            /> */}
-                            <WebMentionInput
-                              text={text}
-                              setText={setText}
-                              taskErrorMessage={taskErrorMessage}
-                              setTaskErrorMessage={setTaskErrorMessage}
-                            />
-                            <div className="flex justify-between items-center">
-                              <p className="text-xs font-semibold text-teal-500">
-                                {formatDate(new Date())}
-                              </p>
-                              {createTask && (
-                                <Button
-                                  variant={"outline"}
-                                  className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
-                                  onClick={() =>
-                                    handleCreateTask(team.id, task.id)
-                                  }
-                                >
-                                  Create
-                                </Button>
-                              )}
-                              {taskStatusShow && (
-                                <Select
-                                  defaultValue="In progress"
-                                  onValueChange={(value) =>
-                                    setTaskStatus(value)
-                                  }
-                                >
-                                  <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-[#9B9B9B] text-center border-[#E2E2E2] bg-[#E2E2E2] rounded-[30px]">
-                                    <SelectValue placeholder="status" />
-                                  </SelectTrigger>
-                                  <SelectContent className="text-[#9B9B9B]">
-                                    <SelectItem value="todo">To Do</SelectItem>
-                                    <SelectItem value="In progress">
-                                      In Progress
-                                    </SelectItem>
-                                    <SelectItem value="Internal feedback">
-                                      Internal feedback
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                          {/* )} */}
+                        </div>
+                      ))}
+                      
                     </CardContent>
                   </Card>
                 </CarouselItem1>
