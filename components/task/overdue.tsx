@@ -5,13 +5,20 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "@/components/
 import { Command, CommandList } from "@/components/ui/command";
 import { FaCheck } from "react-icons/fa6";
 import { Trash2 } from "lucide-react";
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function OverDue() {
+  const searchParams = useSearchParams();
+
   const [swiped, setSwiped] = useState<{ [key: number]: boolean }>({});
   const [selectedFilter, setSelectedFilter] = useState<string>();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [tasks, setAllTasks] = useState<any[]>([]);
   const [error, setError] = useState("");
+
+  const spaceParam = searchParams.get('space')
+  const teamParam = searchParams.get('team')
+  const sortParam = searchParams.get('sort')
 
   const Filters = ["Completed", "In Progress", "Understand"];
 
@@ -26,10 +33,21 @@ export default function OverDue() {
   // Fetch tasks from the database
   useEffect(() => {
     const fetchTask = async () => {
-      const { data: tasks, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .order("time", { ascending: false });
+      let query = supabase.from('tasks').select('*')
+
+      // Apply filter only if `param` is not null or undefined
+
+      // if (spaceParam) {
+      //   query = query.eq('space', spacearam);
+      // }
+      // if (teamParam) {
+      //   query = query.eq('team', teamParam);
+      // }
+      // if (sortParam && sortParam !== 'None') {
+      //   query = query.order(sortParam, { ascending: false });
+      // }
+
+      const { data: tasks, error } = await query;
 
       if (error) {
         setError("Error fetching tasks");
@@ -39,7 +57,7 @@ export default function OverDue() {
     };
 
     fetchTask();
-  }, []);
+  }, [searchParams]);
 
   return (
     <div className="relative w-full space-y-4">
@@ -77,9 +95,8 @@ export default function OverDue() {
           )}
 
           <div
-            className={`bg-white space-y-2 py-3 rounded-[10px] w-[339px] h-32 px-4 transition-transform duration-300 ${
-              swiped[task.id] ? "transform -translate-x-32" : ""
-            }`}
+            className={`bg-white space-y-2 py-3 rounded-[10px] w-[339px] h-32 px-4 transition-transform duration-300 ${swiped[task.id] ? "transform -translate-x-32" : ""
+              }`}
           >
             <div>
               <p className="text-greyshade font-[geist] text-[12px]">
@@ -115,11 +132,10 @@ export default function OverDue() {
                           <li
                             key={status}
                             onClick={() => setSelectedFilter(status)}
-                            className={`flex items-center border-b px-5 space-y-5 border-zinc-300 cursor-pointer ${
-                              selectedFilter === status
-                                ? "text-zinc-950 font-semibold"
-                                : "text-blackish"
-                            }`}
+                            className={`flex items-center border-b px-5 space-y-5 border-zinc-300 cursor-pointer ${selectedFilter === status
+                              ? "text-zinc-950 font-semibold"
+                              : "text-blackish"
+                              }`}
                           >
                             <span className="w-4 h-4 mr-2 flex justify-center items-center">
                               {selectedFilter === status ? (
