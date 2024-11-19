@@ -21,6 +21,7 @@ const config: Config = {
 			navbg:"#f4f4f8",
 			reddish:"#EE5A5A",
 			webbg:'#E5ECF6',
+			primaryColor: { 700: '#1A56DB',},
 			
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
