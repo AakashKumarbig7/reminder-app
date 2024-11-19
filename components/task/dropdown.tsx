@@ -127,12 +127,12 @@ export default function DropDown() {
                     >
                       <span className="w-4 h-4 mr-2 flex justify-center items-center">
                         {selectedSorting === sort ? (
-                          <FaCheck className="text-blackish" />
+                          <FaCheck className="text-blackish " />
                         ) : (
                           <span className="w-4 h-4" />
                         )}
                       </span>
-                      <p className="text-sm ">{sort}</p>
+                      <p className="text-sm pb-1 ">{sort}</p>
                     </li>
                   ))}
                 </ul>
