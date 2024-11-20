@@ -112,6 +112,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
       const { data: fetchedTasks, error: fetchError } = await supabase
         .from("tasks")
         .select("*")
+        .eq("space_id", spaceId)
         .eq("team_id", teamId);
   
       if (fetchError) {
@@ -140,66 +141,77 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     fetchTasks();
   };
 
+  
+
   const handleUpdateTask = async (teamId: number, taskId: number) => {
-    const mentions = text.match(/@\w+/g) || []; // Find all mentions
-    const content = text.replace(/@\w+/g, "").trim();
-
-    console.log(taskId, " taskId");
-
-    const { data, error } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("id", taskId)
-      .eq("team_id", teamId)
-      .single();
-
-    if (error) throw error;
-    if (data) {
-      console.log(data.task_content, " task data");
-      console.log(data, " current task data");
-      if (data.task_content === null && data.mentions === null) {
-
-        setTaskErrorMessage({status : true, errorId : taskId});
-        // setCreateTask(true);
-        console.log("Please enter both content and mentions.");
-        return;
-        
-      } else {
-        setTaskErrorMessage({status : false, errorId : taskId});
-        console.log(mentions + " " + content, "text");
+    try {
+      const mentions = text.match(/@\w+/g) || []; // Extract mentions
+      const content = text.replace(/@\w+/g, "").trim(); // Remove mentions and trim content
   
-        const { data, error } = await supabase
-          .from("tasks")
-          .update({
-            mentions: mentions,
-            task_content: content,
-          })
-          .eq("id", taskId);
+      console.log(taskId, "taskId");
   
-        if (error) throw error;
+      // Fetch the current task by ID and Team ID
+      const { data: taskData, error: fetchError } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("id", taskId)
+        .eq("team_id", teamId)
+        .single();
   
-        console.log(data, " updated task");
+      if (fetchError) {
+        console.error("Error fetching task:", fetchError);
+        throw fetchError;
+      }
   
-        console.log(text, " text");
-        console.log(mentions, " mentions");
-        console.log(content, " content");
+      if (taskData) {
+        console.log(taskData.task_content, "task data");
+        console.log(taskData, "current task data");
   
-        const styledInput = styledInputRef.current;
-        if (!styledInput?.innerText.trim()) {
-          // setTaskError(true);
+        // Validate if both content and mentions are empty
+        if (!content && mentions.length === 0) {
+          setTaskErrorMessage({ status: true, errorId: taskId });
+          console.warn("Please enter both content and mentions.");
           return;
         }
   
-        console.log("Task:", styledInput.innerText);
-        styledInput.innerText = ""; // Clear the content
+        // Reset the error message state if validation passes
+        setTaskErrorMessage({ status: false, errorId: taskId });
+  
+        console.log(mentions, content, "parsed text");
+  
+        // Update the task in the database
+        const { data: updatedTask, error: updateError } = await supabase
+          .from("tasks")
+          .update({
+            mentions,
+            task_content: content,
+          })
+          .eq("team_id", teamId)
+          .eq("id", taskId);
+  
+        if (updateError) {
+          console.error("Error updating task:", updateError);
+          throw updateError;
+        }
+  
+        console.log(updatedTask, "updated task");
+  
+        // Handle styled input and UI updates
+        const styledInput = styledInputRef.current;
+        if (styledInput && !styledInput.innerText.trim()) {
+          console.warn("Styled input is empty.");
+          return;
+        }
+  
+        console.log("Task:", styledInput?.innerText);
+        // styledInput.innerText = ""; // Clear the styled input
         setText(""); // Clear the text state
-        setCreateTask(false);
-        setTaskStatusShow(true);
+        setCreateTask(false); // Hide the task creation UI
+        setTaskStatusShow(true); // Show task status
       }
+    } catch (error) {
+      console.error("Error in handleUpdateTask:", error);
     }
-
-    // Check if both content and mentions are non-empty
-    
   };
 
   const fetchTasks = async () => {
