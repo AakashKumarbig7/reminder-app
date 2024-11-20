@@ -6,7 +6,7 @@ interface Props {
   text: string;
   setText: any;
   taskErrorMessage: any;
-  setTaskErrorMessage: (error: boolean) => void;
+  setTaskErrorMessage: any;
   allTasks: any;
   teamId: number;
   taskId: number;
@@ -69,9 +69,9 @@ const WebMentionInput: React.FC<Props> = ({
     const mentions = text.match(/@\w+/g) || []; // Find all mentions
     const content = text.replace(/@\w+/g, "").trim();
     if (content.length < 0 && mentions.length < 0) {
-      setTaskErrorMessage(true);
+      setTaskErrorMessage({status : true, errorId : taskId});
     } else {
-      setTaskErrorMessage(false);
+      setTaskErrorMessage({status : false, errorId : taskId});
       if (editableRef.current) {
         const plainText = editableRef.current.innerText || "";
         setText(plainText);
@@ -224,6 +224,7 @@ const WebMentionInput: React.FC<Props> = ({
             teamId === task.team_id &&
             taskId === task.id && (
               <div
+                key={task.id}
                 contentEditable
                 ref={editableRef}
                 onInput={handleInput}
@@ -242,7 +243,7 @@ const WebMentionInput: React.FC<Props> = ({
                   // margin:"10px"
                 }}
                 className={`${
-                  taskErrorMessage ? "border border-red-500 p-1" : "border-none"
+                  (taskErrorMessage.errorId === task.id && taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"
                 } text-sm`}
               >
                 {/* {task.mentions.map((mention : any, index : any) => <span key={index} className="font-bold text-primaryColor-700">{mention}</span>)} {task.task_content}  */}
@@ -272,6 +273,9 @@ const WebMentionInput: React.FC<Props> = ({
             textAlign: "left",
             // margin:"10px"
           }}
+          className={`${
+            (taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"
+          } text-sm`}
         ></div>
       )}
     </div>
