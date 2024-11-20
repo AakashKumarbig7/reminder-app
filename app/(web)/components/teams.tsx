@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { stat } from "fs";
 
 interface SearchBarProps {
   spaceId: number;
@@ -29,12 +30,17 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
   const styledInputRef = useRef<HTMLDivElement>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [text, setText] = useState<string>("");
-  const [taskErrorMessage, setTaskErrorMessage] = useState(false);
+  const [taskErrorMessage, setTaskErrorMessage] = useState({
+    status: false,
+    errorId: 0,
+  });
   const [taskStatus, setTaskStatus] = useState<string>("In Progress");
   const [createTask, setCreateTask] = useState(true);
   const [taskStatusShow, setTaskStatusShow] = useState(false);
-  const [taskId, setTaskId] = useState<any[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<any[]>([]);
   const [allTasks, setAllTasks] = useState<any>([]);
+
+  const [taskContents, setTaskContents] = useState<any>([]);
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -66,7 +72,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     return date.toLocaleDateString("en-GB", options); // 'en-GB' gives the format "23 Aug 2024"
   };
 
-  const handleAddTask = async (teamId: number) => {
+  const handleAddTask = async (teamId: number, spaceId: number) => {
     setCreateTask(true);
     // Update the state to add the new task at the beginning of the team's tasks
     setTeams((prevTeams) =>
@@ -91,6 +97,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
           time: formatDate(new Date()),
           status: taskStatus,
           team_id: teamId,
+          space_id: spaceId
         })
         .select()
         .order("id", { ascending: false });
@@ -98,7 +105,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
       if (insertError) {
         throw insertError;
       }
-      setTaskId(insertedTask.map((task: any) => task.id));
       console.log(insertedTask.map((task: any) => task.id), " added task id");
       console.log(insertedTask, "added task");
   
@@ -123,18 +129,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
   };  
 
   const handleDeleteTask = async (teamId: number, taskId: number) => {
-    // console.log(teamId, " teamId");
-    // console.log(taskId, " taskId");
-    // setTeams((prevTeams) =>
-    //   prevTeams.map((team) =>
-    //     team.id === teamId
-    //       ? {
-    //           ...team,
-    //           tasks: team.tasks.filter((task) => task.id !== taskId),
-    //         }
-    //       : team
-    //   )
-    // );
     const { data, error } = await supabase
       .from("tasks")
       .delete()
@@ -152,43 +146,60 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
 
     console.log(taskId, " taskId");
 
-    // Check if both content and mentions are non-empty
-    if (content.length > 0 && mentions.length > 0) {
-      setTaskErrorMessage(false);
-      console.log(mentions + " " + content, "text");
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("id", taskId)
+      .eq("team_id", teamId)
+      .single();
 
-      const { data, error } = await supabase
-        .from("tasks")
-        .update({
-          mentions: mentions,
-          task_content: content,
-        })
-        .eq("id", taskId);
+    if (error) throw error;
+    if (data) {
+      console.log(data.task_content, " task data");
+      console.log(data, " current task data");
+      if (data.task_content === null && data.mentions === null) {
 
-      if (error) throw error;
-
-      console.log(data, " updated task");
-
-      console.log(text, " text");
-      console.log(mentions, " mentions");
-      console.log(content, " content");
-
-      const styledInput = styledInputRef.current;
-      if (!styledInput?.innerText.trim()) {
-        // setTaskError(true);
+        setTaskErrorMessage({status : true, errorId : taskId});
+        // setCreateTask(true);
+        console.log("Please enter both content and mentions.");
         return;
+        
+      } else {
+        setTaskErrorMessage({status : false, errorId : taskId});
+        console.log(mentions + " " + content, "text");
+  
+        const { data, error } = await supabase
+          .from("tasks")
+          .update({
+            mentions: mentions,
+            task_content: content,
+          })
+          .eq("id", taskId);
+  
+        if (error) throw error;
+  
+        console.log(data, " updated task");
+  
+        console.log(text, " text");
+        console.log(mentions, " mentions");
+        console.log(content, " content");
+  
+        const styledInput = styledInputRef.current;
+        if (!styledInput?.innerText.trim()) {
+          // setTaskError(true);
+          return;
+        }
+  
+        console.log("Task:", styledInput.innerText);
+        styledInput.innerText = ""; // Clear the content
+        setText(""); // Clear the text state
+        setCreateTask(false);
+        setTaskStatusShow(true);
       }
-
-      console.log("Task:", styledInput.innerText);
-      styledInput.innerText = ""; // Clear the content
-      setText(""); // Clear the text state
-      setCreateTask(false);
-      setTaskStatusShow(true);
-    } else {
-      setTaskErrorMessage(true);
-      // setCreateTask(true);
-      console.log("Please enter both content and mentions.");
     }
+
+    // Check if both content and mentions are non-empty
+    
   };
 
   const fetchTasks = async () => {
@@ -200,7 +211,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     }
 
     if (data) {
-      console.log(data, " all task data");
       setAllTasks(data);
     }
   };
@@ -234,7 +244,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                         className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
                         onClick={() => {
                           console.log("Team ID:", team.id);
-                          handleAddTask(team.id);
+                          handleAddTask(team.id, spaceId);
                         }}
                       >
                         <Plus size={18} />
