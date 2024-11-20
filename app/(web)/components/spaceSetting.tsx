@@ -1,9 +1,9 @@
 "use client";
-import { useState,useEffect,  } from "react";
+import { useState, useEffect } from "react";
 import WebNavbar from "@/app/(web)/components/navbar";
 import { ClipboardPlus, Trash, Pencil } from "lucide-react";
-import { supabase } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { supabase } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -24,49 +24,79 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
+interface Space {
+  id: string;
+  name: string;
+}
+
 export default function SpaceSetting() {
-  // State for storing spaces
-  const [spaces, setSpaces] = useState<{ name: string }[]>([]);
+  const [spaces, setSpaces] = useState<Space[]>([]);
   const [newSpaceName, setNewSpaceName] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog visibility state
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const router = useRouter();
 
+  // Fetch spaces from Supabase
   const fetchSpaces = async () => {
     try {
       const { data, error } = await supabase
-        .from('spaces') // Your table name
-        .select('space_name'); // Only fetch the column you need
+        .from("spaces")
+        .select("id, space_name");
 
       if (error) {
-        console.error('Error fetching spaces:', error.message);
+        alert("Failed to fetch spaces. Please try again.");
+        console.error("Error fetching spaces:", error.message);
         return;
       }
 
-      setSpaces(data.map((space) => ({ name: space.space_name }))); // Map the result to match the state structure
+      setSpaces(data.map((space) => ({ id: space.id, name: space.space_name })));
     } catch (err) {
-      console.error('Unexpected error:', err);
+      alert("Unexpected error occurred.");
+      console.error("Unexpected error:", err);
     }
   };
-  
-  
+
+  // Add a new space
   const addSpace = async () => {
-    if (newSpaceName.trim() !== '') {
+    if (newSpaceName.trim() !== "") {
       try {
         const { data, error } = await supabase
-          .from('spaces')
+          .from("spaces")
           .insert([{ space_name: newSpaceName }]);
 
         if (error) {
-          console.error('Error inserting space:', error.message);
+          alert("Failed to create space. Please try again.");
+          console.error("Error inserting space:", error.message);
           return;
         }
 
-        setNewSpaceName(''); // Clear the input
+        setNewSpaceName(""); // Clear the input
         setIsDialogOpen(false); // Close the dialog
         fetchSpaces(); // Refresh the spaces after insertion
       } catch (err) {
-        console.error('Unexpected error:', err);
+        alert("Unexpected error occurred.");
+        console.error("Unexpected error:", err);
       }
+    }
+  };
+
+  // Delete a space
+  const deleteSpace = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("spaces")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        alert("Failed to delete space. Please try again.");
+        console.error("Error deleting space:", error.message);
+        return;
+      }
+
+      fetchSpaces(); // Refresh the spaces list after deletion
+    } catch (err) {
+      alert("Unexpected error occurred.");
+      console.error("Unexpected error:", err);
     }
   };
 
@@ -74,31 +104,12 @@ export default function SpaceSetting() {
   useEffect(() => {
     fetchSpaces();
   }, []);
-  // Delete space
-  const deleteSpace = async (name: string) => {
-    try {
-      const { error } = await supabase
-        .from('spaces') // Your table name
-        .delete()
-        .eq('space_name', name); // Match the space_name column to delete the correct row
-  
-      if (error) {
-        console.error('Error deleting space:', error.message);
-        return;
-      }
-  
-      fetchSpaces(); // Refresh the spaces list after deletion
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
-  };
-  
 
   return (
     <>
       <WebNavbar />
       <div className="px-3">
-        {/* Parent div setup as a flex container */}
+        {/* Header with navigation and New Space button */}
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex space-x-[10px]">
             <button className="rounded-lg text-sm text-white border w-[134px] h-[41px] bg-primaryColor-700">
@@ -124,7 +135,10 @@ export default function SpaceSetting() {
               </DialogHeader>
 
               <div>
-                <Label htmlFor="name" className="text-sm text-[#111928] font-medium">
+                <Label
+                  htmlFor="name"
+                  className="text-sm text-[#111928] font-medium"
+                >
                   Space Name:
                 </Label>
                 <Input
@@ -151,9 +165,9 @@ export default function SpaceSetting() {
 
         {/* Table displaying spaces */}
         <div className="pt-[18px]">
-          <Table className="border-b border-gray-200  bg-white rounded-lg">
-            <TableHeader className="">
-              <TableRow className="w-[250px] h-[52px]">
+          <Table className="border-b border-gray-200 bg-white rounded-lg">
+            <TableHeader>
+              <TableRow>
                 <TableHead className="px-4 py-4 text-sm">SPACE NAME</TableHead>
                 <TableHead className="px-4 py-4 text-sm">CREATED BY</TableHead>
                 <TableHead className="px-4 py-4 text-sm">TEAMS</TableHead>
@@ -162,28 +176,44 @@ export default function SpaceSetting() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {spaces.map((space, index) => (
-                <TableRow key={index}>
-                  <TableCell className="px-4 py-4 text-sm text-gray-900">{space.name}</TableCell>
-                  <TableCell className="px-4 py-4 text-sm text-gray-500">Laxman Sarav</TableCell>
-                  <TableCell className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap" >Management Team,DesignTeam,Development Team</TableCell>
-                  <TableCell className="px-4 py-4 text-sm text-gray-500">
-                  </TableCell>
-                  <TableCell className="px-4 py-4 items-center">
-                    <button
-                   onClick={() => router.push(`/editspace/${space.name}`)} >
-                   
-                      <Pencil className="h-5 w-5 "/>
-                    </button>
-                    <button
-                      onClick={() => deleteSpace(space.name)}
-                      className="py-4 px-4"
-                    >
-                      <Trash className="h-5 w-5 items-center" />
-                    </button>
+              {spaces.length > 0 ? (
+                spaces.map((space) => (
+                  <TableRow key={space.id}>
+                    <TableCell className="px-4 py-4 text-sm text-gray-900">
+                      {space.name}
+                    </TableCell>
+                    <TableCell className="px-4 py-4 text-sm text-gray-500">
+                      Laxman Sarav
+                    </TableCell>
+                    <TableCell className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">
+                      Management Team, Design Team, Development Team
+                    </TableCell>
+                    <TableCell className="px-4 py-4 text-sm text-gray-500"></TableCell>
+                    <TableCell className="px-4 py-4 items-center">
+                      <button
+                        onClick={() => router.push(`/editspace/${space.id}`)}
+                      >
+                        <Pencil className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => deleteSpace(space.id)}
+                        className="py-4 px-4"
+                      >
+                        <Trash className="h-5 w-5 items-center" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center text-gray-500 py-4"
+                  >
+                    No spaces available. Click "New Space" to add one.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
