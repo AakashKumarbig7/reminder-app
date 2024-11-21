@@ -1,4 +1,5 @@
 
+import 'rsuite/dist/rsuite-no-reset.min.css';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-screen h-full w-full bg-webbg text-black font-inter">

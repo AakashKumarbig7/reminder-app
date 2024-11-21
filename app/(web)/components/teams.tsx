@@ -14,7 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { stat } from "fs";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import TaskDateUpdater from "./dueDate";
 
 interface SearchBarProps {
   spaceId: number;
@@ -23,7 +25,7 @@ interface SearchBarProps {
 interface Team {
   id: number;
   team_name: string;
-  tasks: { inputValue: string }[];
+  tasks: { id: number; inputValue: string }[];
 }
 
 const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
@@ -41,6 +43,10 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
   const [allTasks, setAllTasks] = useState<any>([]);
 
   const [taskContents, setTaskContents] = useState<any>([]);
+  const [startDate, setStartDate] = useState<any>({
+    date : null,
+    id : null
+  });
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -81,14 +87,14 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
           ? {
               ...team,
               tasks: [
-                { inputValue: "" }, // Add the new task at the beginning
+                { id: team.tasks.length + 1, inputValue: "" }, // Add the new task at the beginning
                 ...team.tasks,
               ],
             }
           : team
       )
     );
-  
+
     // Insert the new task into the database
     try {
       const { data: insertedTask, error: insertError } = await supabase
@@ -97,29 +103,32 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
           time: formatDate(new Date()),
           status: taskStatus,
           team_id: teamId,
-          space_id: spaceId
+          space_id: spaceId,
         })
         .select()
         .order("id", { ascending: false });
-  
+
       if (insertError) {
         throw insertError;
       }
-      console.log(insertedTask.map((task: any) => task.id), " added task id");
+      console.log(
+        insertedTask.map((task: any) => task.id),
+        " added task id"
+      );
       console.log(insertedTask, "added task");
-  
+
       // Fetch updated tasks for the team
       const { data: fetchedTasks, error: fetchError } = await supabase
         .from("tasks")
         .select("*")
         .eq("space_id", spaceId)
         .eq("team_id", teamId);
-  
+
       if (fetchError) {
         console.error(fetchError);
         return;
       }
-  
+
       if (fetchedTasks) {
         console.log(fetchedTasks, "team data");
         fetchTasks();
@@ -127,7 +136,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     } catch (error) {
       console.error("Error adding or fetching tasks:", error);
     }
-  };  
+  };
 
   const handleDeleteTask = async (teamId: number, taskId: number) => {
     const { data, error } = await supabase
@@ -141,15 +150,64 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     fetchTasks();
   };
 
-  
+  //  const handleUpdateTask = async (teamId: number, taskId: number) => {
+  //   try {
+  //     let mentions = text.match(/@\w+/g) || [];
+  //     let content = text.replace(/@\w+/g, "").trim();
+
+  //     const {data, error} = await supabase
+  //     .from("tasks")
+  //     .select("*")
+  //     .eq("id", taskId)
+  //     .eq("team_id", teamId)
+  //     .single();
+
+  //     if (error) {
+  //       console.error("Error fetching task:", error);
+  //       throw error;
+  //     }
+
+  //     if (data) {
+  //       console.log(data.task_content, "task data");
+  //       console.log(data, "current task data");
+  //     }
+  //     if(data.task_content === null && (data.mentions.length === 0 || data.mentions === null)) {
+  //       setTaskErrorMessage({ status: true, errorId: taskId });
+  //       return;
+  //     }
+  //     const { data: updatedTask, error: updateError } = await supabase
+  //       .from("tasks")
+  //       .update({
+  //         task_content: content,
+  //         mentions: mentions,
+  //       })
+  //       .eq("id", taskId)
+  //       .eq("team_id", teamId)
+  //       .select();
+
+  //     if (updateError) {
+  //       throw updateError;
+  //     }
+
+  //     if (updatedTask) {
+  //       console.log(updatedTask, "updated task");
+  //       setTaskErrorMessage({ status: false, errorId: taskId });
+  //       setText("");
+  //       fetchTasks();
+  //     }
+  //   }
+  //   catch (error) {
+  //     console.error("Error adding or fetching tasks:", error);
+  //   }
+  //  }
 
   const handleUpdateTask = async (teamId: number, taskId: number) => {
     try {
       const mentions = text.match(/@\w+/g) || []; // Extract mentions
       const content = text.replace(/@\w+/g, "").trim(); // Remove mentions and trim content
-  
+
       console.log(taskId, "taskId");
-  
+
       // Fetch the current task by ID and Team ID
       const { data: taskData, error: fetchError } = await supabase
         .from("tasks")
@@ -157,28 +215,28 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
         .eq("id", taskId)
         .eq("team_id", teamId)
         .single();
-  
+
       if (fetchError) {
         console.error("Error fetching task:", fetchError);
         throw fetchError;
       }
-  
+
       if (taskData) {
         console.log(taskData.task_content, "task data");
         console.log(taskData, "current task data");
-  
+
         // Validate if both content and mentions are empty
         if (!content && mentions.length === 0) {
           setTaskErrorMessage({ status: true, errorId: taskId });
           console.warn("Please enter both content and mentions.");
           return;
         }
-  
+
         // Reset the error message state if validation passes
         setTaskErrorMessage({ status: false, errorId: taskId });
-  
+
         console.log(mentions, content, "parsed text");
-  
+
         // Update the task in the database
         const { data: updatedTask, error: updateError } = await supabase
           .from("tasks")
@@ -188,21 +246,21 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
           })
           .eq("team_id", teamId)
           .eq("id", taskId);
-  
+
         if (updateError) {
           console.error("Error updating task:", updateError);
           throw updateError;
         }
-  
+
         console.log(updatedTask, "updated task");
-  
+
         // Handle styled input and UI updates
         const styledInput = styledInputRef.current;
         if (styledInput && !styledInput.innerText.trim()) {
           console.warn("Styled input is empty.");
           return;
         }
-  
+
         console.log("Task:", styledInput?.innerText);
         // styledInput.innerText = ""; // Clear the styled input
         setText(""); // Clear the text state
@@ -212,6 +270,27 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     } catch (error) {
       console.error("Error in handleUpdateTask:", error);
     }
+  };
+
+  const handleExpireDateChange = async (
+    teamId: number,
+    taskId: number,
+    date: Date
+  ) => {
+    const formattedDate = formatDate(date);
+    // setStartDate(date);
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({ due_date: formattedDate })
+      .eq("id", taskId)
+      .eq("team_id", teamId);
+    if (error) throw error;
+    if (data) {
+      console.log(data, "due date updated");
+      setStartDate(date);
+      fetchTasks();
+    }
+    // handleUpdateTask(teamId, taskId);
   };
 
   const fetchTasks = async () => {
@@ -265,7 +344,10 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                       {allTasks.map(
                         (task: any) =>
                           task.team_id === team.id && (
-                            <div key={task.id} className="flex flex-col gap-2.5 mt-3">
+                            <div
+                              key={task.id}
+                              className="flex flex-col gap-2.5 mt-3"
+                            >
                               {/* {task.team_id === team.id && ( */}
                               <div
                                 key={task.id}
@@ -296,24 +378,40 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                                   taskErrorMessage={taskErrorMessage}
                                   setTaskErrorMessage={setTaskErrorMessage}
                                   allTasks={allTasks}
-                                  teamId = {team.id}
-                                  taskId = {task.id}
+                                  teamId={team.id}
+                                  taskId={task.id}
                                 />
                                 <div className="flex justify-between items-center">
-                                  <p className="text-xs font-semibold text-teal-500">
-                                    {formatDate(new Date())}
+                                  <p className="text-xs font-semibold text-teal-500 w-[164px]">
+                                    {/* <DatePicker
+                                      className="w-full focus-visible:outline-none border-none"
+                                      closeOnScroll={(e) =>
+                                        e.target === document
+                                      }
+                                      popperPlacement="bottom"
+                                      selected={task.due_date ? task.due_date : startDate}
+                                      onChange={(date) => {
+                                        handleExpireDateChange(
+                                          team.id,
+                                          task.id,
+                                          date as Date
+                                        );
+                                      }}
+                                    /> */}
+                                    <TaskDateUpdater
+                                      team={team}
+                                      task={task}
+                                      fetchTasks={fetchTasks}
+                                      // startDate={startDate}
+                                      // setStartDate={setStartDate}
+                                      // formatDate={formatDate}
+                                    />
                                   </p>
                                   {createTask && (
                                     <Button
                                       variant={"outline"}
                                       className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
                                       onClick={() => {
-                                        console.log(
-                                          "Creating Task ID:",
-                                          task.id,
-                                          "for Team ID:",
-                                          team.id
-                                        );
                                         handleUpdateTask(team.id, task.id);
                                       }}
                                     >

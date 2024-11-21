@@ -1,3 +1,7 @@
 .space_input:hover .space_delete_button{
 opacity: 1;
 }
+.demo{
+    font-size: 20px;
+    font-weight: bold;
+}

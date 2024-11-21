@@ -59,11 +59,10 @@ const SpaceBar = () => {
 
   // Fetch spaces from database
   const fetchSpaces = async () => {
-    const { data, error } = await supabase.from("spaces")
-    .select("*")
-    .order("space_name", { ascending: true })
-    ;
-
+    const { data, error } = await supabase
+      .from("spaces")
+      .select("*")
+      .order("space_name", { ascending: true });
     if (error) {
       console.error("Error fetching spaces:", error);
       return;
@@ -79,10 +78,11 @@ const SpaceBar = () => {
 
   // Handle clicking a tab
   const handleTabClick = async (id: number) => {
-    const {data, error} = await supabase.from("spaces")
-    .select("*")
-    .eq("id", id)
-    .single();
+    const { data, error } = await supabase
+      .from("spaces")
+      .select("*")
+      .eq("id", id)
+      .single();
 
     if (error) {
       console.error("Error fetching space:", error);
@@ -90,7 +90,6 @@ const SpaceBar = () => {
     }
 
     if (data) {
-      console.log(data, " space data");
       setSpaceId(data.id);
     }
     setActiveTab(id);
@@ -147,7 +146,6 @@ const SpaceBar = () => {
 
   // Delete a tab from database and UI
   const deleteTab = async (id: number) => {
-    console.log(id, " tab id");
     const { error } = await supabase.from("spaces").delete().eq("id", id);
 
     const { error: deleteError } = await supabase
@@ -176,7 +174,6 @@ const SpaceBar = () => {
 
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmailInput(e.target.value);
-    console.log("Email input:", emailInput);
 
     try {
       // Fetch all users from the database
@@ -192,11 +189,9 @@ const SpaceBar = () => {
         data?.filter((user) => user.email.includes(emailInput)) || [];
 
       if (matchingUsers.length > 0 || emailInput === "") {
-        console.log("Matching users:", matchingUsers);
         setMatchingUsers(matchingUsers);
         setNoUserFound(false);
       } else {
-        console.log("No users found matching this email input.");
         setNoUserFound(true);
       }
     } catch (err) {
@@ -206,9 +201,9 @@ const SpaceBar = () => {
 
   const handleUserSelect = (user: Tab) => {
     setTeamMemberError(false);
-    console.log(user, " selected user");
+
     setAddedMembers((prevMembers) => [...prevMembers, user]);
-    console.log("Added members:", addedMembers);
+
     setEmailInput("");
     setHighlightedIndex(-1);
   };
@@ -242,7 +237,11 @@ const SpaceBar = () => {
   };
 
   const defaultSpaceData = async () => {
-    const { data, error } = await supabase.from("spaces").select("*").eq("id", activeTab).single();
+    const { data, error } = await supabase
+      .from("spaces")
+      .select("*")
+      .eq("id", activeTab)
+      .single();
 
     if (error) {
       console.error("Error fetching spaces:", error);
@@ -250,7 +249,6 @@ const SpaceBar = () => {
     }
 
     if (data) {
-      console.log(data, " space data");
       setSpaceId(data.id);
     }
   };
@@ -343,7 +341,6 @@ const SpaceBar = () => {
     };
   }, [highlightedIndex, matchingUsers]);
 
-
   useEffect(() => {
     defaultSpaceData();
   }, [activeTab]);
@@ -388,9 +385,7 @@ const SpaceBar = () => {
                     : "bg-white border-gray-300 text-gray-400"
                 }`}
               >
-                <CircleX
-                  size={16}
-                />
+                <CircleX size={16} />
               </button>
             </div>
           ))}
