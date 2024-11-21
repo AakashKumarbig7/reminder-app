@@ -5,3 +5,11 @@ opacity: 1;
     font-size: 20px;
     font-weight: bold;
 }
+
+.react-datepicker__input-container{
+    position: absolute !important;
+      top: 15px;
+      left: 0px;
+      width: 100%;
+      opacity: 0;
+  }

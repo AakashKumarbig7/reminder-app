@@ -44,8 +44,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
 
   const [taskContents, setTaskContents] = useState<any>([]);
   const [startDate, setStartDate] = useState<any>({
-    date : null,
-    id : null
+    date: null,
+    id: null,
   });
 
   const fetchTeams = async () => {
@@ -104,6 +104,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
           status: taskStatus,
           team_id: teamId,
           space_id: spaceId,
+          due_date: formatDate(new Date()),
         })
         .select()
         .order("id", { ascending: false });
@@ -382,31 +383,12 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                                   taskId={task.id}
                                 />
                                 <div className="flex justify-between items-center">
-                                  <p className="text-xs font-semibold text-teal-500 w-[164px]">
-                                    {/* <DatePicker
-                                      className="w-full focus-visible:outline-none border-none"
-                                      closeOnScroll={(e) =>
-                                        e.target === document
-                                      }
-                                      popperPlacement="bottom"
-                                      selected={task.due_date ? task.due_date : startDate}
-                                      onChange={(date) => {
-                                        handleExpireDateChange(
-                                          team.id,
-                                          task.id,
-                                          date as Date
-                                        );
-                                      }}
-                                    /> */}
-                                    <TaskDateUpdater
-                                      team={team}
-                                      task={task}
-                                      fetchTasks={fetchTasks}
-                                      // startDate={startDate}
-                                      // setStartDate={setStartDate}
-                                      // formatDate={formatDate}
-                                    />
-                                  </p>
+                                  <TaskDateUpdater
+                                    team={team}
+                                    task={task}
+                                    fetchTasks={fetchTasks}
+                                  />
+
                                   {createTask && (
                                     <Button
                                       variant={"outline"}

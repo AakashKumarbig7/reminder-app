@@ -8,13 +8,6 @@ interface TaskDateUpdaterProps {
   fetchTasks: () => void;
 }
 
-const customStyles = {
-  positon: "absolute",
-  top: "10px",
-  left: "10px",
-  opacity: 0,
-};
-
 const formatDate = (date: Date): string => {
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -22,7 +15,7 @@ const formatDate = (date: Date): string => {
     day: "2-digit",
   };
 
-  return date.toLocaleDateString("en-GB", options); // '23 Aug 2024'
+  return date.toLocaleDateString("en-GB", options); // e.g., '23 Aug 2024'
 };
 
 const TaskDateUpdater: React.FC<TaskDateUpdaterProps> = ({
@@ -33,11 +26,6 @@ const TaskDateUpdater: React.FC<TaskDateUpdaterProps> = ({
   const [currentDate, setCurrentDate] = useState<Date | null>(
     task.due_date ? new Date(task.due_date) : null
   );
-
-  //   useEffect(() => {
-  //     // Update local state when the `task` prop changes
-  //     setCurrentDate(task.due_date ? new Date(task.due_date) : null);
-  //   }, [task.due_date]);
 
   useEffect(() => {
     if (task.due_date) {
@@ -70,21 +58,32 @@ const TaskDateUpdater: React.FC<TaskDateUpdaterProps> = ({
     }
   };
 
+  const isDueDateInFuture = currentDate && currentDate <= new Date();
+
   return (
     <div className="task-date-updater relative">
-      <DatePicker
-        className="w-full focus-visible:outline-none border-none text-transparent"
-        closeOnScroll={(e) => e.target === document}
-        popperPlacement="bottom"    
-        selected={currentDate}
-        onChange={(date) => {
-          if (date) handleExpireDateChange(date), setCurrentDate(date);
-        }}
-      />
-      {/* Show the formatted date in the UI */}
-      <div className="formatted-date absolute top-0 left-0">
-        {currentDate ? `${formatDate(currentDate)}` : ""}
-      </div>
+      <p
+        className={`text-xs font-semibold ${
+          isDueDateInFuture ? "text-red-500" : "text-teal-500"
+        } w-[164px]`}
+      >
+        <DatePicker
+          className="w-full focus-visible:outline-none border-none text-transparent"
+          closeOnScroll={(e) => e.target === document}
+          popperPlacement="right-end"
+          selected={currentDate}
+          onChange={(date) => {
+            if (date) {
+              handleExpireDateChange(date);
+              setCurrentDate(date);
+            }
+          }}
+        />
+        {/* Show the formatted date in the UI */}
+        <div className="formatted-date">
+          {currentDate ? `${formatDate(currentDate)}` : ""}
+        </div>
+      </p>
     </div>
   );
 };
