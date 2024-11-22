@@ -14,9 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import TaskDateUpdater from "./dueDate";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface SearchBarProps {
   spaceId: number;
@@ -329,7 +340,23 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                         <p className="text-lg font-semibold text-black font-geist">
                           {team.team_name}
                         </p>
-                        <Settings size={20} className="cursor-pointer" />
+                        <Dialog>
+                          <DialogTrigger asChild>
+                          <Settings size={20} className="cursor-pointer" />
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle>Edit Team</DialogTitle>
+                
+                            </DialogHeader>
+                            
+                            <DialogFooter>
+                              <Button>Cancel</Button>
+                              <Button>Save changes</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                        
                       </div>
                       <Button
                         variant={"outline"}

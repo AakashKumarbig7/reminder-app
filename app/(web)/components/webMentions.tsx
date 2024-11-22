@@ -57,6 +57,7 @@ const WebMentionInput: React.FC<Props> = ({
       return;
     }
     setMentionableEntities(data);
+    console.log(data, " mentionable entities");
   };
 
   useEffect(() => {
@@ -64,7 +65,19 @@ const WebMentionInput: React.FC<Props> = ({
   }, []);
 
   // Handle user input to detect mentions and update text
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+  const handleInput = async (e: React.FormEvent<HTMLDivElement>) => {
+    // const {data : memberData, error : memberError} = await supabase
+    //   .from("teams")
+    //   .select("*")
+    //   .eq("id", teamId);
+    // if (memberError) {
+    //   console.error("Database Error:", memberError);
+    //   return; 
+    // }
+    // const refactoredData = memberData.map((team) => team.members.map((member : any) => member.entity_name));
+    // setMentionableEntities(refactoredData);
+    // console.log(memberData.map((team) => team.members.map((member : any) => member.entity_name)), " team members");
+
     console.log(text, "typed Text");
     const mentions = text.match(/@\w+/g) || []; // Find all mentions
     const content = text.replace(/@\w+/g, "").trim();
@@ -101,6 +114,7 @@ const WebMentionInput: React.FC<Props> = ({
               .toLowerCase()
               .startsWith(mentionQuery.toLowerCase().trim())
           );
+          console.log(filteredSuggestions, " filtered suggestions");
           setSuggestions(filteredSuggestions);
         } else {
           setSuggestions([]);
@@ -179,8 +193,8 @@ const WebMentionInput: React.FC<Props> = ({
             backgroundColor: "#f9f9f9",
             position: "absolute",
             zIndex: 10,
-            bottom: "-120px",
-            left: 0,
+            bottom: "-5px",
+            left: '100px',
             textAlign: "left",
             minHeight: "auto",
             maxHeight: "200px",
@@ -229,18 +243,14 @@ const WebMentionInput: React.FC<Props> = ({
                 ref={editableRef}
                 onInput={handleInput}
                 onKeyDown={handleKeyDown}
-                // className='text-red-500'
-                // className={`${mentionColor} ? 'text-red-500' : 'text-black'`}
                 style={{
                   width: "100%",
                   minHeight: "65px",
                   borderRadius: "5px",
-                  // border: "1px solid #ddd",
                   whiteSpace: "pre-wrap",
                   wordWrap: "break-word",
                   outline: "none",
                   textAlign: "left",
-                  // margin:"10px"
                 }}
                 className={`${
                   (taskErrorMessage.errorId === task.id && taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"

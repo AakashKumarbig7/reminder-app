@@ -58,19 +58,20 @@ const TaskDateUpdater: React.FC<TaskDateUpdaterProps> = ({
     }
   };
 
-  const isDueDateInFuture = currentDate && currentDate <= new Date();
+  const isDueDatePastOrToday = currentDate && currentDate <= new Date();
+
 
   return (
     <div className="task-date-updater relative">
       <p
         className={`text-xs font-semibold ${
-          isDueDateInFuture ? "text-red-500" : "text-teal-500"
+          isDueDatePastOrToday ? "text-red-500" : "text-teal-500"
         } w-[164px]`}
       >
         <DatePicker
           className="w-full focus-visible:outline-none border-none text-transparent"
           closeOnScroll={(e) => e.target === document}
-          popperPlacement="right-end"
+          popperPlacement="right-end" // Automatically adjust position
           selected={currentDate}
           onChange={(date) => {
             if (date) {

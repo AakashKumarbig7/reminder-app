@@ -16,6 +16,17 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
 import SpaceTeam from "./teams";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface Tab {
   id: number;
@@ -276,21 +287,21 @@ const SpaceBar = () => {
       }
 
       // Check if there are any members already in the team
-      // const { data: existingTeam, error: checkError } = await supabase
-      //   .from("teams")
-      //   .select("*")
-      //   .eq("team_name", teamName);
+      const { data: existingTeam, error: checkError } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("team_name", teamName);
 
-      // if (checkError) {
-      //   console.error("Error checking existing team:", checkError);
-      //   return;
-      // }
+      if (checkError) {
+        console.error("Error checking existing team:", checkError);
+        return;
+      }
 
-      // if (existingTeam && existingTeam.length > 0) {
-      //   console.log("Team already exists with these members:", existingTeam);
-      //   notify("Team already exists with these members", false);
-      //   return;
-      // }
+      if (existingTeam && existingTeam.length > 0) {
+        console.log("Team already exists with these members:", existingTeam);
+        notify("Team already exists with these members", false);
+        return;
+      }
 
       try {
         // Insert selected user details as array of objects into the `teams` table
@@ -305,6 +316,7 @@ const SpaceBar = () => {
               department: member.department,
               designation: member.designation,
               email: member.email, // Assuming `email` is a field in your `users` table
+              entity_name : member.entity_name,
             })),
             space_id: activeTab,
           });
@@ -349,13 +361,13 @@ const SpaceBar = () => {
     <div className="px-3">
       <Toaster />
       <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full">
-        <div className="flex gap-2 py-2.5 text-sm text-gray-400">
+        <div className="flex gap-2 py-2.5 text-sm text-gray-400 mr-60">
           {tabs.map((tab) => (
             <div
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
               onDoubleClick={() => handleTabDoubleClick(tab.id)}
-              className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer ${
+              className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-8 ${
                 activeTab === tab.id
                   ? "bg-[#1A56DB] text-white border-none"
                   : "bg-white border-gray-300"
@@ -391,29 +403,29 @@ const SpaceBar = () => {
           ))}
           <button
             onClick={addNewTab}
-            className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2"
+            className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-8 min-w-fit"
             style={{ width: "max-content" }}
           >
             Add New Space <CirclePlus size={16} />
           </button>
         </div>
-        <div className="flex gap-2 py-2.5 text-sm text-gray-400 pl-20">
-          <Dialog
+        <div className="flex gap-2 py-2.5 text-sm text-gray-400 ml-20">
+          <Sheet
             open={memberAddDialogOpen}
             onOpenChange={setMemberAddDialogOpen}
           >
-            <DialogTrigger asChild>
-              <button className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2">
+            <SheetTrigger asChild>
+              <button className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-8" style={{ width: "max-content" }}>
                 <span className="text-gray-600">
                   <CirclePlus size={16} />
                 </span>{" "}
                 Add Team
               </button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[534px] font-inter">
-              <DialogHeader className="text-gray-500 text-base font-semibold">
-                <DialogTitle className="text-base">TEAM SETTING</DialogTitle>
-              </DialogHeader>
+            </SheetTrigger>
+            <SheetContent className="min-h-screen overflow-y-scroll" style={{maxWidth: "500px"}}>
+              <SheetHeader>
+                <SheetTitle className="text-base">TEAM SETTING</SheetTitle>
+              </SheetHeader>
               <div className="py-2">
                 <label
                   htmlFor="name"
@@ -537,7 +549,7 @@ const SpaceBar = () => {
                   </div>
                 )}
               </div>
-              <DialogFooter className="flex items-center w-full">
+              <SheetFooter className="mt-5">
                 <Button
                   type="submit"
                   variant={"outline"}
@@ -553,17 +565,11 @@ const SpaceBar = () => {
                 >
                   Save
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-      {/* <div className="pt-3">
-        <div className="mt-2 rounded flex justify-center items-center h-full">
-          {tabs.find((tab) => tab.id === activeTab)?.space_name ||
-            "No content available"}
-        </div>
-      </div> */}
       <SpaceTeam spaceId={spaceId as number} />
     </div>
   );
