@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Settings, Trash2 } from "lucide-react";
+import { Ellipsis, Plus, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WebMentionInput from "./webMentions";
 import { Carousel1, CarouselContent1, CarouselItem1 } from "./webCarousel";
@@ -16,7 +16,18 @@ import {
 } from "@/components/ui/select";
 import "react-datepicker/dist/react-datepicker.css";
 import TaskDateUpdater from "./dueDate";
-
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Dialog,
   DialogContent,
@@ -26,8 +37,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SearchBarProps {
   spaceId: number;
@@ -39,6 +62,16 @@ interface Team {
   tasks: { id: number; inputValue: string }[];
 }
 
+interface Tab {
+  id: number;
+  space_name: string;
+  email: string;
+  username: string;
+  designation: string;
+  role: string;
+  department: string;
+}
+
 const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
   const styledInputRef = useRef<HTMLDivElement>(null);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -48,16 +81,35 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     errorId: 0,
   });
   const [taskStatus, setTaskStatus] = useState<string>("In Progress");
-  const [createTask, setCreateTask] = useState(true);
-  const [taskStatusShow, setTaskStatusShow] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<any[]>([]);
-  const [allTasks, setAllTasks] = useState<any>([]);
-
-  const [taskContents, setTaskContents] = useState<any>([]);
-  const [startDate, setStartDate] = useState<any>({
-    date: null,
-    id: null,
+  const [createTask, setCreateTask] = useState<{
+    status: boolean;
+    taskId: any;
+  }>({
+    status: false,
+    taskId: 0,
   });
+  const [taskStatusShow, setTaskStatusShow] = useState({
+    status: false,
+    taskId: 0,
+  });
+  const [allTasks, setAllTasks] = useState<any>([]);
+  const [teamName, setTeamName] = useState<string>("");
+  const [teamNameDialogOpen, setTeamNameDialogOpen] = useState(false);
+  const [teamNameSheetOpen, setTeamNameSheetOpen] = useState(false);
+  const [updateOptionStates, setUpdateOptionStates] = useState<any>({});
+  const [addedMembers, setAddedMembers] = useState<any[]>([]);
+  const [matchingUsers, setMatchingUsers] = useState<Tab[]>([]);
+  const [noUserFound, setNoUserFound] = useState<boolean>(false);
+  const [emailInput, setEmailInput] = useState<string>("");
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+  // Helper function to toggle options for a specific team
+  const toggleUpdateOption = (teamId: any) => {
+    setUpdateOptionStates((prev: any) => ({
+      ...prev,
+      [teamId]: !prev[teamId],
+    }));
+  };
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -89,8 +141,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
     return date.toLocaleDateString("en-GB", options); // 'en-GB' gives the format "23 Aug 2024"
   };
 
-  const handleAddTask = async (teamId: number, spaceId: number) => {
-    setCreateTask(true);
+  const handleAddTask = async (teamId: any, spaceId: number) => {
+    // setCreateTask({ status: true, teamId: teamId });
     // Update the state to add the new task at the beginning of the team's tasks
     setTeams((prevTeams) =>
       prevTeams.map((team) =>
@@ -128,6 +180,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
         " added task id"
       );
       console.log(insertedTask, "added task");
+      setCreateTask({ status: true, taskId: insertedTask[0] });
 
       // Fetch updated tasks for the team
       const { data: fetchedTasks, error: fetchError } = await supabase
@@ -276,33 +329,12 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
         console.log("Task:", styledInput?.innerText);
         // styledInput.innerText = ""; // Clear the styled input
         setText(""); // Clear the text state
-        setCreateTask(false); // Hide the task creation UI
-        setTaskStatusShow(true); // Show task status
+        setCreateTask({ status: false, taskId: taskId }); // Hide the task creation UI
+        setTaskStatusShow({ status: false, taskId: taskId }); // Show task status
       }
     } catch (error) {
       console.error("Error in handleUpdateTask:", error);
     }
-  };
-
-  const handleExpireDateChange = async (
-    teamId: number,
-    taskId: number,
-    date: Date
-  ) => {
-    const formattedDate = formatDate(date);
-    // setStartDate(date);
-    const { data, error } = await supabase
-      .from("tasks")
-      .update({ due_date: formattedDate })
-      .eq("id", taskId)
-      .eq("team_id", teamId);
-    if (error) throw error;
-    if (data) {
-      console.log(data, "due date updated");
-      setStartDate(date);
-      fetchTasks();
-    }
-    // handleUpdateTask(teamId, taskId);
   };
 
   const fetchTasks = async () => {
@@ -317,6 +349,138 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
       setAllTasks(data);
     }
   };
+
+  const handleClose = () => {
+    setTeamNameSheetOpen(false);
+  };
+
+  const handleDeleteTeam = async (teamId: number) => {
+    try {
+      const { error } = await supabase.from("teams").delete().eq("id", teamId);
+      if (error) {
+        console.error("Error deleting team:", error);
+        return;
+      }
+      setTeamNameDialogOpen(false);
+      fetchTeams();
+    } catch (error) {
+      console.error("Error deleting team:", error);
+    }
+  };
+
+  const handleUpdateTeamName = async (teamId: number, spaceId: number) => {
+    console.log(teamId, spaceId);
+    try {
+      const { data, error } = await supabase
+        .from("teams")
+        .update({ team_name: teamName, members: addedMembers })
+        .eq("id", teamId)
+        .eq("space_id", spaceId)
+        .single();
+
+      if (error) {
+        console.error("Error updating team name:", error);
+        return;
+      }
+
+      // if (data) {
+      console.log("Team name updated successfully:", data);
+      fetchTeams();
+      setTeamNameSheetOpen(false);
+      // }
+    } catch (error) {
+      console.error("Error updating team name:", error);
+    }
+  };
+
+  const getTeamData = async (teamId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("id", teamId)
+        .single();
+      if (error) {
+        console.error("Error fetching user data:", error);
+        return;
+      }
+
+      if (data) {
+        console.log("User data:", data);
+        setAddedMembers(data.members);
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+  const removeMember = (user: any, index: number) => {
+    setAddedMembers((prevMembers) =>
+      prevMembers.filter(
+        (member: any, i: number) => !(member.id === user.id && i === index)
+      )
+    );
+  };
+
+  const handleUserSelect = (user: Tab) => {
+    setAddedMembers((prevMembers) => [...prevMembers, user]);
+
+    setEmailInput("");
+    setHighlightedIndex(-1);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (matchingUsers.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      // Move highlight down
+      setHighlightedIndex((prevIndex) =>
+        prevIndex < matchingUsers.length - 1 ? prevIndex + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      // Move highlight up
+      setHighlightedIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : matchingUsers.length - 1
+      );
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      // Select highlighted user on Enter
+      handleUserSelect(matchingUsers[highlightedIndex]);
+    }
+  };
+
+  const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmailInput(e.target.value);
+
+    try {
+      // Fetch all users from the database
+      const { data, error } = await supabase.from("users").select("*");
+
+      if (error) {
+        console.error("Error fetching users:", error);
+        return;
+      }
+
+      // Filter users whose email includes the input value
+      const matchingUsers =
+        data?.filter((user) => user.email.includes(emailInput)) || [];
+
+      if (matchingUsers.length > 0 || emailInput === "") {
+        setMatchingUsers(matchingUsers);
+        setNoUserFound(false);
+      } else {
+        setNoUserFound(true);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [highlightedIndex, matchingUsers]);
 
   useEffect(() => {
     fetchTeams();
@@ -336,27 +500,368 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                 >
                   <Card key={index}>
                     <CardContent key={index} className="p-[18px] w-full h-full">
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center relative">
                         <p className="text-lg font-semibold text-black font-geist">
                           {team.team_name}
                         </p>
-                        <Dialog>
+                        <DropdownMenu
+                        // open={updateOptionStates}
+                        // onOpenChange={setUpdateOptionStates}
+                        >
+                          <DropdownMenuTrigger>
+                            <Ellipsis size={18} />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <p>
+                              <Dialog
+                                open={teamNameDialogOpen}
+                                onOpenChange={setTeamNameDialogOpen}
+                              >
+                                <DialogTrigger asChild>
+                                  <Button
+                                    className="border-none w-full"
+                                    variant="outline"
+                                  >
+                                    Delete
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                  <DialogHeader>
+                                    <DialogTitle>Delete Team</DialogTitle>
+                                    <DialogDescription>
+                                      Do you want to delete this team?
+                                    </DialogDescription>
+                                  </DialogHeader>
+
+                                  <div className="flex justify-center items-center w-full gap-4">
+                                    <Button
+                                    variant='outline'
+                                      className="w-1/3"
+                                      type="submit"
+                                      onClick={() =>
+                                        setTeamNameDialogOpen(false)
+                                      }
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      className="bg-red-600 hover:bg-red-500 w-1/3"
+                                      type="button"
+                                      onClick={() => handleDeleteTeam(team.id)}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            </p>
+                            <p>
+                              <Sheet
+                                open={teamNameSheetOpen}
+                                onOpenChange={setTeamNameSheetOpen}
+                              >
+                                <SheetTrigger asChild>
+                                  <Button
+                                    className="border-none w-full"
+                                    variant="outline"
+                                    onClick={() => getTeamData(team.id)}
+                                  >
+                                    Edit
+                                  </Button>
+                                </SheetTrigger>
+                                <SheetContent
+                                  className="min-h-screen overflow-y-scroll"
+                                  style={{ maxWidth: "500px" }}
+                                >
+                                  <SheetHeader>
+                                    <SheetTitle>Edit profile</SheetTitle>
+                                  </SheetHeader>
+                                  <div className="mt-2">
+                                    <label
+                                      htmlFor="name"
+                                      className="text-sm text-[#111928] font-medium"
+                                    >
+                                      Team Name
+                                    </label>
+                                    <Input
+                                      className="mb-3 mt-1"
+                                      type="text"
+                                      placeholder="Team Name"
+                                      defaultValue={team.team_name}
+                                      onChange={(e) => {
+                                        setTeamName(e.target.value);
+                                      }}
+                                    />
+                                    <div className="mt-4 relative">
+                                      {matchingUsers.length > 0 &&
+                                        emailInput.length > 0 &&
+                                        !noUserFound && (
+                                          <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
+                                            {matchingUsers.length > 0 && (
+                                              <ul>
+                                                {matchingUsers.map(
+                                                  (user, index) => (
+                                                    <li
+                                                      key={user.id}
+                                                      className={`p-2 cursor-pointer ${
+                                                        index ===
+                                                        highlightedIndex
+                                                          ? "bg-gray-200"
+                                                          : "hover:bg-gray-100"
+                                                      }`}
+                                                      onClick={() =>
+                                                        handleUserSelect(user)
+                                                      }
+                                                      onMouseEnter={() =>
+                                                        setHighlightedIndex(
+                                                          index
+                                                        )
+                                                      }
+                                                    >
+                                                      {user.email}
+                                                    </li>
+                                                  )
+                                                )}
+                                              </ul>
+                                            )}
+                                          </div>
+                                        )}
+                                      {noUserFound && (
+                                        <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
+                                          <ul>
+                                            <li className="p-2 cursor-pointer hover:bg-gray-100">
+                                              No User Found
+                                            </li>
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <label
+                                        htmlFor="members"
+                                        className="text-sm text-[#111928] font-medium"
+                                      >
+                                        Members
+                                      </label>
+                                      <Input
+                                      autoComplete="off"
+                                        id="members"
+                                        placeholder="Add guest email"
+                                        className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
+                                        onChange={getUserData}
+                                      />
+                                    </div>
+                                    {addedMembers.length > 0 && (
+                                      <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
+                                        {addedMembers.map((member, index) => (
+                                          <div
+                                            key={member.id}
+                                            className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
+                                          >
+                                            <div className="flex items-center gap-1">
+                                              {/* <Image
+                            src="/public/images/Subtract.png"
+                            alt="user image"
+                            width={36}
+                            height={36}
+                            className="w-6 h-6 rounded-full"
+                          /> */}
+                                              <span>{(member.username) || member.name}</span>
+                                            </div>
+                                            <span
+                                              className={`${
+                                                member.role === "superadmin"
+                                                  ? "text-[#0E9F6E]"
+                                                  : "text-gray-500"
+                                              }`}
+                                            >
+                                              {member.designation?.length > 25
+                                                ? `${member.designation?.slice(
+                                                    0,
+                                                    26
+                                                  )}...`
+                                                : member.designation}
+                                            </span>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeMember(member, index);
+                                              }}
+                                              className="focus:outline-none space_delete_button text-gray-400"
+                                            >
+                                              <Trash2
+                                                className="text-black"
+                                                size={18}
+                                              />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex justify-center gap-4 mt-5">
+                                    {/* <Button variant='outline' className="w-1/3" onClick={handleClose}>
+                                      Cancel
+                                    </Button> */}
+                                    <Dialog
+                                open={teamNameDialogOpen}
+                                onOpenChange={setTeamNameDialogOpen}
+                              >
+                                <DialogTrigger asChild>
+                                  <Button
+                                    className="border-none w-1/2 bg-red-600 hover:bg-red-500 hover:text-white text-white" 
+                                    variant="outline"
+                                  >
+                                    Delete
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                  <DialogHeader>
+                                    <DialogTitle>Delete Team</DialogTitle>
+                                    <DialogDescription>
+                                      Do you want to delete this team?
+                                    </DialogDescription>
+                                  </DialogHeader>
+
+                                  <div className="flex justify-center items-center w-full gap-4">
+                                    <Button
+                                    variant='outline'
+                                      className="w-1/3"
+                                      type="submit"
+                                      onClick={() =>
+                                        setTeamNameDialogOpen(false)
+                                      }
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      className="bg-red-600 hover:bg-red-500 w-1/3"
+                                      type="button"
+                                      onClick={() => handleDeleteTeam(team.id)}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                                    <Button
+                                    className="w-1/2"
+                                      onClick={() =>
+                                        handleUpdateTeamName(team.id, spaceId)
+                                      }
+                                    >
+                                      Save changes
+                                    </Button>
+                                  </div>
+                                </SheetContent>
+                              </Sheet>
+                            </p>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        {/* <Dialog
+                        open={teamNameDialogOpen}
+                        onOpenChange={setTeamNameDialogOpen}
+                        >
                           <DialogTrigger asChild>
-                          <Settings size={20} className="cursor-pointer" />
+                            <Settings onClick={async() => {
+                              const {data, error } = await supabase
+                              .from('teams')
+                              .select('team_name')
+                              .eq('id', team.id)
+                              .single();
+
+                              if (error) {
+                                console.log(error);
+                              }
+
+                              if (data) {
+                                setTeamName(data.team_name);
+                              }
+                            }} size={20} className="cursor-pointer" />
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-[425px]">
                             <DialogHeader>
                               <DialogTitle>Edit Team</DialogTitle>
-                
+                              <p>{team.team_name}</p>
+                              <p>{team.id}</p>
                             </DialogHeader>
-                            
+                            <div>
+                              <Input
+                                className="mb-3"
+                                type="text"
+                                placeholder="Team Name"
+                                value={team.team_name}
+                                onChange={(e) => {
+                                  setTeamName(e.target.value);
+                                }}
+                              />
+                            </div>
                             <DialogFooter>
-                              <Button>Cancel</Button>
-                              <Button>Save changes</Button>
+                              <Button onClick={handleClose}>Cancel</Button>
+                              <Button onClick={() => handleUpdateTeamName(team.id, spaceId)}>Save changes</Button>
                             </DialogFooter>
                           </DialogContent>
-                        </Dialog>
-                        
+                        </Dialog> */}
+                        {/* <Menubar>
+                          <MenubarMenu>
+                            <MenubarTrigger><Ellipsis size={18} /></MenubarTrigger>
+                            <MenubarContent>
+                              <MenubarItem>
+                                <Sheet open={teamNameDialogOpen}
+                        onOpenChange={setTeamNameDialogOpen}>
+                                  <SheetTrigger asChild>
+                                    <Button variant="outline">Edit</Button>
+                                  </SheetTrigger>
+                                  <SheetContent>
+                                    <SheetHeader>
+                                      <SheetTitle>Edit profile</SheetTitle>
+                                      <SheetDescription>
+                                        Make changes to your profile here. Click
+                                        save when you're done.
+                                      </SheetDescription>
+                                    </SheetHeader>
+                                    <div className="grid gap-4 py-4">
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label
+                                          htmlFor="name"
+                                          className="text-right"
+                                        >
+                                          Name
+                                        </Label>
+                                        <Input
+                                          id="name"
+                                          value="Pedro Duarte"
+                                          className="col-span-3"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label
+                                          htmlFor="username"
+                                          className="text-right"
+                                        >
+                                          Username
+                                        </Label>
+                                        <Input
+                                          id="username"
+                                          value="@peduarte"
+                                          className="col-span-3"
+                                        />
+                                      </div>
+                                    </div>
+                                    <SheetFooter>
+                                      <SheetClose asChild>
+                                        <Button type="submit">
+                                          Save changes
+                                        </Button>
+                                      </SheetClose>
+                                    </SheetFooter>
+                                  </SheetContent>
+                                </Sheet>
+                              </MenubarItem>
+                              <MenubarItem>Delete</MenubarItem>
+                            </MenubarContent>
+                          </MenubarMenu>
+                        </Menubar> */}
                       </div>
                       <Button
                         variant={"outline"}
@@ -424,7 +929,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
                                         handleUpdateTask(team.id, task.id);
                                       }}
                                     >
-                                      Create
+                                      Create {createTask.taskId}
                                     </Button>
                                   )}
                                   {taskStatusShow && (
