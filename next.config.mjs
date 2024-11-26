@@ -7,7 +7,17 @@ const nextConfig = {
                 protocol:"https",
                 hostname:"localhost",
                 pathname:"/images/**"
-            }
+            },
+            {
+                protocol: 'https',
+                hostname: 'dusxvkdxtgtjpuqwxgbs.supabase.co',
+                pathname: '/**',
+              },
+            {
+                protocol: 'https',
+                hostname: 'dusxvkdxtgtjpuqwxgbs.supabase.co',
+                pathname: '/userProfile/**',
+              },
         ]
     }
 };

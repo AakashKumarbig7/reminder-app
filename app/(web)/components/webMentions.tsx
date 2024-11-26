@@ -10,6 +10,7 @@ interface Props {
   allTasks: any;
   teamId: number;
   taskId: number;
+  taskStatus: boolean;
 }
 
 interface MentionableEntity {
@@ -17,6 +18,7 @@ interface MentionableEntity {
   name: string;
   type: EntityType;
   email: string;
+  entity_name: string;
 }
 
 type EntityType = "Employee" | "Team" | "Space";
@@ -36,6 +38,7 @@ const WebMentionInput: React.FC<Props> = ({
   allTasks,
   teamId,
   taskId,
+  taskStatus,
 }) => {
   const [suggestions, setSuggestions] = useState<MentionableEntity[]>([]);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(
@@ -47,36 +50,47 @@ const WebMentionInput: React.FC<Props> = ({
   const editableRef = useRef<HTMLDivElement | null>(null);
   const [mentionColor, setMentionColor] = useState(false);
 
-  // Fetch mentionable entities from the database
-  const getMentions = async () => {
-    const { data, error } = await supabase
-      .from("employee_entities")
-      .select("*");
-    if (error) {
-      console.error("Database Error:", error);
-      return;
-    }
-    setMentionableEntities(data);
-    console.log(data, " mentionable entities");
-  };
+  // const [getAllTasks, setGetAllTasks] = useState(() => ({}));
 
-  useEffect(() => {
-    getMentions();
-  }, []);
+  // Fetch mentionable entities from the database
+  // const getMentions = async () => {
+  //   const { data, error } = await supabase
+  //     .from("users")
+  //     .select("*");
+  //   if (error) {
+  //     console.error("Database Error:", error);
+  //     return;
+  //   }
+  //   setMentionableEntities(data.map((user) => user.members));
+  //   console.log(data, " mentionable entities");
+  // };
+
+  // useEffect(() => {
+  //   getMentions();
+  // }, []);
 
   // Handle user input to detect mentions and update text
   const handleInput = async (e: React.FormEvent<HTMLDivElement>) => {
-    // const {data : memberData, error : memberError} = await supabase
-    //   .from("teams")
-    //   .select("*")
-    //   .eq("id", teamId);
-    // if (memberError) {
-    //   console.error("Database Error:", memberError);
-    //   return; 
-    // }
-    // const refactoredData = memberData.map((team) => team.members.map((member : any) => member.entity_name));
-    // setMentionableEntities(refactoredData);
-    // console.log(memberData.map((team) => team.members.map((member : any) => member.entity_name)), " team members");
+    try {
+      const { data: memberData, error: memberError } = await supabase
+        .from("teams")
+        .select("members")
+        .eq("id", teamId);
+  
+      if (memberError) throw memberError;
+  
+      if (memberData && memberData.length > 0) {
+        // Safely access and transform members
+        const entities = memberData.flatMap((team) => 
+          team.members || []
+        );
+        setMentionableEntities(entities);
+      } else {
+        console.warn("No team members found for the given team ID.");
+      }
+    } catch (error) {
+      console.error("Failed to fetch team members:", error);
+    }
 
     console.log(text, "typed Text");
     const mentions = text.match(/@\w+/g) || []; // Find all mentions
@@ -110,9 +124,8 @@ const WebMentionInput: React.FC<Props> = ({
             cursorPosition
           );
           const filteredSuggestions = mentionableEntities.filter((entity) =>
-            entity.name
-              .toLowerCase()
-              .startsWith(mentionQuery.toLowerCase().trim())
+            entity.entity_name.toLowerCase().includes(mentionQuery.toLowerCase())
+              
           );
           console.log(filteredSuggestions, " filtered suggestions");
           setSuggestions(filteredSuggestions);
@@ -128,7 +141,7 @@ const WebMentionInput: React.FC<Props> = ({
   const selectMention = (entity: MentionableEntity) => {
     if (mentionStartIndex !== null && editableRef.current) {
       const plainText = editableRef.current.innerText || "";
-      const mentionText = `@${entity.name} `;
+      const mentionText = `@${entity.entity_name} `;
       const beforeMention = plainText.slice(0, mentionStartIndex);
       const afterMention = plainText.slice(
         mentionStartIndex + mentionText.length - 1
@@ -178,13 +191,37 @@ const WebMentionInput: React.FC<Props> = ({
     return acc;
   }, {} as Record<EntityType, MentionableEntity[]>);
 
+  const handleAllMention = () => {
+    if (mentionableEntities.length > 0 && editableRef.current) {
+      let plainText = editableRef.current.innerText || "";
+  
+      // Remove standalone '@' symbols with empty space next to them
+      plainText = plainText.replace(/@\s+/g, "");
+  
+      // Construct the mentions list with specific formatting
+      const mentionTexts = mentionableEntities.map((entity, index) =>
+        index === 0 ? entity.entity_name : ` @${entity.entity_name}`
+      );
+  
+      // Construct the new content
+      const newContent = `${plainText}${mentionTexts.join("")}`.trim();
+      editableRef.current.innerText = newContent;
+      setText(newContent);
+  
+      setSuggestions([]);
+      setMentionStartIndex(null);
+    }
+  };
+  
+  
+
   return (
     <div style={{ position: "relative", width: "100%" }} className="py-1.5">
       {Object.keys(groupedSuggestions).length > 0 && (
         <div
           style={{
             listStyle: "none",
-            padding: "10px",
+            padding: "0px",
             margin: "5px 0",
             border: "1px solid #ddd",
             borderRadius: "5px",
@@ -198,7 +235,7 @@ const WebMentionInput: React.FC<Props> = ({
             textAlign: "left",
             minHeight: "auto",
             maxHeight: "200px",
-            overflowY: "scroll",
+            overflowY: "auto",
           }}
         >
           {(
@@ -209,10 +246,11 @@ const WebMentionInput: React.FC<Props> = ({
           ).map(([type, entities]) => (
             <div key={type} style={{ marginBottom: "5px" }}>
               <div
-                style={{ fontWeight: "bold", color: entityTypeColors[type] }}
-              >
-                {type}
-              </div>
+            className="cursor-pointer hover:bg-gray-300 p-2"
+            onClick={handleAllMention}
+          >
+            @all
+          </div>
               {entities.map((entity) => (
                 <div
                   className="cursor-pointer hover:bg-gray-300 rounded"
@@ -224,7 +262,7 @@ const WebMentionInput: React.FC<Props> = ({
                     color: "#333",
                   }}
                 >
-                  {entity.name}
+                  {entity.entity_name}
                   {entity.email && <p className="text-xs">{entity.email}</p>}
                 </div>
               ))}
@@ -243,6 +281,7 @@ const WebMentionInput: React.FC<Props> = ({
                 ref={editableRef}
                 onInput={handleInput}
                 onKeyDown={handleKeyDown}
+                onFocus={handleInput}
                 style={{
                   width: "100%",
                   minHeight: "65px",
@@ -254,7 +293,7 @@ const WebMentionInput: React.FC<Props> = ({
                 }}
                 className={`${
                   (taskErrorMessage.errorId === task.id && taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"
-                } text-sm`}
+                } text-sm ${taskStatus === true ? "pointer-events-none" : "pointer-events-auto"}`}
               >
                 {/* {task.mentions.map((mention : any, index : any) => <span key={index} className="font-bold text-primaryColor-700">{mention}</span>)} {task.task_content}  */}
                 <span className="font-bold text-primaryColor-700">
@@ -270,18 +309,15 @@ const WebMentionInput: React.FC<Props> = ({
           ref={editableRef}
           onInput={handleInput}
           onKeyDown={handleKeyDown}
-          // className='text-red-500'
-          // className={`${mentionColor} ? 'text-red-500' : 'text-black'`}
+          onFocus={handleInput}
           style={{
             width: "100%",
             minHeight: "65px",
             borderRadius: "5px",
-            // border: "1px solid #ddd",
             whiteSpace: "pre-wrap",
             wordWrap: "break-word",
             outline: "none",
             textAlign: "left",
-            // margin:"10px"
           }}
           className={`${
             (taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"

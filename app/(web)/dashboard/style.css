@@ -8,7 +8,7 @@ opacity: 1;
 
 .react-datepicker__input-container{
     position: absolute !important;
-      top: 15px;
+      top: 0px;
       left: 0px;
       width: 100%;
       opacity: 0;

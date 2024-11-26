@@ -1,32 +1,23 @@
 "use client";
 import { supabase } from "@/lib/supabase/client";
-import { CirclePlus, CircleX, Plus, Trash2 } from "lucide-react";
+import { CirclePlus, CircleX, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
 import SpaceTeam from "./teams";
-import { Label } from "@/components/ui/label";
+
 import {
   Sheet,
-  SheetClose,
+  
   SheetContent,
-  SheetDescription,
+  
   SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import Image from "next/image";
 
 interface Tab {
   id: number;
@@ -36,6 +27,7 @@ interface Tab {
   designation: string;
   role: string;
   department: string;
+  profile_image: string;
 }
 
 const notify = (message: string, success: boolean) =>
@@ -63,6 +55,7 @@ const SpaceBar = () => {
   const [teamNameError, setTeamNameError] = useState(false);
   const [teamMemberError, setTeamMemberError] = useState(false);
   const [spaceId, setSpaceId] = useState<number | null>(null);
+  const [teamData, setTeamData] = useState(() => ({}));
 
   useEffect(() => {
     fetchSpaces();
@@ -264,6 +257,18 @@ const SpaceBar = () => {
     }
   };
 
+  const fetchTeamData = async () => {
+    const { data, error } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("space_id", spaceId);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+  };
+
   const handleSaveMembers = async () => {
     if (teamName === "") {
       setTeamNameError(true);
@@ -317,6 +322,7 @@ const SpaceBar = () => {
               designation: member.designation,
               email: member.email, // Assuming `email` is a field in your `users` table
               entity_name : member.entity_name,
+              profile_image: member.profile_image
             })),
             space_id: activeTab,
           });
@@ -330,7 +336,7 @@ const SpaceBar = () => {
         setTeamNameError(false);
         setTeamMemberError(false);
         setMemberAddDialogOpen(false);
-        defaultSpaceData();
+        fetchTeamData();
         notify("Members saved successfully", true);
       } catch (err) {
         console.error("Unexpected error:", err);
@@ -355,6 +361,7 @@ const SpaceBar = () => {
 
   useEffect(() => {
     defaultSpaceData();
+    setTeamData(fetchTeamData());
   }, [activeTab]);
 
   return (
@@ -515,13 +522,13 @@ const SpaceBar = () => {
                         className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
                       >
                         <div className="flex items-center gap-1">
-                          {/* <Image
-                            src="/public/images/Subtract.png"
+                          <Image
+                            src={member.profile_image}
                             alt="user image"
                             width={36}
                             height={36}
-                            className="w-6 h-6 rounded-full"
-                          /> */}
+                            className="w-[32px] h-[32px] rounded-full"
+                          />
                           <span>{member.username}</span>
                         </div>
                         <span
@@ -570,7 +577,7 @@ const SpaceBar = () => {
           </Sheet>
         </div>
       </div>
-      <SpaceTeam spaceId={spaceId as number} />
+      <SpaceTeam spaceId={spaceId as number} teamData = {teamData} setTeamData = {fetchTeamData} />
     </div>
   );
 };

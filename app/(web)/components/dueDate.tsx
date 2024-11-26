@@ -6,6 +6,7 @@ interface TaskDateUpdaterProps {
   team: any;
   task: any;
   fetchTasks: () => void;
+  taskStatus: boolean;
 }
 
 const formatDate = (date: Date): string => {
@@ -22,6 +23,7 @@ const TaskDateUpdater: React.FC<TaskDateUpdaterProps> = ({
   team,
   task,
   fetchTasks,
+  taskStatus,
 }) => {
   const [currentDate, setCurrentDate] = useState<Date | null>(
     task.due_date ? new Date(task.due_date) : null
@@ -62,14 +64,14 @@ const TaskDateUpdater: React.FC<TaskDateUpdaterProps> = ({
 
 
   return (
-    <div className="task-date-updater relative">
+    <div className={`task-date-updater relative`}>
       <p
         className={`text-xs font-semibold ${
           isDueDatePastOrToday ? "text-red-500" : "text-teal-500"
-        } w-[164px]`}
+        } w-[164px]  ${taskStatus === true ? "pointer-events-none" : "pointer-events-auto"}`}
       >
         <DatePicker
-          className="w-full focus-visible:outline-none border-none text-transparent"
+          className={`w-full focus-visible:outline-none border-none text-transparent`}
           closeOnScroll={(e) => e.target === document}
           popperPlacement="right-end" // Automatically adjust position
           selected={currentDate}
@@ -81,7 +83,7 @@ const TaskDateUpdater: React.FC<TaskDateUpdaterProps> = ({
           }}
         />
         {/* Show the formatted date in the UI */}
-        <div className="formatted-date">
+        <div className="formatted-date -mt-[15px]">
           {currentDate ? `${formatDate(currentDate)}` : ""}
         </div>
       </p>
