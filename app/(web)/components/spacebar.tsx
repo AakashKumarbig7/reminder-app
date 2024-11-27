@@ -241,6 +241,7 @@ const SpaceBar = () => {
   };
 
   const defaultSpaceData = async () => {
+    if (!activeTab) return;
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
@@ -258,6 +259,7 @@ const SpaceBar = () => {
   };
 
   const fetchTeamData = async () => {
+    if (!spaceId) return;
     const { data, error } = await supabase
       .from("teams")
       .select("*")

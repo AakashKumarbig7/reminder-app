@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 interface SearchBarProps {
   spaceId: number;
@@ -76,6 +77,7 @@ const notify = (message: string, success: boolean) =>
   });
 
 const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId, teamData, setTeamData }) => {
+  const route = useRouter();
   const styledInputRef = useRef<HTMLDivElement>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [text, setText] = useState<string>("");
@@ -98,6 +100,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId, teamData, setTeamData })
   const [updateTaskId, setUpdateTaskId] = useState({ teamId: 0, taskId: 0 });
   const [teamNameError, setTeamNameError] = useState(false);
 
+  const [mentionTrigger, setMentionTrigger] = useState(false);
+
   // Helper function to toggle options for a specific team
   const toggleUpdateOption = (teamId: any) => {
     setUpdateOptionStates((prev: any) => ({
@@ -107,6 +111,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId, teamData, setTeamData })
   };
 
   const fetchTeams = async () => {
+    if (!spaceId) return;
     const { data, error } = await supabase
       .from("teams")
       .select("*")
@@ -282,6 +287,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId, teamData, setTeamData })
     setText(""); // Clear the input text
     fetchTasks(); // Refresh task list
     fetchTeams(); // Refresh team data
+    setMentionTrigger(!mentionTrigger);
 
     const styledInput = styledInputRef.current;
     if (styledInput) {
@@ -483,6 +489,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId, teamData, setTeamData })
   }, [highlightedIndex, matchingUsers]);
 
   const recoverTask = async () => {
+    if (updateTaskId.taskId === 0) return;
     const { data: taskData, error: fetchError } = await supabase
       .from("tasks")
       .update({ task_created: true })
@@ -510,7 +517,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId, teamData, setTeamData })
               {teams.map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="w-[339px] h-auto min-h-[200px] basis-[28%]"
+                  className="max-w-[339px] w-[339px] h-auto min-h-[200px] basis-[28%]"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="p-[18px] w-full h-full">
@@ -909,6 +916,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId, teamData, setTeamData })
                                   teamId={team.id}
                                   taskId={task.id}
                                   taskStatus={task.task_created}
+                                  mentionTrigger={mentionTrigger}
+                                  setMentionTrigger={setMentionTrigger}
                                 />
                                 <div className="flex justify-between items-center">
                                   <div
@@ -954,7 +963,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({ spaceId, teamData, setTeamData })
                                       }}
                                     >
                                       <SelectTrigger
-                                        className={`w-[164px] pt-2 pr-[10px] text-center rounded-[30px] border-none ${
+                                        className={`w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none ${
                                           task.task_status === "todo"
                                             ? "text-reddish bg-[#F8DADA]"
                                             : task.task_status === "In progress"

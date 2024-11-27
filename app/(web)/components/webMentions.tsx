@@ -11,6 +11,8 @@ interface Props {
   teamId: number;
   taskId: number;
   taskStatus: boolean;
+  mentionTrigger: boolean;
+  setMentionTrigger: any;
 }
 
 interface MentionableEntity {
@@ -39,6 +41,8 @@ const WebMentionInput: React.FC<Props> = ({
   teamId,
   taskId,
   taskStatus,
+  mentionTrigger,
+  setMentionTrigger,
 }) => {
   const [suggestions, setSuggestions] = useState<MentionableEntity[]>([]);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(
@@ -65,9 +69,9 @@ const WebMentionInput: React.FC<Props> = ({
   //   console.log(data, " mentionable entities");
   // };
 
-  // useEffect(() => {
-  //   getMentions();
-  // }, []);
+  useEffect(() => {
+    // getMentions();
+  }, [mentionTrigger, setMentionTrigger]);
 
   // Handle user input to detect mentions and update text
   const handleInput = async (e: React.FormEvent<HTMLDivElement>) => {
@@ -76,14 +80,12 @@ const WebMentionInput: React.FC<Props> = ({
         .from("teams")
         .select("members")
         .eq("id", teamId);
-  
+
       if (memberError) throw memberError;
-  
+
       if (memberData && memberData.length > 0) {
         // Safely access and transform members
-        const entities = memberData.flatMap((team) => 
-          team.members || []
-        );
+        const entities = memberData.flatMap((team) => team.members || []);
         setMentionableEntities(entities);
       } else {
         console.warn("No team members found for the given team ID.");
@@ -96,9 +98,9 @@ const WebMentionInput: React.FC<Props> = ({
     const mentions = text.match(/@\w+/g) || []; // Find all mentions
     const content = text.replace(/@\w+/g, "").trim();
     if (content.length < 0 && mentions.length < 0) {
-      setTaskErrorMessage({status : true, errorId : taskId});
+      setTaskErrorMessage({ status: true, errorId: taskId });
     } else {
-      setTaskErrorMessage({status : false, errorId : taskId});
+      setTaskErrorMessage({ status: false, errorId: taskId });
       if (editableRef.current) {
         const plainText = editableRef.current.innerText || "";
         setText(plainText);
@@ -124,8 +126,9 @@ const WebMentionInput: React.FC<Props> = ({
             cursorPosition
           );
           const filteredSuggestions = mentionableEntities.filter((entity) =>
-            entity.entity_name.toLowerCase().includes(mentionQuery.toLowerCase())
-              
+            entity.entity_name
+              .toLowerCase()
+              .includes(mentionQuery.toLowerCase())
           );
           console.log(filteredSuggestions, " filtered suggestions");
           setSuggestions(filteredSuggestions);
@@ -194,26 +197,24 @@ const WebMentionInput: React.FC<Props> = ({
   const handleAllMention = () => {
     if (mentionableEntities.length > 0 && editableRef.current) {
       let plainText = editableRef.current.innerText || "";
-  
+
       // Remove standalone '@' symbols with empty space next to them
       plainText = plainText.replace(/@\s+/g, "");
-  
+
       // Construct the mentions list with specific formatting
       const mentionTexts = mentionableEntities.map((entity, index) =>
         index === 0 ? entity.entity_name : ` @${entity.entity_name}`
       );
-  
+
       // Construct the new content
       const newContent = `${plainText}${mentionTexts.join("")}`.trim();
       editableRef.current.innerText = newContent;
       setText(newContent);
-  
+
       setSuggestions([]);
       setMentionStartIndex(null);
     }
   };
-  
-  
 
   return (
     <div style={{ position: "relative", width: "100%" }} className="py-1.5">
@@ -231,7 +232,7 @@ const WebMentionInput: React.FC<Props> = ({
             position: "absolute",
             zIndex: 10,
             bottom: "-5px",
-            left: '100px',
+            left: "100px",
             textAlign: "left",
             minHeight: "auto",
             maxHeight: "200px",
@@ -246,11 +247,11 @@ const WebMentionInput: React.FC<Props> = ({
           ).map(([type, entities]) => (
             <div key={type} style={{ marginBottom: "5px" }}>
               <div
-            className="cursor-pointer hover:bg-gray-300 p-2"
-            onClick={handleAllMention}
-          >
-            @all
-          </div>
+                className="cursor-pointer hover:bg-gray-300 p-2"
+                onClick={handleAllMention}
+              >
+                @all
+              </div>
               {entities.map((entity) => (
                 <div
                   className="cursor-pointer hover:bg-gray-300 rounded"
@@ -284,7 +285,7 @@ const WebMentionInput: React.FC<Props> = ({
                 onFocus={handleInput}
                 style={{
                   width: "100%",
-                  minHeight: "65px",
+                  minHeight: "30px",
                   borderRadius: "5px",
                   whiteSpace: "pre-wrap",
                   wordWrap: "break-word",
@@ -292,8 +293,15 @@ const WebMentionInput: React.FC<Props> = ({
                   textAlign: "left",
                 }}
                 className={`${
-                  (taskErrorMessage.errorId === task.id && taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"
-                } text-sm ${taskStatus === true ? "pointer-events-none" : "pointer-events-auto"}`}
+                  taskErrorMessage.errorId === task.id &&
+                  taskErrorMessage.status === true
+                    ? "border border-red-500 p-1"
+                    : "border-none"
+                } text-sm ${
+                  taskStatus === true
+                    ? "pointer-events-none"
+                    : "pointer-events-auto"
+                }`}
               >
                 {/* {task.mentions.map((mention : any, index : any) => <span key={index} className="font-bold text-primaryColor-700">{mention}</span>)} {task.task_content}  */}
                 <span className="font-bold text-primaryColor-700">
@@ -320,7 +328,9 @@ const WebMentionInput: React.FC<Props> = ({
             textAlign: "left",
           }}
           className={`${
-            (taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"
+            taskErrorMessage.status === true
+              ? "border border-red-500 p-1"
+              : "border-none"
           } text-sm`}
         ></div>
       )}
