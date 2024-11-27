@@ -504,7 +504,7 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
                               <div>
                                 <label
                                   htmlFor="members"
-                                  className="text-sm text-[#111928] font-medium"
+                                  className="text-sm text-gray-900 text-inter font-medium"
                                 >
                                   Members
                                 </label>
