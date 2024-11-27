@@ -7,12 +7,13 @@ import { supabase } from "@/lib/supabase/client";
 import toast, { Toaster } from "react-hot-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import AddTeam from "@/app/(web)/components/addteam";
-import {Select,SelectContent, SelectItem, SelectTrigger,SelectValue,} from "@/components/ui/select";
-import {Dialog,DialogContent,DialogFooter,DialogTrigger,} from "@/components/ui/dialog";
-import { Carousel,CarouselContent,CarouselItem,} from "@/components/ui/carousel";
- import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogTrigger, } from "@/components/ui/dialog";
+import { Carousel, CarouselContent, CarouselItem, } from "@/components/ui/carousel";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
+import TeamCard from "../../components/teamCard";
 
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
@@ -27,7 +28,7 @@ const notify = (message: string, success: boolean) =>
 interface Team {
   id: number;
   team_name: string;
- 
+
 }
 interface Tab {
   id: number;
@@ -199,13 +200,13 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
       setTeamNameError(true);
       return;
     }
-  
+
     // Validate added members
     if (addedMembers.length === 0) {
       setTeamMemberError(true);
       return;
     }
-  
+
     try {
       // Fetch selected user details based on `id`
       const { data: fetchedMembers, error: fetchError } = await supabase
@@ -215,12 +216,12 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
           "id",
           addedMembers.map((member) => member.id)
         );
-  
+
       if (fetchError) {
         console.error("Error fetching members:", fetchError);
         return;
       }
-  
+
       // Insert team data into `teams` table
       const { error: insertError } = await supabase.from("teams").insert({
         team_name: teamName,
@@ -234,44 +235,22 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
         })),
         space_id: spaceId, // Assuming `spaceId` is correctly defined in your context
       });
-  
+
       if (insertError) {
         console.error("Error saving members:", insertError);
         return;
       }
-  
+
       // Reset states on successful save
       setTeamName("");
       setAddedMembers([]);
       setTeamNameError(false);
       setTeamMemberError(false);
-  
+
       notify("Members saved successfully", true);
     } catch (err) {
       console.error("Unexpected error:", err);
     }
-  };
-  
-
-  const handleDeleteTeam = async (teamId: number) => {
-    try {
-      const { error } = await supabase.from("teams").delete().eq("id", teamId);
-      if (error) {
-        console.error("Error deleting team:", error);
-        return;
-      }
-      // setTeamNameDialogOpen(false);
-      fetchTeams();
-    } catch (error) {
-      console.error("Error deleting team:", error);
-    }
-  };
-  const handleClose = () => {
-    // setMemberAddDialogOpen(false);
-    setTeamName("");
-    setAddedMembers([]);
-    setTeamNameError(false);
-    setTeamMemberError(false);
   };
 
   useEffect(() => {
@@ -297,7 +276,7 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
       // Select highlighted user on Enter
       setTeamMemberError(false);
       handleUserSelect(matchingUsers[highlightedIndex]);
-      
+
     }
   };
 
@@ -430,6 +409,7 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
 
                 {teams.length > 0 ? (
                   teams.map((team: any) => (
+<<<<<<< HEAD
                     <CarouselItem
                       key={team.id}
                       className="w-[339px] h-auto min-h-[200px] basis-[28%]"
@@ -587,6 +567,9 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
                         </Card>
                       </>
                     </CarouselItem>
+=======
+                    <TeamCard team={team} spaceId={spaceId} />
+>>>>>>> 5ea0680b79ce12fa097762ef1fb22090d5227676
                   ))
                 ) : (
                   <div className="w-full min-h-[80vh] flex justify-center items-center">
