@@ -7,12 +7,13 @@ import { supabase } from "@/lib/supabase/client";
 import toast, { Toaster } from "react-hot-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import AddTeam from "@/app/(web)/components/addteam";
-import {Select,SelectContent, SelectItem, SelectTrigger,SelectValue,} from "@/components/ui/select";
-import {Dialog,DialogContent,DialogFooter,DialogTrigger,} from "@/components/ui/dialog";
-import { Carousel,CarouselContent,CarouselItem,} from "@/components/ui/carousel";
- import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogTrigger, } from "@/components/ui/dialog";
+import { Carousel, CarouselContent, CarouselItem, } from "@/components/ui/carousel";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
+import TeamCard from "../../components/teamCard";
 
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
@@ -27,7 +28,7 @@ const notify = (message: string, success: boolean) =>
 interface Team {
   id: number;
   team_name: string;
- 
+
 }
 interface Tab {
   id: number;
@@ -199,13 +200,13 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
       setTeamNameError(true);
       return;
     }
-  
+
     // Validate added members
     if (addedMembers.length === 0) {
       setTeamMemberError(true);
       return;
     }
-  
+
     try {
       // Fetch selected user details based on `id`
       const { data: fetchedMembers, error: fetchError } = await supabase
@@ -215,12 +216,12 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
           "id",
           addedMembers.map((member) => member.id)
         );
-  
+
       if (fetchError) {
         console.error("Error fetching members:", fetchError);
         return;
       }
-  
+
       // Insert team data into `teams` table
       const { error: insertError } = await supabase.from("teams").insert({
         team_name: teamName,
@@ -234,44 +235,22 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
         })),
         space_id: spaceId, // Assuming `spaceId` is correctly defined in your context
       });
-  
+
       if (insertError) {
         console.error("Error saving members:", insertError);
         return;
       }
-  
+
       // Reset states on successful save
       setTeamName("");
       setAddedMembers([]);
       setTeamNameError(false);
       setTeamMemberError(false);
-  
+
       notify("Members saved successfully", true);
     } catch (err) {
       console.error("Unexpected error:", err);
     }
-  };
-  
-
-  const handleDeleteTeam = async (teamId: number) => {
-    try {
-      const { error } = await supabase.from("teams").delete().eq("id", teamId);
-      if (error) {
-        console.error("Error deleting team:", error);
-        return;
-      }
-      // setTeamNameDialogOpen(false);
-      fetchTeams();
-    } catch (error) {
-      console.error("Error deleting team:", error);
-    }
-  };
-  const handleClose = () => {
-    // setMemberAddDialogOpen(false);
-    setTeamName("");
-    setAddedMembers([]);
-    setTeamNameError(false);
-    setTeamMemberError(false);
   };
 
   useEffect(() => {
@@ -297,7 +276,7 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
       // Select highlighted user on Enter
       setTeamMemberError(false);
       handleUserSelect(matchingUsers[highlightedIndex]);
-      
+
     }
   };
 
@@ -430,163 +409,7 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
 
                 {teams.length > 0 ? (
                   teams.map((team: any) => (
-                    <CarouselItem
-                      key={team.id}
-                      className="w-[339px] h-auto min-h-[200px] basis-[28%]"
-                    >
-                      <>
-                        <Card>
-                          <CardContent className="p-[18px] w-full h-full">
-                            <div className="flex justify-between items-center">
-                              <p className="text-lg font-semibold text-black font-geist">
-                                {team.team_name}
-                              </p>
-                              <Trash2
-                                size={20}
-                                className="cursor-pointer"
-                                onClick={() => handleDeleteTeam(team.id)}
-                              />
-                            </div>
-                            <div className="py-2">
-                              <label
-                                htmlFor="name"
-                                className="text-sm text-[#111928] font-medium"
-                              >
-                                Team Name
-                              </label>
-                              <Input
-                                id="name"
-                                placeholder=""
-                                defaultValue={team.team_name}
-                                className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
-                              />
-
-                              <div className="mt-8 relative">
-                                {matchingUsers.length > 0 &&
-                                  emailInput.length > 0 &&
-                                  !noUserFound && (
-                                    <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
-                                      {matchingUsers.length > 0 && (
-                                        <ul>
-                                          {matchingUsers.map((user, index) => (
-                                            <li
-                                              key={user.id}
-                                              className={`p-2 cursor-pointer ${
-                                                index === highlightedIndex
-                                                  ? "bg-gray-200"
-                                                  : "hover:bg-gray-100"
-                                              }`}
-                                              onClick={() =>
-                                                handleUserSelect(user)
-                                              }
-                                              onMouseEnter={() =>
-                                                setHighlightedIndex(index)
-                                              }
-                                            >
-                                              {user.email}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      )}
-                                    </div>
-                                  )}
-                                {noUserFound && (
-                                  <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
-                                    <ul>
-                                      <li className="p-2 cursor-pointer hover:bg-gray-100">
-                                        No User Found
-                                      </li>
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div>
-                                <label
-                                  htmlFor="members"
-                                  className="text-sm text-[#111928] font-medium"
-                                >
-                                  Members
-                                </label>
-                                <Input
-                                  autoComplete="off"
-                                  id="members"
-                                  placeholder="Add guest email"
-                                  className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
-                                  onChange={getUserData}
-                                />
-                              </div>
-                              {teamMemberError && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Please fill the field
-                  </p>
-                )}
-
-                              {addedMembers.length > 0 && (
-                                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
-                                  {addedMembers.map((member, index) => (
-                                    <div
-                                      key={member.id}
-                                      className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
-                                    >
-                                      <div className="flex items-center gap-1">
-
-                                        <span>
-                                          {member.username || member.name}
-                                        </span>
-                                      </div>
-                                      <span
-                                        className={`${
-                                          member.role === "superadmin"
-                                            ? "text-[#0E9F6E]"
-                                            : "text-gray-500"
-                                        }`}
-                                      >
-                                        {member.designation?.length > 25
-                                          ? `${member.designation?.slice(
-                                              0,
-                                              26
-                                            )}...`
-                                          : member.designation}
-                                      </span>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          removeMember(member, index);
-                                        }}
-                                        className="focus:outline-none space_delete_button text-gray-400"
-                                      >
-                                        <Trash2
-                                          className="text-black"
-                                          size={18}
-                                        />
-                                      </button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between w-full">
-                              <Button
-                                type="submit"
-                                variant={"outline"}
-                                className="w-[120px] border border-gray-200 text-gray-800 font-medium"
-                                onClick={handleClose}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                type="submit"
-                                className="w-[120px] bg-primaryColor-700 hover:bg-blue-600 text-white"
-                                onClick={handleSaveMembers}
-                              >
-                                Save
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </>
-                    </CarouselItem>
+                    <TeamCard team={team} spaceId={spaceId} />
                   ))
                 ) : (
                   <div className="w-full min-h-[80vh] flex justify-center items-center">
