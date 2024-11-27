@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/button";
 import WebMentionInput from "./webMentions";
 import { Carousel1, CarouselContent1, CarouselItem1 } from "./webCarousel";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,

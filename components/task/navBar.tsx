@@ -69,7 +69,7 @@ export default function NavBar() {
                           <span className="w-4 h-4" />  
                         )}
                       </span>
-                      <p className="text-sm pt-[10px] pr-[10px]">{space}</p>
+                      <p className="text-sm font-geist font-semibold text-zinc-950 pt-[10px] pr-[10px]">{space}</p>
                     </li>
                   ))}
                 </ul>

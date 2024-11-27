@@ -258,9 +258,9 @@ export function NewTask() {
             alt="Add Icon"
             width={20}
             height={20}
-            className="mr-2"
+            className="mr-2 text-bgwhite "
           />
-          New Task
+         <p className="text-bgwhite font-geist text-[16px] font-semibold"> New Task</p>
         </DrawerTrigger>
         <DrawerContent className="pb-10">
           <DrawerHeader className="flex items-center justify-between">

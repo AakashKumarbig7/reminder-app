@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import WebNavbar from "@/app/(web)/components/navbar";
-import { ClipboardPlus, Trash, Pencil } from "lucide-react";
+import { ClipboardPlus, Trash2, Pencil } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import {
@@ -115,8 +115,11 @@ export default function SpaceSetting() {
             <button className="rounded-lg text-sm text-white border w-[134px] h-[41px] bg-primaryColor-700">
               Space Setting
             </button>
-            <button className="rounded-lg text-sm border w-[134px] h-[41px] text-gray-400">
+            <button className="rounded-lg text-sm border w-[104px] h-[41px] text-gray-400">
               Members
+            </button>
+            <button className="rounded-lg text-sm border w-[89px] h-[41px] text-gray-400">
+              Access
             </button>
           </div>
 
@@ -186,7 +189,7 @@ export default function SpaceSetting() {
                       Laxman Sarav
                     </TableCell>
                     <TableCell className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">
-                      Management Team, Design Team, Development Team
+                      ----
                     </TableCell>
                     <TableCell className="px-4 py-4 text-sm text-gray-500"></TableCell>
                     <TableCell className="px-4 py-4 items-center">
@@ -199,7 +202,7 @@ export default function SpaceSetting() {
                         onClick={() => deleteSpace(space.id)}
                         className="py-4 px-4"
                       >
-                        <Trash className="h-5 w-5 items-center" />
+                        <Trash2 className="h-5 w-5 items-center" />
                       </button>
                     </TableCell>
                   </TableRow>
