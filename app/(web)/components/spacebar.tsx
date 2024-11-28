@@ -1,5 +1,5 @@
 "use client";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/utils/supabase/supabaseClient";
 import { CirclePlus, CircleX, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";

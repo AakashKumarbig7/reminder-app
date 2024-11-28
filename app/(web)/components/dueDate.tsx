@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 interface TaskDateUpdaterProps {
   team: any;

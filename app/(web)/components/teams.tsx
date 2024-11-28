@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Ellipsis, Plus, Settings, Trash2 } from "lucide-react";

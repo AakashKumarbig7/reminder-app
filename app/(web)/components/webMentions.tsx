@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 interface Props {
   text: string;

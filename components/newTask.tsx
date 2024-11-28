@@ -21,7 +21,7 @@ import { Button } from "./ui/button";
 import styles from "../styles/newtask.module.css";
 import axios from "axios";
 import MentionInput from "./mentionInput";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 type User = {
   id: number;
