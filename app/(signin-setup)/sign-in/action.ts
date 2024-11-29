@@ -28,8 +28,8 @@ export async function signIn(email: string, password: string) {
   if (error) {
     return { error: error.message };
   }
-  redirect("/dashboard");
   getUserData();
+  redirect("/dashboard");
 }
 
 export async function signUp(email: string, password: string) {

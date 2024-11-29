@@ -99,6 +99,7 @@ const WebNavbar = () => {
                 width={36}
                 height={36}
                 className="rounded-full"
+                
               />
               <div>
                 <p className="text-sm font-semibold">Laxman Sarav</p>
