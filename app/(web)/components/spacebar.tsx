@@ -278,21 +278,21 @@ const SpaceBar = () => {
       }
 
       // Check if there are any members already in the team
-      // const { data: existingTeam, error: checkError } = await supabase
-      //   .from("teams")
-      //   .select("*")
-      //   .eq("team_name", teamName);
+      const { data: existingTeam, error: checkError } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("team_name", teamName);
 
-      // if (checkError) {
-      //   console.error("Error checking existing team:", checkError);
-      //   return;
-      // }
+      if (checkError) {
+        console.error("Error checking existing team:", checkError);
+        return;
+      }
 
-      // if (existingTeam && existingTeam.length > 0) {
-      //   console.log("Team already exists with these members:", existingTeam);
-      //   notify("Team already exists with these members", false);
-      //   return;
-      // }
+      if (existingTeam && existingTeam.length > 0) {
+        console.log("Team already exists with these members:", existingTeam);
+        notify("Team already exists with these members", false);
+        return;
+      }
 
       try {
         // Insert selected user details as array of objects into the `teams` table

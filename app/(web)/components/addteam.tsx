@@ -32,8 +32,10 @@ interface Team {
 }
 interface SearchBarProps {
     spaceId: number;
+    sendDataToParent:any;
+
   }
-const AddTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
+const AddTeam: React.FC<SearchBarProps> = ({ spaceId,sendDataToParent }) => {
   const [teams, setTeams] = useState<any[]>([]);
   const [memberAddDialogOpen, setMemberAddDialogOpen] = useState(false);
 
@@ -172,8 +174,10 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
         setTeamNameError(false);
         setTeamMemberError(false);
         setMemberAddDialogOpen(false);
+        
 
         notify("Members saved successfully", true);
+        sendDataToParent ()
       } catch (err) {
         console.error("Unexpected error:", err);
       }
@@ -223,7 +227,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId }) => {
       <Sheet open={memberAddDialogOpen} onOpenChange={setMemberAddDialogOpen}>
         <SheetTrigger asChild>
           <button
-            className="  bg-white w-[315px] h-[41px] rounded-[8px] border border-gray-300 border-dashed items-center flex justify-center"
+            className="  bg-white w-[315px] h-[41px] rounded-[8px] border border-gray-300 border-dashed items-center flex justify-center cursor-pointer hover:bg-slate-50"
             // onClick={toggleDrawer}
           >
             <span className="text-gray-600 px-[5px]">

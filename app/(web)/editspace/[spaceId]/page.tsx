@@ -40,12 +40,15 @@ interface Tab {
   department: string;
 }
 
-export default function EditSpace({ params }: { params: { spaceId: any } }) {
+const EditSpace = ({ params }: { params: { spaceId: any } }) =>{
   // States
   const [spaceNames, setSpaceNames] = useState<string[]>([]);
   const [selectedSpace, setSelectedSpace] = useState<string | undefined>(
     undefined
   );
+
+  const [selectedTeam, setSelectedTeam] = useState<any>(null); // Store the selected team data
+  const [isSaving, setIsSaving] = useState(false); // For handling the save state (loading)
   // Team-related states
   const [teams, setTeams] = useState<any[]>([]);
   // const [memberAddDialogOpen, setMemberAddDialogOpen] = useState(false);
@@ -54,15 +57,87 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
   const [teamNameError, setTeamNameError] = useState(false);
   const [emailInput, setEmailInput] = useState("");
   const [matchingUsers, setMatchingUsers] = useState<any[]>([]);
-  const [noUserFound, setNoUserFound] = useState(false);
+  // const [noUserFound, setNoUserFound] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [addedMembers, setAddedMembers] = useState<any[]>([]);
   const [teamMemberError, setTeamMemberError] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+ 
+  const [datafromChild,setdatafromchild]=useState("")
 
   const router = useRouter();
   const { spaceId } = params;
+
+  // Handle selecting a team from TeamCard
+  // const handleTeamSelection = (team: any) => {
+  //   setSelectedTeam(team); // Update selected team
+  // };
+
+  const handleDataFromChild=(data:any) =>{
+    setdatafromchild(data)
+  }
+  // Handle saving changes for the selected team (member additions or deletions)
+  // const saveChanges = async () => {
+  //   if (!selectedTeam) return;
+
+  //   setIsSaving(true); // Show loading state
+
+  //   const { data, error } = await supabase
+  //     .from("teams")
+  //     .update({
+  //       members: selectedTeam.members, // Assuming members field is an array of user IDs or objects
+  //     })
+  //     .eq("id", selectedTeam.id);
+
+  //   setIsSaving(false); // Hide loading state
+
+  //   if (error) {
+  //     console.error(error);
+  //   } else {
+  //     console.log("Members updated successfully:", data);
+  //   }
+  // };
+  const handleUpdateTeam = async () => {
+
+     
+    for(let i=0;i<teams.length;i++)
+
+    {
+    if (teams[i].members.length === 0) {
+      setTeamNameError(true);
+      return;
+    } else if (teams[i].members.length > 0) {
+      try {
+        const { data, error } = await supabase
+          .from("teams")
+          .update({  members: teams[i].members })
+          .eq("id", teams[i].id)
+          .eq("space_id", spaceId)
+          .single();
+
+        if (error) {
+          console.error("Error updating team name:", error);
+          return;
+        }
+
+        // if (data) {
+        console.log("Team name updated successfully:", data);
+        fetchTeams();
+        // setTeamNameSheetOpen(false);
+        setTeamNameError(false);
+        
+        // }
+      }
+       catch (error) {
+        console.error("Error updating team name:", error);
+      }
+    }
+   
+  }
+  notify("Team updated successfully", true);
+  };
+
 
   const handleDelete = async () => {
     try {
@@ -102,6 +177,7 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
         ...team,
       }));
       setTeams(teamData as Team[]);
+    
     }
   };
 
@@ -136,32 +212,32 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
     return data?.id ?? null;
   };
 
-  const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmailInput(e.target.value);
+  // const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setEmailInput(e.target.value);
 
-    try {
-      // Fetch all users from the database
-      const { data, error } = await supabase.from("users").select("*");
+  //   try {
+  //     // Fetch all users from the database
+  //     const { data, error } = await supabase.from("users").select("*");
 
-      if (error) {
-        console.error("Error fetching users:", error);
-        return;
-      }
+  //     if (error) {
+  //       console.error("Error fetching users:", error);
+  //       return;
+  //     }
 
-      // Filter users whose email includes the input value
-      const matchingUsers =
-        data?.filter((user) => user.email.includes(emailInput)) || [];
+  //     // Filter users whose email includes the input value
+  //     const matchingUsers =
+  //       data?.filter((user) => user.email.includes(emailInput)) || [];
 
-      if (matchingUsers.length > 0 || emailInput === "") {
-        setMatchingUsers(matchingUsers);
-        setNoUserFound(false);
-      } else {
-        setNoUserFound(true);
-      }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-    }
-  };
+  //     if (matchingUsers.length > 0 || emailInput === "") {
+  //       setMatchingUsers(matchingUsers);
+  //       setNoUserFound(false);
+  //     } else {
+  //       setNoUserFound(true);
+  //     }
+  //   } catch (err) {
+  //     console.error("Unexpected error:", err);
+  //   }
+  // };
 
   const handleSelectChange = async (value: string) => {
     setSelectedSpace(value);
@@ -179,106 +255,106 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
     }
   };
 
-  const handleUserSelect = (user: Tab) => {
-    setTeamMemberError(false);
-    console.log(user, " selected user");
-    setAddedMembers((prevMembers) => [...prevMembers, user]);
-    console.log("Added members:", addedMembers);
-    setEmailInput("");
-    setHighlightedIndex(-1);
-  };
+  // const handleUserSelect = (user: Tab) => {
+  //   setTeamMemberError(false);
+  //   console.log(user, " selected user");
+  //   setAddedMembers((prevMembers) => [...prevMembers, user]);
+  //   console.log("Added members:", addedMembers);
+  //   setEmailInput("");
+  //   setHighlightedIndex(-1);
+  // };
 
-  const removeMember = (member: any, index: number) => {
-    const updatedMembers = [...addedMembers];
-    updatedMembers.splice(index, 1);
-    setAddedMembers(updatedMembers);
-  };
+  // const removeMember = (member: any, index: number) => {
+  //   const updatedMembers = [...addedMembers];
+  //   updatedMembers.splice(index, 1);
+  //   setAddedMembers(updatedMembers);
+  // };
 
-  const handleSaveMembers = async () => {
-    // Validate team name
-    if (teamName === "") {
-      setTeamNameError(true);
-      return;
-    }
+  // const handleSaveMembers = async () => {
+  //   // Validate team name
+  //   if (teamName === "") {
+  //     setTeamNameError(true);
+  //     return;
+  //   }
 
-    // Validate added members
-    if (addedMembers.length === 0) {
-      setTeamMemberError(true);
-      return;
-    }
+  //   // Validate added members
+  //   if (addedMembers.length === 0) {
+  //     setTeamMemberError(true);
+  //     return;
+  //   }
 
-    try {
-      // Fetch selected user details based on `id`
-      const { data: fetchedMembers, error: fetchError } = await supabase
-        .from("users")
-        .select("*")
-        .in(
-          "id",
-          addedMembers.map((member) => member.id)
-        );
+  //   try {
+  //     // Fetch selected user details based on `id`
+  //     const { data: fetchedMembers, error: fetchError } = await supabase
+  //       .from("users")
+  //       .select("*")
+  //       .in(
+  //         "id",
+  //         addedMembers.map((member) => member.id)
+  //       );
 
-      if (fetchError) {
-        console.error("Error fetching members:", fetchError);
-        return;
-      }
+  //     if (fetchError) {
+  //       console.error("Error fetching members:", fetchError);
+  //       return;
+  //     }
 
-      // Insert team data into `teams` table
-      const { error: insertError } = await supabase.from("teams").insert({
-        team_name: teamName,
-        members: fetchedMembers.map((member) => ({
-          id: member.id,
-          name: member.username, // Ensure your `users` table has this column
-          role: member.role,
-          department: member.department,
-          designation: member.designation,
-          email: member.email, // Ensure `email` exists in your table
-        })),
-        space_id: spaceId, // Assuming `spaceId` is correctly defined in your context
-      });
+  //     // Insert team data into `teams` table
+  //     const { error: insertError } = await supabase.from("teams").insert({
+  //       team_name: teamName,
+  //       members: fetchedMembers.map((member) => ({
+  //         id: member.id,
+  //         name: member.username, // Ensure your `users` table has this column
+  //         role: member.role,
+  //         department: member.department,
+  //         designation: member.designation,
+  //         email: member.email, // Ensure `email` exists in your table
+  //       })),
+  //       space_id: spaceId, // Assuming `spaceId` is correctly defined in your context
+  //     });
 
-      if (insertError) {
-        console.error("Error saving members:", insertError);
-        return;
-      }
+  //     if (insertError) {
+  //       console.error("Error saving members:", insertError);
+  //       return;
+  //     }
 
-      // Reset states on successful save
-      setTeamName("");
-      setAddedMembers([]);
-      setTeamNameError(false);
-      setTeamMemberError(false);
+  //     // Reset states on successful save
+  //     setTeamName("");
+  //     setAddedMembers([]);
+  //     setTeamNameError(false);
+  //     setTeamMemberError(false);
 
-      notify("Members saved successfully", true);
-    } catch (err) {
-      console.error("Unexpected error:", err);
-    }
-  };
+  //     notify("Members saved successfully", true);
+  //   } catch (err) {
+  //     console.error("Unexpected error:", err);
+  //   }
+  // };
 
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [highlightedIndex, matchingUsers]);
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (matchingUsers.length === 0) return;
+  // useEffect(() => {
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [highlightedIndex, matchingUsers]);
+  // const handleKeyDown = (e: KeyboardEvent) => {
+  //   if (matchingUsers.length === 0) return;
 
-    if (e.key === "ArrowDown") {
-      // Move highlight down
-      setHighlightedIndex((prevIndex) =>
-        prevIndex < matchingUsers.length - 1 ? prevIndex + 1 : 0
-      );
-    } else if (e.key === "ArrowUp") {
-      // Move highlight up
-      setHighlightedIndex((prevIndex) =>
-        prevIndex > 0 ? prevIndex - 1 : matchingUsers.length - 1
-      );
-    } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      // Select highlighted user on Enter
-      setTeamMemberError(false);
-      handleUserSelect(matchingUsers[highlightedIndex]);
+  //   if (e.key === "ArrowDown") {
+  //     // Move highlight down
+  //     setHighlightedIndex((prevIndex) =>
+  //       prevIndex < matchingUsers.length - 1 ? prevIndex + 1 : 0
+  //     );
+  //   } else if (e.key === "ArrowUp") {
+  //     // Move highlight up
+  //     setHighlightedIndex((prevIndex) =>
+  //       prevIndex > 0 ? prevIndex - 1 : matchingUsers.length - 1
+  //     );
+  //   } else if (e.key === "Enter" && highlightedIndex >= 0) {
+  //     // Select highlighted user on Enter
+  //     setTeamMemberError(false);
+  //     handleUserSelect(matchingUsers[highlightedIndex]);
 
-    }
-  };
+  //   }
+  // };
 
   useEffect(() => {
     const fetchSelectedSpace = async () => {
@@ -303,7 +379,48 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
     fetchSelectedSpace();
     fetchTeams();
   }, [spaceId]);
-
+  const onAllTeamMembersSavebutton= () =>{
+// console.log(teams);
+  }
+  const onTeamDataTrigger =(user:any,teamId:any,type:any)=>{
+    if(type=="add")
+    {
+    teams.forEach(e =>{
+      if(e.id ==teamId)
+      {
+       
+        const isAlreadyAdded = e.members.some(
+          (member:any) => member.id === user.id
+        );
+      if(!isAlreadyAdded)
+      {
+        e.members.push(user)
+        
+      }
+      }
+    })
+    // console.log(teams);
+  }
+  else
+  {
+    teams.forEach(e =>{
+      if(e.id ==teamId)
+      {
+        // e.members.(user)
+        e.members.forEach((m:any,index:any) =>
+        {
+          if(m.id==user.id)
+          {
+              e.members.splice(index,1);
+          }
+        }
+        
+        )
+      }
+    })
+  }
+    // console.log(teams);
+  }
   return (
     <>
       <WebNavbar />
@@ -330,8 +447,7 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
                 <div className="text-center">
                   <h2 className="text-lg font-semibold">Are you sure?</h2>
                   <p className="mt-2 text-sm text-gray-600">
-                    Do you really want to delete this space? This action cannot
-                    be undone.
+                    Do you really want to delete this space
                   </p>
                 </div>
                 <DialogFooter className="flex justify-end mt-4">
@@ -364,7 +480,10 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
             </button>
             <button
               className="rounded-lg text-sm text-white w-[134px] h-[41px] bg-primaryColor-700 cursor-pointer hover:bg-blue-600"
-              onClick={() => console.log(`Save changes for space ${spaceId}`)}
+              onClick={() =>
+                handleUpdateTeam()
+              }
+            
             >
               Save Changes
             </button>
@@ -402,175 +521,17 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
                 <CarouselItem className="basis-[28%] ">
                   <Card className="border border-gray-300 w-[339px] h-[65px] rounded-[12px] items-center">
                     <CardContent className="px-3 py-3">
-                      <AddTeam spaceId={spaceId as number} />
+                      <AddTeam spaceId={spaceId as number } sendDataToParent={fetchTeams}/>
                     </CardContent>
                   </Card>
                 </CarouselItem>
 
                 {teams.length > 0 ? (
                   teams.map((team: any) => (
-<<<<<<< HEAD
-                    <CarouselItem
-                      key={team.id}
-                      className="w-[339px] h-auto min-h-[200px] basis-[28%]"
-                    >
-                      <>
-                        <Card>
-                          <CardContent className="p-[18px] w-full h-full">
-                            <div className="flex justify-between items-center">
-                              <p className="text-lg font-semibold text-black font-geist">
-                                {team.team_name}
-                              </p>
-                              <Trash2
-                                size={20}
-                                className="cursor-pointer"
-                                onClick={() => handleDeleteTeam(team.id)}
-                              />
-                            </div>
-                            <div className="py-2">
-                              <label
-                                htmlFor="name"
-                                className="text-sm text-[#111928] font-medium"
-                              >
-                                Team Name
-                              </label>
-                              <Input
-                                id="name"
-                                placeholder=""
-                                defaultValue={team.team_name}
-                                className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
-                              />
-
-                              <div className="mt-8 relative">
-                                {matchingUsers.length > 0 &&
-                                  emailInput.length > 0 &&
-                                  !noUserFound && (
-                                    <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
-                                      {matchingUsers.length > 0 && (
-                                        <ul>
-                                          {matchingUsers.map((user, index) => (
-                                            <li
-                                              key={user.id}
-                                              className={`p-2 cursor-pointer ${
-                                                index === highlightedIndex
-                                                  ? "bg-gray-200"
-                                                  : "hover:bg-gray-100"
-                                              }`}
-                                              onClick={() =>
-                                                handleUserSelect(user)
-                                              }
-                                              onMouseEnter={() =>
-                                                setHighlightedIndex(index)
-                                              }
-                                            >
-                                              {user.email}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      )}
-                                    </div>
-                                  )}
-                                {noUserFound && (
-                                  <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
-                                    <ul>
-                                      <li className="p-2 cursor-pointer hover:bg-gray-100">
-                                        No User Found
-                                      </li>
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div>
-                                <label
-                                  htmlFor="members"
-                                  className="text-sm text-gray-900 text-inter font-medium"
-                                >
-                                  Members
-                                </label>
-                                <Input
-                                  autoComplete="off"
-                                  id="members"
-                                  placeholder="Add guest email"
-                                  className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
-                                  onChange={getUserData}
-                                />
-                              </div>
-                              {teamMemberError && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Please fill the field
-                  </p>
-                )}
-
-                              {addedMembers.length > 0 && (
-                                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
-                                  {addedMembers.map((member, index) => (
-                                    <div
-                                      key={member.id}
-                                      className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
-                                    >
-                                      <div className="flex items-center gap-1">
-
-                                        <span>
-                                          {member.username || member.name}
-                                        </span>
-                                      </div>
-                                      <span
-                                        className={`${
-                                          member.role === "superadmin"
-                                            ? "text-[#0E9F6E]"
-                                            : "text-gray-500"
-                                        }`}
-                                      >
-                                        {member.designation?.length > 25
-                                          ? `${member.designation?.slice(
-                                              0,
-                                              26
-                                            )}...`
-                                          : member.designation}
-                                      </span>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          removeMember(member, index);
-                                        }}
-                                        className="focus:outline-none space_delete_button text-gray-400"
-                                      >
-                                        <Trash2
-                                          className="text-black"
-                                          size={18}
-                                        />
-                                      </button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between w-full">
-                              <Button
-                                type="submit"
-                                variant={"outline"}
-                                className="w-[120px] border border-gray-200 text-gray-800 font-medium"
-                                onClick={handleClose}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                type="submit"
-                                className="w-[120px] bg-primaryColor-700 hover:bg-blue-600 text-white"
-                                onClick={handleSaveMembers}
-                              >
-                                Save
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </>
-                    </CarouselItem>
-=======
-                    <TeamCard team={team} spaceId={spaceId} />
->>>>>>> 5ea0680b79ce12fa097762ef1fb22090d5227676
+                    
+                    <TeamCard key={team.id} team={team} spaceId={spaceId} sendDataToParent={onTeamDataTrigger}  />
                   ))
+                
                 ) : (
                   <div className="w-full min-h-[80vh] flex justify-center items-center">
                     <p className="text-lg font-semibold">No teams found</p>
@@ -584,3 +545,4 @@ export default function EditSpace({ params }: { params: { spaceId: any } }) {
     </>
   );
 }
+export default EditSpace;
