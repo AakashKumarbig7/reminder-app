@@ -230,12 +230,12 @@ const WebMentionInput: React.FC<Props> = ({
             width: "100%",
             backgroundColor: "#f9f9f9",
             position: "absolute",
-            zIndex: 10,
-            bottom: "-5px",
-            left: "100px",
+            zIndex: 99999,
+            bottom: "40px",
+            left: "0px",
             textAlign: "left",
             minHeight: "auto",
-            maxHeight: "200px",
+            maxHeight: "140px",
             overflowY: "auto",
           }}
         >
@@ -245,9 +245,9 @@ const WebMentionInput: React.FC<Props> = ({
               MentionableEntity[]
             ][]
           ).map(([type, entities]) => (
-            <div key={type} style={{ marginBottom: "5px" }}>
+            <div key={type} style={{ marginBottom: "3px" }}>
               <div
-                className="cursor-pointer hover:bg-gray-300 p-2"
+                className="cursor-pointer hover:bg-gray-300 p-2 pb-1 pl-2.5"
                 onClick={handleAllMention}
               >
                 @all

@@ -9,9 +9,7 @@ import SpaceTeam from "./teams";
 
 import {
   Sheet,
-  
   SheetContent,
-  
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -30,6 +28,10 @@ interface Tab {
   profile_image: string;
 }
 
+interface loggedUserDataProps {
+  loggedUserData: any;
+}
+
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
     style: {
@@ -41,7 +43,7 @@ const notify = (message: string, success: boolean) =>
     duration: 3000,
   });
 
-const SpaceBar = () => {
+const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
@@ -323,8 +325,8 @@ const SpaceBar = () => {
               department: member.department,
               designation: member.designation,
               email: member.email, // Assuming `email` is a field in your `users` table
-              entity_name : member.entity_name,
-              profile_image: member.profile_image
+              entity_name: member.entity_name,
+              profile_image: member.profile_image,
             })),
             space_id: activeTab,
           });
@@ -369,14 +371,14 @@ const SpaceBar = () => {
   return (
     <div className="px-3">
       <Toaster />
-      <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full">
+      <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full h-[62px]">
         <div className="flex gap-2 py-2.5 text-sm text-gray-400 mr-60">
           {tabs.map((tab) => (
             <div
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
               onDoubleClick={() => handleTabDoubleClick(tab.id)}
-              className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-8 ${
+              className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
                 activeTab === tab.id
                   ? "bg-[#1A56DB] text-white border-none"
                   : "bg-white border-gray-300"
@@ -410,176 +412,193 @@ const SpaceBar = () => {
               </button>
             </div>
           ))}
-          <button
-            onClick={addNewTab}
-            className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-8 min-w-fit"
-            style={{ width: "max-content" }}
-          >
-            Add New Space <CirclePlus size={16} />
-          </button>
+          {loggedUserData?.role === "owner" && (
+            <button
+              onClick={addNewTab}
+              className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10 min-w-fit"
+              style={{ width: "max-content" }}
+            >
+              Add New Space <CirclePlus size={16} />
+            </button>
+          )}
         </div>
-        <div className="flex gap-2 py-2.5 text-sm text-gray-400 ml-20">
-          <Sheet
-            open={memberAddDialogOpen}
-            onOpenChange={setMemberAddDialogOpen}
-          >
-            <SheetTrigger asChild>
-              <button className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-8" style={{ width: "max-content" }}>
-                <span className="text-gray-600">
-                  <CirclePlus size={16} />
-                </span>{" "}
-                Add Team
-              </button>
-            </SheetTrigger>
-            <SheetContent className="min-h-screen overflow-y-scroll" style={{maxWidth: "500px"}}>
-              <SheetHeader>
-                <SheetTitle className="text-base">TEAM SETTING</SheetTitle>
-              </SheetHeader>
-              <div className="py-2">
-                <label
-                  htmlFor="name"
-                  className="text-sm text-[#111928] font-medium"
+        {loggedUserData?.role === "owner" && (
+          <div className="flex gap-2 py-2.5 text-sm text-gray-400 ml-20">
+            <Sheet
+              open={memberAddDialogOpen}
+              onOpenChange={setMemberAddDialogOpen}
+            >
+              <SheetTrigger asChild>
+                <button
+                  className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10"
+                  style={{ width: "max-content" }}
                 >
-                  Team Name
-                </label>
-                <Input
-                  id="name"
-                  placeholder="Development Name"
-                  className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
-                  onChange={(e: any) => {
-                    setTeamName(e.target.value);
-                    setTeamNameError(false);
-                  }}
-                />
-                {teamNameError && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Please fill the field
-                  </p>
-                )}
-                <div className="mt-8 relative">
-                  {matchingUsers.length > 0 &&
-                    emailInput.length > 0 &&
-                    !noUserFound && (
-                      <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
-                        {matchingUsers.length > 0 && (
-                          <ul>
-                            {matchingUsers.map((user, index) => (
-                              <li
-                                key={user.id}
-                                className={`p-2 cursor-pointer ${
-                                  index === highlightedIndex
-                                    ? "bg-gray-200"
-                                    : "hover:bg-gray-100"
-                                }`}
-                                onClick={() => handleUserSelect(user)}
-                                onMouseEnter={() => setHighlightedIndex(index)}
-                              >
-                                {user.email}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )}
-                  {noUserFound && (
-                    <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
-                      <ul>
-                        <li className="p-2 cursor-pointer hover:bg-gray-100">
-                          No User Found
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                <div>
+                  <span className="text-gray-600">
+                    <CirclePlus size={16} />
+                  </span>{" "}
+                  Add Team
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                className="min-h-screen overflow-y-scroll"
+                style={{ maxWidth: "500px" }}
+              >
+                <SheetHeader>
+                  <SheetTitle className="text-base">TEAM SETTING</SheetTitle>
+                </SheetHeader>
+                <div className="py-2">
                   <label
-                    htmlFor="members"
+                    htmlFor="name"
                     className="text-sm text-[#111928] font-medium"
                   >
-                    Members
+                    Team Name
                   </label>
                   <Input
-                    id="members"
-                    placeholder="Add guest email"
-                    className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
-                    onChange={getUserData}
+                    id="name"
+                    placeholder="Development Name"
+                    className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
+                    onChange={(e: any) => {
+                      setTeamName(e.target.value);
+                      setTeamNameError(false);
+                    }}
                   />
+                  {teamNameError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Please fill the field
+                    </p>
+                  )}
+                  <div className="mt-8 relative">
+                    {matchingUsers.length > 0 &&
+                      emailInput.length > 0 &&
+                      !noUserFound && (
+                        <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
+                          {matchingUsers.length > 0 && (
+                            <ul>
+                              {matchingUsers.map((user, index) => (
+                                <li
+                                  key={user.id}
+                                  className={`p-2 cursor-pointer ${
+                                    index === highlightedIndex
+                                      ? "bg-gray-200"
+                                      : "hover:bg-gray-100"
+                                  }`}
+                                  onClick={() => handleUserSelect(user)}
+                                  onMouseEnter={() =>
+                                    setHighlightedIndex(index)
+                                  }
+                                >
+                                  {user.email}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+                    {noUserFound && (
+                      <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
+                        <ul>
+                          <li className="p-2 cursor-pointer hover:bg-gray-100">
+                            No User Found
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
 
-                  {/* <Button className="absolute right-[30px] bottom-[38px] rounded-[10px] border border-zinc-300 bg-primaryColor-700 text-white text-xs font-medium hover:bg-primaryColor-700">
+                  <div>
+                    <label
+                      htmlFor="members"
+                      className="text-sm text-[#111928] font-medium"
+                    >
+                      Members
+                    </label>
+                    <Input
+                      id="members"
+                      placeholder="Add guest email"
+                      className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
+                      onChange={getUserData}
+                    />
+
+                    {/* <Button className="absolute right-[30px] bottom-[38px] rounded-[10px] border border-zinc-300 bg-primaryColor-700 text-white text-xs font-medium hover:bg-primaryColor-700">
                     <Plus size={16} />
                     Add
                   </Button> */}
-                </div>
-                {teamMemberError && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Please fill the field
-                  </p>
-                )}
-                {addedMembers.length > 0 && (
-                  <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
-                    {addedMembers.map((member, index) => (
-                      <div
-                        key={member.id}
-                        className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
-                      >
-                        <div className="flex items-center gap-1">
-                          <Image
-                            src={member.profile_image}
-                            alt="user image"
-                            width={36}
-                            height={36}
-                            className="w-[32px] h-[32px] rounded-full"
-                          />
-                          <span>{member.username}</span>
-                        </div>
-                        <span
-                          className={`${
-                            member.role === "superadmin"
-                              ? "text-[#0E9F6E]"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {member.designation?.length > 25
-                            ? `${member.designation?.slice(0, 26)}...`
-                            : member.designation}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeMember(member, index);
-                          }}
-                          className="focus:outline-none space_delete_button text-gray-400"
-                        >
-                          <Trash2 className="text-black" size={18} />
-                        </button>
-                      </div>
-                    ))}
                   </div>
-                )}
-              </div>
-              <SheetFooter className="mt-5">
-                <Button
-                  type="submit"
-                  variant={"outline"}
-                  className="w-1/2 border border-gray-200 text-gray-800 font-medium"
-                  onClick={handleClose}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="w-1/2 bg-primaryColor-700 hover:bg-blue-600 text-white"
-                  onClick={handleSaveMembers}
-                >
-                  Save
-                </Button>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
-        </div>
+                  {teamMemberError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Please fill the field
+                    </p>
+                  )}
+                  {addedMembers.length > 0 && (
+                    <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
+                      {addedMembers.map((member, index) => (
+                        <div
+                          key={member.id}
+                          className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
+                        >
+                          <div className="flex items-center gap-1">
+                            <Image
+                              src={member.profile_image}
+                              alt="user image"
+                              width={36}
+                              height={36}
+                              className="w-[32px] h-[32px] rounded-full"
+                            />
+                            <span>{member.username}</span>
+                          </div>
+                          <span
+                            className={`${
+                              member.role === "superadmin"
+                                ? "text-[#0E9F6E]"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {member.designation?.length > 25
+                              ? `${member.designation?.slice(0, 26)}...`
+                              : member.designation}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeMember(member, index);
+                            }}
+                            className="focus:outline-none space_delete_button text-gray-400"
+                          >
+                            <Trash2 className="text-black" size={18} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <SheetFooter className="mt-5">
+                  <Button
+                    type="submit"
+                    variant={"outline"}
+                    className="w-1/2 border border-gray-200 text-gray-800 font-medium"
+                    onClick={handleClose}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="w-1/2 bg-primaryColor-700 hover:bg-blue-600 text-white"
+                    onClick={handleSaveMembers}
+                  >
+                    Save
+                  </Button>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+          </div>
+        )}
       </div>
-      <SpaceTeam spaceId={spaceId as number} teamData = {teamData} setTeamData = {fetchTeamData} />
+      <SpaceTeam
+        spaceId={spaceId as number}
+        teamData={teamData}
+        setTeamData={fetchTeamData}
+        loggedUserData={loggedUserData as any}
+      />
     </div>
   );
 };

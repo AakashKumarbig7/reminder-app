@@ -26,7 +26,7 @@ import { Search, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 // import Loading from "@/components/ui/loading";
-import { getUserData, signIn } from "./action";
+import { getLoggedInUserData, signIn } from "./action";
 import toast, { Toaster } from "react-hot-toast";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/utils/supabase/supabaseClient";
@@ -81,10 +81,18 @@ const SignIn = () => {
         notify(`Sign in failed: ${res.error}`, false);
       } else {
         notify("Sign in successful", true);
-        const user = await getUserData();
-        localStorage.setItem('userId', user?.id!);
-        localStorage.setItem('userEmail', user?.email!);
-        // checkUserSignedIn();
+        // const user = await getLoggedInUserData();
+        // console.log(user?.id);
+        // localStorage.setItem("userId", user?.id!);
+        // localStorage.setItem("userEmail", user?.email!);
+        // Check the screen width and redirect accordingly
+        const screenWidth = window.innerWidth;
+
+        if (screenWidth >= 992) {
+          route.push("/dashboard"); // Large devices
+        } else if (screenWidth <= 991) {
+          route.push("/home"); // Medium devices
+        }
       }
     } catch (error) {
       setSigninLoading(false);
@@ -136,7 +144,7 @@ const SignIn = () => {
 
   useEffect(() => {
     const fetchUserId = async () => {
-      const user = await getUserData();
+      const user = await getLoggedInUserData();
       if (user) {
         setSignedInUserId(user.id);
       }
@@ -144,17 +152,16 @@ const SignIn = () => {
     fetchUserId();
   }, [signedInUserId]);
 
-//   if (isLoading) {
-//     return <Loading />;
-//   }
+  //   if (isLoading) {
+  //     return <Loading />;
+  //   }
 
   return (
     <div className="md:flex sm:block justify-end min-h-screen font-inter">
       <Toaster />
       <div className="md:w-3/5 sm:w-full h-screen flex flex-col justify-center relative">
         <div className="lg:w-[515px] p-10 md:w-full w-full md:p-12 lg:p-0 m-auto">
-        <div className="absolute top-4 left-4">
-          </div>
+          <div className="absolute top-4 left-4"></div>
           <h1 className="text-3xl font-bold mb-7">Sign In</h1>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">

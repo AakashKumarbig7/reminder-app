@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 // Fetch user data
-export async function getUserData() {
+export async function getLoggedInUserData() {
   const supabase = createClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -40,23 +40,26 @@ export async function signIn(email : string, password : string) {
   console.log("Sign-in successful:", data);
 
   // Fetch user data
-  const user = await getUserData();
+  const user = await getLoggedInUserData();
   if (!user) {
     return { error: "Failed to fetch user data after sign-in." };
   }
+  // redirect("/dashboard");
+
+  // console.log(window.innerWidth, " window width");
 
  // Check the device screen size and redirect accordingly
- if (typeof window !== "undefined") {
+//  if (typeof window !== "undefined") {
 
-  // Initial screen size check and redirection
-  const screenWidth = window.innerWidth;
+//   // Initial screen size check and redirection
+//   const screenWidth = window.innerWidth;
 
-  if (screenWidth >= 1024) {
-    redirect("/dashboard"); // Large devices
-  } else if (screenWidth <= 1024) {
-    redirect("/home"); // Medium devices
-  }
-}
+//   if (screenWidth >= 1024) {
+//     redirect("/dashboard"); // Large devices
+//   } else if (screenWidth <= 1024) {
+//     redirect("/home"); // Medium devices
+//   }
+// }
 
 
 }
