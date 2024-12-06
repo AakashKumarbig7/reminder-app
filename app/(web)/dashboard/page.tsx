@@ -5,7 +5,6 @@ import SpaceBar from "../components/spacebar";
 import "./style.css";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import HashLoader from "react-spinners/HashLoader";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 
 const WebDashboard = () => {

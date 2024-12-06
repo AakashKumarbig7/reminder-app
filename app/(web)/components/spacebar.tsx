@@ -1,6 +1,13 @@
 "use client";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { CirclePlus, CircleX, Trash2 } from "lucide-react";
+import {
+  CirclePlus,
+  CircleX,
+  Ellipsis,
+  EllipsisVertical,
+  Route,
+  Trash2,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +16,7 @@ import SpaceTeam from "./teams";
 
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetFooter,
   SheetHeader,
@@ -16,6 +24,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Image from "next/image";
+import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
 
 interface Tab {
   id: number;
@@ -44,6 +54,7 @@ const notify = (message: string, success: boolean) =>
   });
 
 const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
+  const route = useRouter();
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
@@ -58,10 +69,67 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [teamMemberError, setTeamMemberError] = useState(false);
   const [spaceId, setSpaceId] = useState<number | null>(null);
   const [teamData, setTeamData] = useState(() => ({}));
+  const [updatedSpaceName, setUpdatedSpaceName] = useState<string>("");
+  const [spaceEditDialogOpen, setSpaceEditDialogOpen] = useState(false);
+  const [spaceDetails, setSpaceDetails] = useState<any[]>([]);
 
   useEffect(() => {
     fetchSpaces();
   }, []);
+
+  // const handleOpenChange = (open: boolean) => {
+  //   setSpaceEditDialogOpen({ status: open, id: tab.id });
+  // };
+
+  const updateSpaceTab = async (id: any) => {
+    try {
+      // if (!updatedSpaceName) {
+      //   return;
+      // }
+      const { error } = await supabase
+        .from("spaces")
+        .update({ space_name: updatedSpaceName || spaceId })
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error updating space:", error);
+        return;
+      }
+
+      console.log(spaceDetails, " space details");
+
+      // const { data, error: spaceError } = await supabase
+      // .from("teams")
+      // .delete()
+      // .in("id", spaceDetails.map((member: any) => member.id));
+
+      // if (spaceError) {
+      //   console.error("Error deleting tabs:", spaceError);
+      //   return;
+      // }
+
+      notify("Space name updated successfully", true);
+      const newTabs = tabs.filter((tab) => tab.id !== id);
+      setTabs(newTabs);
+      if (newTabs.length > 0) {
+        setActiveTab(newTabs[0].id); // Set first tab as active if any left
+      } else {
+        setActiveTab(null);
+      }
+
+      fetchSpaces(); // Optional: Refresh spaces list if needed
+    } catch (error) {
+      console.error("Error updating space:", error);
+    }
+  };
+
+  const deleteTeam = async (user: any, index: number) => {
+    setSpaceDetails((prevMembers) =>
+      prevMembers.filter(
+        (member: any, i: number) => !(member.id === user.id && i === index)
+      )
+    );
+  };
 
   // Fetch spaces from database
   const fetchSpaces = async () => {
@@ -97,37 +165,22 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
     if (data) {
       setSpaceId(data.id);
+      const { data: spaceId, error: spaceError } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("space_id", data.id);
+
+      if (spaceError) {
+        console.error("Error fetching space:", spaceError);
+        return;
+      }
+
+      if (spaceId) {
+        setSpaceDetails(spaceId);
+        console.log("Space data: ", spaceId);
+      }
     }
     setActiveTab(id);
-    // setIsEditing(null);
-  };
-
-  // Handle double-clicking a tab for editing
-  const handleTabDoubleClick = (id: number) => {
-    setIsEditing(id);
-  };
-
-  // Update tab name in database and UI
-  const handleInputChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    id: number
-  ) => {
-    const newName = event.target.value;
-    const { error } = await supabase
-      .from("spaces")
-      .update({ space_name: newName })
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error updating space name:", error);
-      return;
-    }
-
-    setTabs((prevTabs) =>
-      prevTabs.map((tab) =>
-        tab.id === id ? { ...tab, space_name: newName } : tab
-      )
-    );
   };
 
   // Add a new tab in database and UI
@@ -146,7 +199,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       const newTab = data[0];
       setTabs((prevTabs) => [...prevTabs, newTab]);
       setActiveTab(newTab.id);
-      setIsEditing(newTab.id);
     }
   };
 
@@ -176,6 +228,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     } else {
       setActiveTab(null);
     }
+    notify("Space deleted successfully", true);
   };
 
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -377,39 +430,148 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
             <div
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
-              onDoubleClick={() => handleTabDoubleClick(tab.id)}
               className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
                 activeTab === tab.id
                   ? "bg-[#1A56DB] text-white border-none"
                   : "bg-white border-gray-300"
               }`}
             >
-              {isEditing === tab.id ? (
-                <input
-                  type="text"
-                  value={tab.space_name}
-                  onChange={(e) => handleInputChange(e, tab.id)}
-                  onBlur={() => setIsEditing(null)}
-                  className="h-full outline-none bg-transparent text-current py-1 pr-0"
-                  autoFocus
-                />
-              ) : (
-                <span>{tab.space_name || "Double-click to edit"}</span>
-              )}
+              <span>{tab.space_name}</span>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteTab(tab.id);
-                }}
-                className={`absolute right-2 focus:outline-none space_delete_button ${
-                  activeTab === tab.id
-                    ? "text-white border-none"
-                    : "bg-white border-gray-300 text-gray-400"
-                }`}
+              <Sheet
+              // open={spaceEditDialogOpen}
+              // onOpenChange={setSpaceEditDialogOpen}
               >
-                <CircleX size={16} />
-              </button>
+                <SheetTrigger asChild>
+                  <EllipsisVertical
+                    className={`absolute right-2 focus:outline-none space_delete_button ${
+                      activeTab === tab.id
+                        ? "text-white border-none"
+                        : "bg-white border-gray-300 text-gray-400"
+                    }`}
+                    size={16}
+                  />
+                </SheetTrigger>
+                <SheetContent
+                  className="pt-2.5 p-3 font-inter flex flex-col justify-between"
+                  style={{ maxWidth: "415px" }}
+                >
+                  <div>
+                    <SheetHeader>
+                      <SheetTitle className="text-gray-500 uppercase text-base">
+                        space setting
+                      </SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-3">
+                      <Label htmlFor="name" className="text-sm text-gray-900">
+                        Space Name
+                      </Label>
+                      <Input
+                        id="name"
+                        defaultValue={tab.space_name}
+                        className="w-full mt-1"
+                        onChange={(e) => setUpdatedSpaceName(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="pt-2">
+                      <Label htmlFor="name" className="text-sm text-gray-900">
+                        Teams
+                      </Label>
+                      <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[70vh] max-h-[70vh] overflow-auto playlist-scroll">
+                        {spaceDetails.length > 0 ? (
+                          spaceDetails.map((team: any, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between mb-2"
+                            >
+                              <p className="text-gray-900 font-inter text-sm">
+                                {team.team_name.length > 16 ? (
+                                  team.team_name.slice(0, 16) + "..."
+                                ) : (
+                                  team.team_name
+                                )}
+                              </p>
+                              <div className="flex">
+                                {team.members.length > 0 ? (
+                                  <>
+                                    {team.members
+                                      .slice(0, 6)
+                                      .map((member: any, index: number) => (
+                                        <Image
+                                          key={index}
+                                          src={member.profile_image}
+                                          alt={member.name}
+                                          width={30}
+                                          height={30}
+                                          className="w-[32px] h-[32px] rounded-full -mr-2.5 border-2 border-white"
+                                        />
+                                      ))}
+                                    {team.members.length > 6 && (
+                                      <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
+                                        +{team.members.length - 6}
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <p className="text-gray-900 font-inter text-sm">
+                                    No Members Found
+                                  </p>
+                                )}
+                              </div>
+
+                              <Trash2 size={16} className="cursor-pointer" onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      deleteTeam(
+                                                        team,
+                                                        index
+                                                      );
+                                                    }}/>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-500 text-base font-inter">
+                            No Team Found
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <SheetFooter className="">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-1/3 border border-red-500 text-red-500 text-sm hover:text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTab(tab.id);
+                      }}
+                    >
+                      Delete Space
+                    </Button>
+                    <SheetClose asChild>
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        className="w-1/3 text-sm"
+                      >
+                        Cancel
+                      </Button>
+                    </SheetClose>
+                    <Button
+                      type="submit"
+                      className="bg-primaryColor-700 text-white hover:bg-primaryColor-700 text-sm w-1/3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateSpaceTab(tab.id);
+                      }}
+                    >
+                      Update
+                    </Button>
+                  </SheetFooter>
+                </SheetContent>
+              </Sheet>
             </div>
           ))}
           {loggedUserData?.role === "owner" && (
@@ -564,7 +726,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                             }}
                             className="focus:outline-none space_delete_button text-gray-400"
                           >
-                            <Trash2 className="text-black" size={18} />
+                            <Trash2 className="text-black" size={18} /> 1
                           </button>
                         </div>
                       ))}
