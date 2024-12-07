@@ -39,9 +39,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
-import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
+import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { Toaster } from "@/components/ui/toaster";
 
 interface SearchBarProps {
   spaceId: number;
@@ -66,17 +68,6 @@ interface Tab {
   department: string;
   task_created: number;
 }
-
-const notify = (message: string, success: boolean) =>
-  toast[success ? "success" : "error"](message, {
-    style: {
-      borderRadius: "10px",
-      background: "#fff",
-      color: "#000",
-    },
-    position: "top-right",
-    duration: 3000,
-  });
 
 const SpaceTeam: React.FC<SearchBarProps> = ({
   spaceId,
@@ -123,6 +114,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     const { data, error } = await supabase
       .from("teams")
       .select("*")
+      .eq("is_deleted", false)
       .eq("space_id", spaceId);
 
     if (error) {
@@ -180,6 +172,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
           team_id: teamId,
           space_id: spaceId,
           due_date: formatDate(addDays(new Date(), 1)),
+          is_deleted: false,
         })
         .select()
         .order("id", { ascending: false });
@@ -198,6 +191,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       const { data: fetchedTasks, error: fetchError } = await supabase
         .from("tasks")
         .select("*")
+        .eq("is_deleted", false)
         .eq("space_id", spaceId)
         .eq("team_id", teamId);
 
@@ -218,7 +212,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   const handleDeleteTask = async (teamId: number, taskId: number) => {
     const { data, error } = await supabase
       .from("tasks")
-      .delete()
+      .update({ is_deleted: true })
       .eq("team_id", teamId)
       .eq("id", taskId);
 
@@ -227,7 +221,45 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     console.log(data, " deleted task");
     fetchTasks();
     setTaskDeleteOpen(false);
-    notify("Task deleted successfully", true);
+    toast({
+      title: "Deleted Successfully!",
+      description: "Task deleted successfully!",
+      action: (
+        <ToastAction
+          altText="Undo"
+          onClick={() => handleTaskUndo(teamId, taskId)}
+        >
+          Undo
+        </ToastAction>
+      ),
+    });
+  };
+
+  const handleTaskUndo = async (teamId: number, taskId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ is_deleted: false })
+        .eq("team_id", teamId)
+        .eq("id", taskId);
+  
+      if (error) throw error;
+  
+      fetchTasks(); // Refresh the tasks list
+      toast({
+        title: "Undo Successful",
+        description: "The task has been restored.",
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Error undoing delete:", error);
+      toast({
+        title: "Error",
+        description: "Failed to restore the task. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
   };
 
   const handleUpdateTask = async (teamId: number, taskId: number) => {
@@ -284,7 +316,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         }
 
         resetInputAndFetchUpdates();
-        notify("Task created successfully", true);
+        // notify("Task created successfully", true);
       }
     } catch (error) {
       console.error("Error in handleUpdateTask:", error);
@@ -308,6 +340,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     const { data, error } = await supabase
       .from("tasks")
       .select("*")
+      .eq("is_deleted", false)
       .order("created_at", { ascending: true });
     if (error) {
       console.error("Error fetching tasks:", error);
@@ -328,7 +361,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       // Delete tasks associated with the team first
       const { error: taskError } = await supabase
         .from("tasks")
-        .delete()
+        .update({ is_deleted: true })
         .eq("team_id", teamId);
 
       if (taskError) {
@@ -341,7 +374,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       // Now delete the team
       const { error: teamError } = await supabase
         .from("teams")
-        .delete()
+        .update({ is_deleted: true })
         .eq("id", teamId);
 
       if (teamError) {
@@ -354,11 +387,63 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       // Additional cleanup actions
       setTeamNameDialogOpen(false);
       fetchTeams();
-      notify("Team deleted successfully", true);
+      toast({
+        title: "Deleted Successfully!",
+        description: "Team deleted successfully!",
+        action: (
+          <ToastAction
+            altText="Undo"
+            onClick={() => handleTeamUndo(teamId)}
+          >
+            Undo
+          </ToastAction>
+        ),
+      });
     } catch (error) {
       console.error("Unexpected error during deletion:", error);
     }
   };
+
+  const handleTeamUndo = async (teamId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ is_deleted: false })
+        .eq("team_id", teamId);
+
+      if (error) {
+        console.error("Error undoing delete:", error);
+        return;
+      }
+
+      // Now delete the team
+      const { error: teamError } = await supabase
+        .from("teams")
+        .update({ is_deleted: false })
+        .eq("id", teamId);
+
+      if (teamError) {
+        console.error("Error deleting team:", teamError);
+        return;
+      }
+
+      // Additional cleanup actions
+      setTeamNameDialogOpen(false);
+      fetchTeams();
+      toast({
+        title: "Undo Successful",
+        description: "The deleted team has been restored.",
+        duration: 5000,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to restore the deleted team. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  }
 
   const handleUpdateTeam = async (
     teamId: number,
@@ -391,7 +476,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         fetchTeams();
         setTeamNameSheetOpen(false);
         setTeamNameError(false);
-        notify("Team updated successfully", true);
+        // notify("Team updated successfully", true);
         // }
       } catch (error) {
         console.error("Error updating team name:", error);
@@ -508,6 +593,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     const { data: taskData, error: fetchError } = await supabase
       .from("tasks")
       .update({ task_created: true })
+      .eq("is_deleted", false)
       .eq("id", updateTaskId.taskId)
       .eq("team_id", updateTaskId.teamId)
       .select();
@@ -546,6 +632,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   return (
     <div>
+      <Toaster />
       {teams.length > 0 ? (
         <div className="w-full py-4 px-0">
           <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">
@@ -562,7 +649,11 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                       >
                         <div className="flex justify-between items-center relative">
                           <p className="text-lg font-semibold text-black font-geist">
-                            {team.team_name}
+                            {team.team_name.length > 20 ? (
+                              team.team_name.slice(0, 20) + "..."
+                            ) : (
+                              team.team_name
+                            )}
                           </p>
                           {loggedUserData?.role === "owner" && (
                             <DropdownMenu
@@ -1034,10 +1125,10 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                             );
                                           }
                                           setTaskStatus(value);
-                                          notify(
-                                            `Task status updated to "${value}"`,
-                                            true
-                                          );
+                                          // notify(
+                                          //   `Task status updated to "${value}"`,
+                                          //   true
+                                          // );
                                           fetchTasks();
                                         }}
                                       >

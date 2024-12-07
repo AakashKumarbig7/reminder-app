@@ -11,7 +11,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import toast, { Toaster } from "react-hot-toast";
+// import toast, { Toaster } from "react-hot-toast";
 import SpaceTeam from "./teams";
 
 import {
@@ -26,6 +26,8 @@ import {
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 interface Tab {
   id: number;
@@ -42,16 +44,16 @@ interface loggedUserDataProps {
   loggedUserData: any;
 }
 
-const notify = (message: string, success: boolean) =>
-  toast[success ? "success" : "error"](message, {
-    style: {
-      borderRadius: "10px",
-      background: "#fff",
-      color: "#000",
-    },
-    position: "top-right",
-    duration: 3000,
-  });
+// const notify = (message: string, success: boolean) =>
+//   toast[success ? "success" : "error"](message, {
+//     style: {
+//       borderRadius: "10px",
+//       background: "#fff",
+//       color: "#000",
+//     },
+//     position: "top-right",
+//     duration: 3000,
+//   });
 
 const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const route = useRouter();
@@ -72,6 +74,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [updatedSpaceName, setUpdatedSpaceName] = useState<string>("");
   const [spaceEditDialogOpen, setSpaceEditDialogOpen] = useState(false);
   const [spaceDetails, setSpaceDetails] = useState<any[]>([]);
+  const [spaceName, setSpaceName] = useState<string>("");
+  const [deletedSpace, setDeletedSpace] = useState<any[]>([]);
 
   useEffect(() => {
     fetchSpaces();
@@ -83,12 +87,9 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   const updateSpaceTab = async (id: any) => {
     try {
-      // if (!updatedSpaceName) {
-      //   return;
-      // }
       const { error } = await supabase
         .from("spaces")
-        .update({ space_name: updatedSpaceName || spaceId })
+        .update({ space_name: updatedSpaceName || spaceName })
         .eq("id", id);
 
       if (error) {
@@ -96,19 +97,36 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         return;
       }
 
-      console.log(spaceDetails, " space details");
+      const { data: taskData, error: taskError } = await supabase
+        .from("tasks")
+        .update({is_deleted: true})
+        .in(
+          "team_id",
+          deletedSpace.map((member: any) => member.id)
+        );
 
-      // const { data, error: spaceError } = await supabase
-      // .from("teams")
-      // .delete()
-      // .in("id", spaceDetails.map((member: any) => member.id));
+      if (taskError) {
+        console.error("Error deleting tabs:", taskError);
+        return;
+      }
 
-      // if (spaceError) {
-      //   console.error("Error deleting tabs:", spaceError);
-      //   return;
-      // }
+      const { data, error: spaceError } = await supabase
+        .from("teams")
+        .update({is_deleted: true})
+        .in(
+          "id",
+          deletedSpace.map((member: any) => member.id)
+        );
 
-      notify("Space name updated successfully", true);
+      if (spaceError) {
+        console.error("Error deleting tabs:", spaceError);
+        return;
+      }
+
+      // notify("Space updated successfully", true);
+      fetchSpaces();
+      fetchTeamData();
+      setSpaceEditDialogOpen(false);
       const newTabs = tabs.filter((tab) => tab.id !== id);
       setTabs(newTabs);
       if (newTabs.length > 0) {
@@ -117,18 +135,27 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         setActiveTab(null);
       }
 
-      fetchSpaces(); // Optional: Refresh spaces list if needed
+      // Optional: Refresh spaces list if needed
     } catch (error) {
       console.error("Error updating space:", error);
     }
   };
 
   const deleteTeam = async (user: any, index: number) => {
-    setSpaceDetails((prevMembers) =>
-      prevMembers.filter(
+    setSpaceDetails((prevMembers) => {
+      // Find the team to delete based on user id and index
+      const deletedTeam = prevMembers.find(
+        (member: any, i: number) => member.id === user.id && i === index
+      );
+      if (deletedTeam) {
+        console.log("Deleted Team:", deletedTeam);
+        setDeletedSpace((prevMembers) => [...prevMembers, deletedTeam]);
+      }
+
+      return prevMembers.filter(
         (member: any, i: number) => !(member.id === user.id && i === index)
-      )
-    );
+      );
+    });
   };
 
   // Fetch spaces from database
@@ -136,6 +163,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
+      .eq("is_deleted", false)
       .order("space_name", { ascending: true });
     if (error) {
       console.error("Error fetching spaces:", error);
@@ -156,6 +184,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       .from("spaces")
       .select("*")
       .eq("id", id)
+      // .eq("is_deleted", false)
       .single();
 
     if (error) {
@@ -165,9 +194,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
     if (data) {
       setSpaceId(data.id);
+      setSpaceName(data.space_name);
       const { data: spaceId, error: spaceError } = await supabase
         .from("teams")
         .select("*")
+        .eq("is_deleted", false)
         .eq("space_id", data.id);
 
       if (spaceError) {
@@ -187,7 +218,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const addNewTab = async () => {
     const { data, error } = await supabase
       .from("spaces")
-      .insert({ space_name: "New Space" })
+      .insert({ space_name: "New Space", is_deleted: false })
       .select();
 
     if (error) {
@@ -204,11 +235,19 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   // Delete a tab from database and UI
   const deleteTab = async (id: number) => {
-    const { error } = await supabase.from("spaces").delete().eq("id", id);
+    const { data, error: taskError } = await supabase
+      .from("tasks")
+      .update({is_deleted: true})
+      .eq("space_id", id);
+
+    if (taskError) {
+      console.error("Error deleting tabs:", taskError);
+      return;
+    }
 
     const { error: deleteError } = await supabase
       .from("teams")
-      .delete()
+      .update({is_deleted: true})
       .eq("space_id", id);
 
     if (deleteError) {
@@ -216,10 +255,15 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       return;
     }
 
+    const { error } = await supabase.from("spaces").update({is_deleted: true}).eq("id", id);
+
     if (error) {
       console.error("Error deleting space:", error);
       return;
     }
+
+    fetchSpaces();
+    fetchTeamData();
 
     const newTabs = tabs.filter((tab) => tab.id !== id);
     setTabs(newTabs);
@@ -228,8 +272,75 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     } else {
       setActiveTab(null);
     }
-    notify("Space deleted successfully", true);
+    toast({
+      title: "Deleted Successfully!",
+      description: "Space deleted successfully!",
+      action: (
+        <ToastAction
+          altText="Undo"
+          onClick={() => handleSpaceUndo(spaceId as number)}
+        >
+          Undo
+        </ToastAction>
+      ),
+    });
   };
+
+  const handleSpaceUndo = async (id: number) => {
+    try{
+    const { data, error: taskError } = await supabase
+      .from("tasks")
+      .update({is_deleted: false})
+      .eq("space_id", id);
+
+    if (taskError) {
+      console.error("Error deleting tabs:", taskError);
+      return;
+    }
+
+    const { error: deleteError } = await supabase
+      .from("teams")
+      .update({is_deleted: false})
+      .eq("space_id", id);
+
+    if (deleteError) {
+      console.error("Error deleting tabs:", deleteError);
+      return;
+    }
+
+    const { error } = await supabase.from("spaces").update({is_deleted: false}).eq("id", id);
+
+    if (error) {
+      console.error("Error deleting space:", error);
+      return;
+    }
+
+    fetchSpaces();
+    fetchTeamData();
+
+    // const newTabs = tabs.filter((tab) => tab.id !== id);
+    // setTabs(newTabs);
+    // if (newTabs.length > 0) {
+    //   setActiveTab(newTabs[0].id); // Set first tab as active if any left
+    // } else {
+    //   setActiveTab(null);
+    // }
+    toast({
+      title: "Undo Successful",
+      description: "The space has been restored.",
+      duration: 5000,
+    });
+  } catch (error) {
+    console.error("Error undoing space:", error);
+    toast({
+      title: "Undo Failed",
+      description: "An error occurred while undoing the space.",
+      variant: "destructive",
+      duration: 5000,
+    })
+  }
+  };
+
 
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmailInput(e.target.value);
@@ -318,6 +429,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     const { data, error } = await supabase
       .from("teams")
       .select("*")
+      .eq("is_deleted", false)
       .eq("space_id", spaceId);
 
     if (error) {
@@ -361,7 +473,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
       if (existingTeam && existingTeam.length > 0) {
         console.log("Team already exists with these members:", existingTeam);
-        notify("Team already exists with these members", false);
+        // notify("Team already exists with these members", false);
         return;
       }
 
@@ -382,6 +494,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
               profile_image: member.profile_image,
             })),
             space_id: activeTab,
+            is_deleted: false,
           });
 
         if (insertError) {
@@ -394,7 +507,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         setTeamMemberError(false);
         setMemberAddDialogOpen(false);
         fetchTeamData();
-        notify("Members saved successfully", true);
+        // notify("Members saved successfully", true);
       } catch (err) {
         console.error("Unexpected error:", err);
       }
@@ -423,7 +536,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   return (
     <div className="px-3">
-      <Toaster />
+      
       <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full h-[62px]">
         <div className="flex gap-2 py-2.5 text-sm text-gray-400 mr-60">
           {tabs.map((tab) => (
@@ -486,11 +599,9 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                               className="flex items-center justify-between mb-2"
                             >
                               <p className="text-gray-900 font-inter text-sm">
-                                {team.team_name.length > 16 ? (
-                                  team.team_name.slice(0, 16) + "..."
-                                ) : (
-                                  team.team_name
-                                )}
+                                {team.team_name.length > 16
+                                  ? team.team_name.slice(0, 16) + "..."
+                                  : team.team_name}
                               </p>
                               <div className="flex">
                                 {team.members.length > 0 ? (
@@ -504,7 +615,13 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                                           alt={member.name}
                                           width={30}
                                           height={30}
-                                          className="w-[32px] h-[32px] rounded-full -mr-2.5 border-2 border-white"
+                                          className={`w-[32px] h-[32px] rounded-full ${
+                                            team.members.length === 1
+                                              ? "mr-2.5"
+                                              : team.members.length > 0
+                                              ? "-mr-2.5"
+                                              : ""
+                                          } border-2 border-white`}
                                         />
                                       ))}
                                     {team.members.length > 6 && (
@@ -520,13 +637,14 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                                 )}
                               </div>
 
-                              <Trash2 size={16} className="cursor-pointer" onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      deleteTeam(
-                                                        team,
-                                                        index
-                                                      );
-                                                    }}/>
+                              <Trash2
+                                size={16}
+                                className="cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteTeam(team, index);
+                                }}
+                              />
                             </div>
                           ))
                         ) : (
@@ -726,7 +844,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                             }}
                             className="focus:outline-none space_delete_button text-gray-400"
                           >
-                            <Trash2 className="text-black" size={18} /> 1
+                            <Trash2 className="text-black" size={18} />
                           </button>
                         </div>
                       ))}
