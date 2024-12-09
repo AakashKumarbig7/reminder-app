@@ -14,45 +14,72 @@ import {
 } from "@/components/ui/drawer";
 import { Command, CommandList } from "@/components/ui/command";
 
+import { useRouter, useSearchParams } from 'next/navigation'
+
+const Teams = [
+  "Design Team",
+  "Development Team",
+  "S.E.O Team",
+  "WordPress Team",
+  "Management",
+  // "Add new Team",
+];
+const Sorting = [
+  "None",
+  "Due Date",
+  "Alphabetical",
+  "Created on",
+  "Modified on",
+];
+
 export default function DropDown() {
-  const [selectedTeam, setSelectedTeam] = useState("");
-  const [selectedSorting, setSelectedSorting] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams(); // To read current query params
+
+  const [selectedTeam, setSelectedTeam] = useState(searchParams.get('team') || Teams[0]);
+  const [selectedSorting, setSelectedSorting] = useState(searchParams.get('sort') || Sorting[0]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDrawerOpen1, setIsDrawerOpen1] = useState(false);
 
-  const Teams = [
-    "Design Team",
-    "Development Team",
-    "S.E.O Team",
-    "WordPress Team",
-    "Management",
 
-    // "Add new Team",
-  ];
-  const Sorting = [
-    "None",
-    "Due Date",
-    "Alphabetical",
-    "Created on",
-    "Modified on",
-  ];
+
+  // Update the URL query parameter
+  const updateQueryParam = (key: string, value: string) => {
+    // Create a new search params object
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (value) {
+      params.set(key, value); // Add/update the query param
+    } else {
+      params.delete(key); // Remove the query param if value is empty
+    }
+
+    // Navigate with the updated query string
+    router.push(`?${params.toString()}`);
+  };
+
+
   const handleSelected = (sort: any) => {
     setSelectedSorting(sort);
+    updateQueryParam('sort', sort || undefined);
     console.log("Selected Space:", sort);
     setIsDrawerOpen(false);
   };
   const handleSelect = (team: any) => {
     setSelectedTeam(team);
+    updateQueryParam('team', team || undefined);
     console.log("Selected Space:", team);
     setIsDrawerOpen1(false);
   };
+
 
   return (
     <>
       <div className="flex  justify-between ">
         <Drawer open={isDrawerOpen1} onOpenChange={setIsDrawerOpen1}>
           <DrawerTrigger>
-            <div className="bg-white py-3  rounded-xl border h-[40px] w-[243px] border-gray-300 px-[18px] ">
+            <div className="bg-white py-3  rounded-xl border h-[40px] w-[243px] border-gray-300 px-[18px] flex items-center ">
+              <p>{selectedTeam}</p>
               <RiArrowDropDownLine className="w-[18px] h-[18px]  text-black ml-auto  " />
             </div>
           </DrawerTrigger>
@@ -65,11 +92,10 @@ export default function DropDown() {
                     <li
                       key={team}
                       onClick={() => handleSelect(team)}
-                      className={`flex items-center   border-b-[1px] border-zinc-300 cursor-pointer ${
-                        selectedTeam === team
-                          ? "text-zinc-950 font-semibold"
-                          : "text-blackish"
-                      }`}
+                      className={`flex items-center   border-b-[1px] border-zinc-300 cursor-pointer ${selectedTeam === team
+                        ? "text-zinc-950 font-semibold"
+                        : "text-blackish"
+                        }`}
                     >
                       <span className="w-4 h-4 mr-2 flex justify-center items-center">
                         {selectedTeam === team ? (
@@ -119,20 +145,19 @@ export default function DropDown() {
                       key={sort}
                       onClick={() => handleSelected(sort)}
                       className={`flex items-center border-b-[1px] pt-[10px] pr-[10px] border-zinc-300 cursor-pointer 
-                        ${
-                          selectedSorting === sort
-                            ? "text-zinc-950 font-semibold"
-                            : "text-blackish"
+                        ${selectedSorting === sort
+                          ? "text-zinc-950 font-semibold"
+                          : "text-blackish"
                         }`}
                     >
                       <span className="w-4 h-4 mr-2 flex justify-center items-center">
                         {selectedSorting === sort ? (
-                          <FaCheck className="text-blackish" />
+                          <FaCheck className="text-blackish " />
                         ) : (
                           <span className="w-4 h-4" />
                         )}
                       </span>
-                      <p className="text-sm ">{sort}</p>
+                      <p className="text-sm pb-1 ">{sort}</p>
                     </li>
                   ))}
                 </ul>

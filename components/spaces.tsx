@@ -8,6 +8,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import Link from "next/link";
 
 export default function Spaces() {
   const [spaceNames, setSpaceNames] = useState<string[]>([]); // Updated state type
@@ -52,9 +53,7 @@ export default function Spaces() {
               {spaceNames.length > 0 ? (
                 spaceNames.map((spaceName, index) => (
                   <CarouselItem key={index} className="flex-none">
-                    <button className="rounded-[10px] border border-teal-500 bg-white flex items-center justify-center min-w-min h-10 px-4 text-base font-medium text-greyblack">
-                      <p>{spaceName}</p>
-                    </button>
+                    <Link href={`/task?space=${spaceName}`} className="rounded-[10px] border border-teal-500 bg-white flex items-center justify-center min-w-min h-10 px-4 text-base font-medium text-greyblack">{spaceName}</Link>
                   </CarouselItem>
                 ))
               ) : (
