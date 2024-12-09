@@ -76,6 +76,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [spaceDetails, setSpaceDetails] = useState<any[]>([]);
   const [spaceName, setSpaceName] = useState<string>("");
   const [deletedSpace, setDeletedSpace] = useState<any[]>([]);
+  const [deletedTasks, setDeletedTasks] = useState<any[]>([]);
+  const [deletedTeams, setDeletedTeams] = useState<any[]>([]);
 
   useEffect(() => {
     fetchSpaces();
@@ -235,36 +237,88 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   // Delete a tab from database and UI
   const deleteTab = async (id: number) => {
-    const { data, error: taskError } = await supabase
+    let backupData: {
+      tasks: any[];
+      teams: any[];
+      space: any;
+    } = { tasks: [], teams: [], space: null };
+  
+    // Fetch tasks
+    const { data: tasks, error: tasksError } = await supabase
       .from("tasks")
-      .update({is_deleted: true})
+      .select("*")
+      .eq("is_deleted", false)
       .eq("space_id", id);
-
-    if (taskError) {
-      console.error("Error deleting tabs:", taskError);
+  
+    if (tasksError) {
+      console.error("Error fetching tasks:", tasksError);
       return;
     }
-
-    const { error: deleteError } = await supabase
+    backupData.tasks = tasks || [];
+  
+    // Fetch teams
+    const { data: teams, error: teamsError } = await supabase
       .from("teams")
-      .update({is_deleted: true})
+      .select("*")
+      .eq("is_deleted", false)
       .eq("space_id", id);
-
-    if (deleteError) {
-      console.error("Error deleting tabs:", deleteError);
+  
+    if (teamsError) {
+      console.error("Error fetching teams:", teamsError);
       return;
     }
-
-    const { error } = await supabase.from("spaces").update({is_deleted: true}).eq("id", id);
-
-    if (error) {
-      console.error("Error deleting space:", error);
+    backupData.teams = teams || [];
+  
+    // Fetch space
+    const { data: space, error: spaceError } = await supabase
+      .from("spaces")
+      .select("*")
+      .eq("id", id)
+      .single();
+  
+    if (spaceError) {
+      console.error("Error fetching space:", spaceError);
       return;
     }
-
+    backupData.space = space;
+  
+    // Mark tasks as deleted
+    const { error: tasksDeleteError } = await supabase
+      .from("tasks")
+      .update({ is_deleted: true })
+      .eq("space_id", id);
+  
+    if (tasksDeleteError) {
+      console.error("Error deleting tasks:", tasksDeleteError);
+      return;
+    }
+  
+    // Mark teams as deleted
+    const { error: teamsDeleteError } = await supabase
+      .from("teams")
+      .update({ is_deleted: true })
+      .eq("space_id", id);
+  
+    if (teamsDeleteError) {
+      console.error("Error deleting teams:", teamsDeleteError);
+      return;
+    }
+  
+    // Mark space as deleted
+    const { error: spaceDeleteError } = await supabase
+      .from("spaces")
+      .update({ is_deleted: true })
+      .eq("id", id);
+  
+    if (spaceDeleteError) {
+      console.error("Error deleting space:", spaceDeleteError);
+      return;
+    }
+  
+    // Update UI
     fetchSpaces();
     fetchTeamData();
-
+  
     const newTabs = tabs.filter((tab) => tab.id !== id);
     setTabs(newTabs);
     if (newTabs.length > 0) {
@@ -272,75 +326,91 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     } else {
       setActiveTab(null);
     }
+  
     toast({
       title: "Deleted Successfully!",
       description: "Space deleted successfully!",
       action: (
         <ToastAction
           altText="Undo"
-          onClick={() => handleSpaceUndo(spaceId as number)}
+          onClick={async () => {
+            await handleSpaceUndo(backupData);
+          }}
         >
           Undo
         </ToastAction>
       ),
     });
   };
-
-  const handleSpaceUndo = async (id: number) => {
-    try{
-    const { data, error: taskError } = await supabase
-      .from("tasks")
-      .update({is_deleted: false})
-      .eq("space_id", id);
-
-    if (taskError) {
-      console.error("Error deleting tabs:", taskError);
-      return;
+  
+  // Undo functionality
+  const handleSpaceUndo = async (backupData: {
+    tasks: any[];
+    teams: any[];
+    space: any;
+  }) => {
+    // Restore tasks
+    if (backupData.tasks.length > 0) {
+      const { error: tasksRestoreError } = await supabase
+        .from("tasks")
+        .update({ is_deleted: false })
+        .in(
+          "id",
+          backupData.tasks.map((task) => task.id)
+        );
+  
+      if (tasksRestoreError) {
+        console.error("Error restoring tasks:", tasksRestoreError);
+        return;
+      }
     }
-
-    const { error: deleteError } = await supabase
-      .from("teams")
-      .update({is_deleted: false})
-      .eq("space_id", id);
-
-    if (deleteError) {
-      console.error("Error deleting tabs:", deleteError);
-      return;
+  
+    // Restore teams
+    if (backupData.teams.length > 0) {
+      const { error: teamsRestoreError } = await supabase
+        .from("teams")
+        .update({ is_deleted: false })
+        .in(
+          "id",
+          backupData.teams.map((team) => team.id)
+        );
+  
+      if (teamsRestoreError) {
+        console.error("Error restoring teams:", teamsRestoreError);
+        return;
+      }
     }
-
-    const { error } = await supabase.from("spaces").update({is_deleted: false}).eq("id", id);
-
-    if (error) {
-      console.error("Error deleting space:", error);
-      return;
+  
+    // Restore space
+    if (backupData.space) {
+      const { error: spaceRestoreError } = await supabase
+        .from("spaces")
+        .update({ is_deleted: false })
+        .eq("id", backupData.space.id);
+  
+      if (spaceRestoreError) {
+        console.error("Error restoring space:", spaceRestoreError);
+        return;
+      }
     }
-
+  
+    // Refresh UI
     fetchSpaces();
     fetchTeamData();
-
-    // const newTabs = tabs.filter((tab) => tab.id !== id);
-    // setTabs(newTabs);
-    // if (newTabs.length > 0) {
-    //   setActiveTab(newTabs[0].id); // Set first tab as active if any left
-    // } else {
-    //   setActiveTab(null);
-    // }
+    route.refresh();
+    const newTabs = tabs.filter((tab) => tab.id !== backupData.space.id);
+    setTabs(newTabs);
+    if (newTabs.length > 0) {
+      setActiveTab(newTabs[0].id); // Set first tab as active if any left
+    } else {
+      setActiveTab(null);
+    }
     toast({
-      title: "Undo Successful",
-      description: "The space has been restored.",
-      duration: 5000,
+      title: "Undo Successful!",
+      description: "Space, tasks, and teams have been restored.",
     });
-  } catch (error) {
-    console.error("Error undoing space:", error);
-    toast({
-      title: "Undo Failed",
-      description: "An error occurred while undoing the space.",
-      variant: "destructive",
-      duration: 5000,
-    })
-  }
   };
-
+  
 
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmailInput(e.target.value);
