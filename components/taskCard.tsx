@@ -10,7 +10,7 @@ export default function TaskCard({ item }: { item: Task }) {
     return (
         <div className="rounded-xl bg-white shadow w-2/6" key={item.id}>
             <div className="flex flex-col items-center h-[110.33px] w-[88px]  rounded-[14px] justify-evenly">
-                <p className="text-sm text-[12px] font-[600] text-[#000000]">
+                <p className="text-[12px] font-[600] text-black">
                     {item.taskname}
                 </p>
                 <p className="text-[#14B8A6] text-xl font-bold">{item.value}</p>

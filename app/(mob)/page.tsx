@@ -1,6 +1,6 @@
-import HomePage from "@/app/(mob)/home/page";
+// import HomePage from "@/app/(mob)/home/page";
 
-export default function Home() {
-  return <HomePage />
-}
+// export default function Home() {
+//   return <HomePage />
+// }
 

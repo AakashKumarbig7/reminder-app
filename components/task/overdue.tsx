@@ -38,15 +38,15 @@ export default function OverDue() {
 
       // Apply filter only if `param` is not null or undefined
 
-      // if (spaceParam) {
-      //   query = query.eq('space', spacearam);
-      // }
-      // if (teamParam) {
-      //   query = query.eq('team', teamParam);
-      // }
-      // if (sortParam && sortParam !== 'None') {
-      //   query = query.order(sortParam, { ascending: false });
-      // }
+      if (spaceParam) {
+        query = query.eq('space', spaceParam);
+      }
+      if (teamParam) {
+        query = query.eq('team', teamParam);
+      }
+      if (sortParam && sortParam !== 'None') {
+        query = query.order(sortParam, { ascending: false });
+      }
 
       const { data: tasks, error } = await query;
 
@@ -61,11 +61,11 @@ export default function OverDue() {
   }, [searchParams]);
 
   return (
-    <div className="relative w-full space-y-4">
+    <div className=" w-full space-y-4">
       {tasks.map((task: any) => (
         <div
           key={task.id}
-          className="relative w-[339px]"
+          className="relative w-full"
           onTouchStart={(e) => {
             const startX = e.touches[0].clientX;
             const handleTouchMove = (moveEvent: TouchEvent) => {
@@ -95,7 +95,8 @@ export default function OverDue() {
           )}
 
           <div
-            className={`bg-white space-y-2 py-3 rounded-[10px] w-[339px] h-32 px-4 transition-transform duration-300 ${swiped[task.id] ? "transform -translate-x-32" : ""
+            className={`bg-white space-y-2 py-3 rounded-[10px] w-full
+               h-32 px-4 transition-transform duration-300 ${swiped[task.id] ? "transform -translate-x-32" : ""
               }`}
           >
             <div>
