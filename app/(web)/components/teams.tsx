@@ -1,12 +1,20 @@
 "use client";
 
-import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Ellipsis, Plus, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WebMentionInput from "./webMentions";
 import { Carousel1, CarouselContent1, CarouselItem1 } from "./webCarousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -25,14 +33,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -44,6 +44,7 @@ import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { Toaster } from "@/components/ui/toaster";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 interface SearchBarProps {
   spaceId: number;

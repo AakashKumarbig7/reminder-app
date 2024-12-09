@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
-import Footer from "@/app/(mob)/footer/footer";
+
 // // import { GeistSans } from "geist/font/sans";
 
 // // const geistSans = localFont({

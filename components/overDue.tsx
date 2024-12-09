@@ -13,8 +13,8 @@ export default function OverDue () {
   return (
     <div className="">
       <div className="flex justify-between items-center mb-2">
-        <h4 className="text-lg font-semibold text-black">Overdue Task</h4>
-        <p className="text-teal-500 cursor-pointer">View all</p>
+        <h4 className="text-lg  font-semibold font-geist text-black">Overdue Task</h4>
+        <p className="text-teal-500  font-geist font-medium  text-sm cursor-pointer">View all</p>
       </div>
       {/* <div className="  pt-[18px]">
         <div className="  flex  space-x-2  justify-evenly ">
@@ -53,15 +53,15 @@ export default function OverDue () {
                 <Card>
                   <CardContent className="aspect-square p-[18px] w-full h-[156px]">
                     {/* <div className="bg-white shadow-md p-4 rounded-lg w-full"> */}
-                      <div className="bg-bgmain text-neutral-500 text-xs font-semibold border-gray-300 rounded-full inline-block px-2 py-1">
-                        Wordpress Team
+                      <div className="bg-navbg text-neutral-500   text-xs font-semibold border-gray-300 rounded-[30px] inline-block px-2 py-1">
+                        Design Team
                       </div>
-                      <p className="text-shadeblack mt-2">
+                      <p className="text-black font-normal mt-2">
                         @shiji new project to talk
                       </p>
                       <div className="flex justify-between items-center mt-2">
-                        <span className="text-red-500 font-bold text-sm">
-                          Today
+                        <span className="text-red-500 font-bold text-[12px]">
+                          Yesterday
                         </span>
                         <span className="border bg-[#F8DADA] text-reddish rounded-3xl text-shadeorange text-sm font-bold py-1 px-2">
                           To Do

@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
 
 
+
 interface Space {
   id: string;
   name: string;

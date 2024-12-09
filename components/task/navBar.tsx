@@ -69,18 +69,12 @@ export default function NavBar() {
                           <span className="w-4 h-4" />  
                         )}
                       </span>
-                      <p className="text-sm pt-[10px] pr-[10px]">{space}</p>
+                      <p className="text-sm font-geist   pt-[10px] pr-[10px]">{space}</p>
                     </li>
                   ))}
                 </ul>
               </CommandList>
             </Command>
-
-            {/* <DrawerFooter>
-              <button className="mt-[18px] p-2 mb-10 border w-[340px] h-10 border-teal-500 text-teal-500 rounded-lg bg-lightskyblue">
-                Manage Teams
-              </button>
-            </DrawerFooter> */}
           </DrawerContent>
         </Drawer>
 
