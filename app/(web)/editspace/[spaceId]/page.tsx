@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import WebNavbar from "@/app/(web)/components/navbar";
 import { Trash2, CirclePlus } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import toast, { Toaster } from "react-hot-toast";
+import { supabase } from "@/utils/supabase/supabaseClient";
 interface Tab {
   id: number;
   space_name: string;
@@ -291,7 +291,7 @@ export default function EditSpace({ params }: { params: { spaceId: string } }) {
 
   return (
     <>
-      <WebNavbar />
+      {/* <WebNavbar /> */}
       <div className="px-3 space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <p className="text-center text-lg font-semibold pl-2">Space Setting</p>
