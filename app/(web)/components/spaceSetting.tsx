@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import WebNavbar from "@/app/(web)/components/navbar";
 import { ClipboardPlus, Trash, Pencil } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -107,7 +107,7 @@ export default function SpaceSetting() {
 
   return (
     <>
-      <WebNavbar />
+      <WebNavbar loggedUserData />
       <div className="px-3">
         {/* Header with navigation and New Space button */}
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
