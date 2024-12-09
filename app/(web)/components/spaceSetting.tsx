@@ -107,7 +107,7 @@ export default function SpaceSetting() {
 
   return (
     <>
-      <WebNavbar loggedUserData />
+      {/* <WebNavbar loggedUserData={loggedUserData as any} /> */}
       <div className="px-3">
         {/* Header with navigation and New Space button */}
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
