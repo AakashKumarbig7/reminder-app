@@ -31,11 +31,10 @@ interface Team {
   team_name: string;
 }
 interface SearchBarProps {
-    spaceId: number;
-    sendDataToParent:any;
-
-  }
-const AddTeam: React.FC<SearchBarProps> = ({ spaceId,sendDataToParent }) => {
+  spaceId: number;
+  sendDataToParent: any;
+}
+const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
   const [teams, setTeams] = useState<any[]>([]);
   const [memberAddDialogOpen, setMemberAddDialogOpen] = useState(false);
 
@@ -92,8 +91,6 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId,sendDataToParent }) => {
     } catch (err) {
       console.error("Unexpected error:", err);
     }
-
-   
   };
   const handleUserSelect = (user: any) => {
     if (!addedMembers.some((member) => member.id === user.id)) {
@@ -134,7 +131,8 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId,sendDataToParent }) => {
       const { data: existingTeam, error: checkError } = await supabase
         .from("teams")
         .select("*")
-        .eq("team_name", teamName);
+        .eq("team_name", teamName)
+        .eq("space_id", spaceId);
 
       if (checkError) {
         console.error("Error checking existing team:", checkError);
@@ -142,11 +140,10 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId,sendDataToParent }) => {
       }
 
       if (existingTeam && existingTeam.length > 0) {
-        console.log("Team already exists with these members:", existingTeam);
-        notify("Team already exists with these members", false);
+        console.log("Team already exists in this space:", existingTeam);
+        notify("Team already exists With these members", false);
         return;
       }
-
       try {
         // Insert selected user details as array of objects into the `teams` table
         const { data: insertedData, error: insertError } = await supabase
@@ -174,17 +171,15 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId,sendDataToParent }) => {
         setTeamNameError(false);
         setTeamMemberError(false);
         setMemberAddDialogOpen(false);
-        
 
-        notify("Members saved successfully", true);
-        sendDataToParent ()
+        notify("Team And Members saved successfully", true);
+        sendDataToParent();
       } catch (err) {
         console.error("Unexpected error:", err);
       }
     }
   };
 
-  
   const handleClose = () => {
     setMemberAddDialogOpen(false);
     setTeamName("");
@@ -217,8 +212,6 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId,sendDataToParent }) => {
     }
   };
   useEffect(() => {
-    
-   
     fetchTeams();
   }, [spaceId]);
 

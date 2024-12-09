@@ -32,11 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-interface Space {
-  id: string;
-  name: string;
-  teams?: string[]; // Optional array of team names
-}
+
 interface Space {
   id: string;
   name: string;
@@ -81,42 +77,55 @@ export default function SpaceSetting({}) {
           .from("spaces")
           .insert([{ space_name: newSpaceName }]);
 
+          
+
         if (error) {
           alert("Failed to create space. Please try again.");
           console.error("Error inserting space:", error.message);
           return;
         }
-
-        setNewSpaceName(""); // Clear the input
-        setIsDialogOpen(false); // Close the dialog
-        fetchSpaces(); // Refresh the spaces after insertion
+        setIsDialogOpen(false);
+        fetchSpaces();
+       
       } catch (err) {
         alert("Unexpected error occurred.");
         console.error("Unexpected error:", err);
       }
     }
   };
+  const SpaceCreateDialogClose = async () =>{
+    setNewSpaceName(""); // Clear the input
+    setIsDialogOpen(false); // Close the dialog
+    fetchSpaces(); // Refresh the spaces after insertion
+  }
 
   // Delete a space
   const deleteSpace = async (id: string) => {
     try {
       setIsDeleting(true);
-      const { error } = await supabase.from("spaces").delete().eq("id", id);
-
+      const { error } = await supabase
+      .from("spaces")
+      .delete()
+      .eq("id", id);
+      
       if (error) {
       
-        setIsOpen(false);
+        
         console.error("Error deleting space:", error.message);
         return;
       }
-
+      setIsOpen(false);
       fetchSpaces(); // Refresh the spaces list after deletion
-    } catch (err) {
+    } 
+    catch (err) {
       alert("Unexpected error occurred.");
       console.error("Unexpected error:", err);
     }
   };
-
+const handleDeleteDialogClose = async () => {
+  setIsOpen(false);
+  fetchSpaces();
+}
   const fetchSpacesWithTeams = async () => {
     try {
       // Step 1: Fetch spaces from Supabase
@@ -193,9 +202,9 @@ export default function SpaceSetting({}) {
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex space-x-[10px]">
             <button className="rounded-lg text-sm text-white border w-[134px] h-[41px] bg-primaryColor-700">
-              Space Setting
+              Space Settings
             </button>
-            <button className="rounded-lg text-sm border w-[104px] h-[41px] text-gray-400">
+            <button  onClick={() => router.push(`/members`)} className="rounded-lg text-sm border w-[104px] h-[41px] text-gray-400">
               Members
             </button>
             <button className="rounded-lg text-sm border w-[89px] h-[41px] text-gray-400">
@@ -233,7 +242,15 @@ export default function SpaceSetting({}) {
                 />
               </div>
 
-              <DialogFooter className="flex justify-center items-center">
+              <DialogFooter className="flex justify-between " >
+                
+              <Button
+                  type="button"
+                onClick={SpaceCreateDialogClose}
+                  className=" text-gray-700  bg-gray-100 h-[36px] w-[117.61px] hover:bg-gray-200"
+                >
+                  Cancel
+                </Button>
                 <Button
                   type="button"
                   onClick={addSpace}
@@ -241,6 +258,7 @@ export default function SpaceSetting({}) {
                 >
                   Create Space
                 </Button>
+                
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -249,7 +267,7 @@ export default function SpaceSetting({}) {
         {/* Table displaying spaces */}
         <div className="pt-[18px]">
           <Table className="border-b border-gray-200 bg-white rounded-[8px]">
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-gray-50 rounded-[8px]" >
               <TableRow>
                 <TableHead className="px-4 py-4 text-sm">SPACE NAME</TableHead>
                 <TableHead className="px-4 py-4 text-sm">CREATED BY</TableHead>
@@ -316,7 +334,7 @@ export default function SpaceSetting({}) {
                   {/* Cancel button */}
                   <button
                     className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleDeleteDialogClose}
                     disabled={isDeleting}
                   >
                     Cancel

@@ -7,6 +7,8 @@ import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import toast from "react-hot-toast";
 import {
   Dialog,
@@ -49,6 +51,7 @@ const TeamCard: React.FC<{
   spaceId: any;
   sendDataToParent: any;
 }> = ({ team, spaceId, sendDataToParent }) => {
+ 
   const [teamName, setTeamName] = useState(team.team_name);
   const [teamNameError, setTeamNameError] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -60,6 +63,11 @@ const TeamCard: React.FC<{
   const [teamMemberError, setTeamMemberError] = useState(false);
   const [isopen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+ 
+
+  const fetchSpaces = async () => {
+    let { data: spaces, error } = await supabase.from("spaces").select("*");
+  };
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -160,11 +168,13 @@ const TeamCard: React.FC<{
     setAddedMembers((prevMembers) => [...prevMembers, user]);
     sendDataToParent(user, teamId, "add");
 
-    // setAddedMembers( Array.from(
-    //   new Set(addedMembers.map(member => member.id))
-    // ).map(id => addedMembers.find(member => member.id === id)!))
+    // setAddedMembers(
+    //   Array.from(new Set(addedMembers.map((member) => member.id))).map(
+    //     (id) => addedMembers.find((member) => member.id === id)!
+    //   )
+    // );
 
-    // sendDataToParent(user,teamId,"add");
+    sendDataToParent(user, teamId, "add");
 
     setEmailInput("");
     setHighlightedIndex(-1);
@@ -182,6 +192,8 @@ const TeamCard: React.FC<{
 
   const handleDeleteTeam = async (teamId: number) => {
     try {
+      setIsDeleting(true); // Optional, if you have a loading state
+
       // Delete tasks associated with the team first
       const { error: taskError } = await supabase
         .from("tasks")
@@ -208,11 +220,15 @@ const TeamCard: React.FC<{
 
       console.log("Team deleted successfully.");
 
-      // Additional cleanup actions
+      // Close the dialog and refresh the page
       setIsOpen(false);
-      fetchTeams();
+        fetchTeams();
+        fetchSpaces();
+      // Notify the user
       notify("Team deleted successfully", true);
-     
+
+      // Refresh the page after a short delay (optional for better UX)
+      
     } catch (error) {
       console.error("Unexpected error during deletion:", error);
     } finally {
@@ -315,6 +331,9 @@ const TeamCard: React.FC<{
       handleUserSelect(matchingUsers[highlightedIndex], "");
     }
   };
+  useEffect(() => {
+    fetchTeams();
+  }, [spaceId]);
 
   return (
     <CarouselItem
@@ -369,7 +388,7 @@ const TeamCard: React.FC<{
             <div className="py-2">
               <label
                 htmlFor="name"
-                className="text-sm text-[#111928] font-medium"
+                className="text-sm text-gray-900 font-inter font-medium"
               >
                 Team Name
               </label>
@@ -419,7 +438,7 @@ const TeamCard: React.FC<{
               <div>
                 <label
                   htmlFor="members"
-                  className="text-sm text-[#111928] font-medium"
+                  className="text-sm text-gray-900 font-inter font-medium"
                 >
                   Members
                 </label>
@@ -485,50 +504,51 @@ const TeamCard: React.FC<{
                 </div>
               )} */}
               {addedMembers.length > 0 && (
-  <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
-    {addedMembers
-      .filter((member, index, self) =>
-        self.findIndex(m => m.id === member.id) === index // Filter unique IDs
-      )
-      .map((member, index) => (
-        <div
-          key={member.id}
-          className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
-        >
-          <div className="flex items-center gap-1">
-            <Image
-              src={Userimage}
-              alt="user image"
-              width={36}
-              height={36}
-              className="w-6 h-6 rounded-full"
-            />
-            <span>{member.username || member.name}</span>
-          </div>
-          <span
-            className={`${
-              member.role === "superadmin"
-                ? "text-[#0E9F6E]"
-                : "text-gray-500"
-            }`}
-          >
-            {member.designation?.length > 25
-              ? `${member.designation?.slice(0, 26)}...`
-              : member.designation}
-          </span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              removeMember(member, index, team.id);
-            }}
-            className="focus:outline-none space_delete_button text-gray-400"
-          >
-            <Trash2 className="text-black" size={18} />
-          </button>
-        </div>
-      ))}
-  </div>
-)}
+                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
+                  {addedMembers
+                    .filter(
+                      (member, index, self) =>
+                        self.findIndex((m) => m.id === member.id) === index // Filter unique IDs
+                    )
+                    .map((member, index) => (
+                      <div
+                        key={member.id}
+                        className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
+                      >
+                        <div className="flex items-center gap-1">
+                          <Image
+                            src={Userimage}
+                            alt="user image"
+                            width={36}
+                            height={36}
+                            className="w-6 h-6 rounded-full"
+                          />
+                          <span>{member.username || member.name}</span>
+                        </div>
+                        <span
+                          className={`${
+                            member.role === "superadmin"
+                              ? "text-[#0E9F6E]"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {member.designation?.length > 25
+                            ? `${member.designation?.slice(0, 26)}...`
+                            : member.designation}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMember(member, index, team.id);
+                          }}
+                          className="focus:outline-none space_delete_button text-gray-400"
+                        >
+                          <Trash2 className="text-black" size={18} />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
             <div className=" items-end pl-[200px]  w-full">
               {/* <Button
