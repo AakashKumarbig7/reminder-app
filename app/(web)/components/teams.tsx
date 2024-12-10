@@ -612,6 +612,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   useEffect(() => {
     const getUser = async () => {
       const user = await getLoggedInUserData();
+      console.log(user, " user");
 
       const { data, error } = await supabase
         .from("users")

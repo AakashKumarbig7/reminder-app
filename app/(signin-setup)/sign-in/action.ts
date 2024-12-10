@@ -7,19 +7,29 @@ import { redirect } from "next/navigation";
 // Fetch user data
 export async function getLoggedInUserData() {
   const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
+  // const { data, error } = await supabase.auth.getUser();
 
-  if (error) {
-    console.error("Error fetching user data:", error.message);
-    return null;
-  }
+  // if (error) {
+  //   console.error("Error fetching user data:", error.message);
+  //   return null;
+  // }
+
+  // if (data?.user) {
+  //   console.log("User ID:", data.user.id);
+  //   return data.user;
+  // }
+
+  // return null;
+
+  const { data } = await supabase.auth.getUser();
 
   if (data?.user) {
-    console.log("User ID:", data.user.id);
+    // const { user } = data;
+    // console.log("data in getUserData 1 ", user.id);
     return data.user;
+  } else {
+    return null;
   }
-
-  return null;
 }
 
 // Sign in function
