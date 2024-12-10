@@ -2,9 +2,18 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import WebNavbar from "@/app/(web)/components/navbar";
-import { Trash2, CirclePlus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { Trash2, CirclePlus, Plus } from "lucide-react";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import toast, { Toaster } from "react-hot-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import AddTeam from "@/app/(web)/components/addteam";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -17,21 +26,10 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import toast, { Toaster } from "react-hot-toast";
-import { supabase } from "@/utils/supabase/supabaseClient";
-import { Card, CardContent } from "@/components/ui/card";
-import AddTeam from "../../components/addteam";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import TeamCard from "../../components/teamCard";
-interface Tab {
-  id: number;
-  space_name: string;
-  email: string;
-  username: string;
-  designation: string;
-  role: string;
-  department: string;
-}
+
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
     style: {
@@ -90,39 +88,29 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   };
 
   const handleUpdateTeam = async () => {
-    for (let i = 0; i < teams.length; i++) {
-      if (teams[i].members.length === 0) {
-        setTeamNameError(true);
-        return;
-      } else if (teams[i].members.length > 0) {
-        try {
-          const { data, error } = await supabase
-            .from("teams")
-            .update({ members: teams[i].members })
-            .eq("id", teams[i].id)
-            .eq("space_id", spaceId)
-            .single();
-
-          if (error) {
-            console.error("Error updating team name:", error);
-            return;
-          }
-
-          if (data) {
-            console.log("Team name updated successfully:", data);
-            fetchTeams();
-            fetchSpace();
-
-            // setTeamNameSheetOpen(false);
-            setTeamNameError(false);
-          }
-        } catch (error) {
-          console.error("Error updating team name:", error);
+    try {
+      for (const team of teams) {
+        const { data, error } = await supabase
+          .from("teams")
+          .update({ members: team.members }) // Update members in the database
+          .eq("id", team.id)
+          .eq("space_id", spaceId);
+  
+        if (error) {
+          console.error("Error updating team:", error);
+          notify("Error saving changes. Please try again.", false);
+          return;
         }
       }
+  
+      notify(" Teams updated successfully!", true);
+      fetchTeams(); // Refresh teams to sync with the database
+    } catch (error) {
+      console.error("Error saving changes:", error);
+      notify("An error occurred. Please try again.", false);
     }
-    notify("Team updated successfully", true);
   };
+  
 
   const handleDelete = async () => {
     try {
@@ -160,20 +148,22 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
       .from("teams")
       .select("*")
       .eq("space_id", spaceId);
-
+  
     if (error) {
-      console.log(error);
+      console.error("Error fetching teams:", error);
       return;
     }
-
+  
     if (data) {
-      const teamData = data.map((team) => ({
-        ...team,
-      }));
-      setTeams(teamData as Team[]);
+      setTeams(
+        data.map((team:any) => ({
+          ...team,
+          members: team.members || [], // Ensure members array is not null
+        }))
+      );
     }
   };
-
+  
   // Fetch all spaces from Supabase
   const fetchSpace = async () => {
     const { data, error } = await supabase
@@ -247,39 +237,28 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const onAllTeamMembersSavebutton = () => {
     // console.log(teams);
   };
-  const onTeamDataTrigger = (user: any, teamId: any, type: any) => {
-    if (type == "add") {
-      teams.forEach((e) => {
-        if (e.id == teamId) {
-          const isAlreadyAdded = e.members.some(
-            (member: any) => member.id === user.id
-          );
-          if (!isAlreadyAdded) {
-            e.members.push(user);
-          }
-        }
-      });
-      // console.log(teams);
-      fetchTeams();
-    } else {
-      teams.forEach((e) => {
-        if (e.id == teamId) {
-          // e.members.(user)
-          e.members.forEach((m: any, index: any) => {
-            if (m.id == user.id) {
-              e.members.splice(index, 1);
+  const onTeamDataTrigger = (user: any, teamId: number, type: string) => {
+    setTeams((prevTeams) =>
+      prevTeams.map((team) =>
+        team.id === teamId
+          ? {
+              ...team,
+              members:
+                type === "add"
+                  ? [...team.members, user] // Add member
+                  : team.members.filter((m: any) => m.id !== user.id), // Remove member
             }
-          });
-        }
-      });
-    }
-    // console.log(teams);
-    fetchTeams();
+          : team
+      )
+    );
   };
+  
+  
   return (
     <>
       {/* <WebNavbar /> */}
-      <div className="px-3 space-y-[18px]">
+      <Toaster />
+      <div className="px-3 h-full   space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <div className="px-3 flex w-full items-center justify-between">
             {/* Title Section */}
@@ -294,7 +273,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
                     className="border border-gray-200 w-[41px] h-[41px] flex items-center justify-center rounded-[8px] cursor-pointer hover:bg-slate-50"
                     onClick={() => setIsOpen(true)}
                   >
-                    <Trash2 className="h-6 w-6" />
+                    <Trash2 className="h-5 w-5" />
                   </button>
                 </DialogTrigger>
 
@@ -347,7 +326,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
           </div>
         </div>
 
-        <div className="rounded-lg bg-white h-full w-full shadow-md">
+        <div className="rounded-lg bg-white h-full pb-[200px] w-full shadow-md">
           <div className="px-3">
             <div className="w-full pt-[12px] items-center space-y-2">
               <Label

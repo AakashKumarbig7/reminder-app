@@ -19,6 +19,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
   DialogFooter,
@@ -55,6 +56,7 @@ const Members = () => {
     mobile: "",
     role: "",
   });
+  const [error, setError] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   // Fetch members from Supabase
@@ -68,66 +70,66 @@ const Members = () => {
   };
 
   // Add or update a member
-  const handleAddSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      let imageUrl = editData.profile_image;
+  // const handleAddSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   try {
+  //     let imageUrl = editData.profile_image;
 
-      // Upload the image to Supabase Storage
-      if (file) {
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("profiles")
-          .upload(`profiles/${file.name}`, file, {
-            cacheControl: "3600",
-            upsert: true,
-          });
+  //     // Upload the image to Supabase Storage
+  //     if (file) {
+  //       const { data: uploadData, error: uploadError } = await supabase.storage
+  //         .from("profiles")
+  //         .upload(`profiles/${file.name}`, file, {
+  //           cacheControl: "3600",
+  //           upsert: true,
+  //         });
 
-        if (uploadError)
-          throw new Error(`Image upload failed: ${uploadError.message}`);
+  //       if (uploadError)
+  //         throw new Error(`Image upload failed: ${uploadError.message}`);
 
-        const { data: publicUrlData } = supabase.storage
-          .from("profiles")
-          .getPublicUrl(`profiles/${file.name}`);
-        imageUrl = publicUrlData?.publicUrl || "";
-      }
+  //       const { data: publicUrlData } = supabase.storage
+  //         .from("profiles")
+  //         .getPublicUrl(`profiles/${file.name}`);
+  //       imageUrl = publicUrlData?.publicUrl || "";
+  //     }
 
-      if (editData.id) {
-        // Update existing member
-        const { error: updateError } = await supabase
-          .from("users")
-          .update({
-            username: editData.username,
-            profile_image: imageUrl,
-            designation: editData.designation,
-            email: editData.email,
-            mobile: editData.mobile,
-            role: editData.role,
-          })
-          .eq("id", editData.id);
+  //     if (editData.id) {
+  //       // Update existing member
+  //       const { error: updateError } = await supabase
+  //         .from("users")
+  //         .update({
+  //           username: editData.username,
+  //           profile_image: imageUrl,
+  //           designation: editData.designation,
+  //           email: editData.email,
+  //           mobile: editData.mobile,
+  //           role: editData.role,
+  //         })
+  //         .eq("id", editData.id);
 
-        if (updateError)
-          throw new Error(`Update failed: ${updateError.message}`);
-      } else {
-        // Add new member
-        const { error: insertError } = await supabase.from("users").insert({
-          username: editData.username,
-          profile_image: imageUrl,
-          designation: editData.designation,
-          email: editData.email,
-          mobile: editData.mobile,
-          role: editData.role,
-        });
+  //       if (updateError)
+  //         throw new Error(`Update failed: ${updateError.message}`);
+  //     } else {
+  //       // Add new member
+  //       const { error: insertError } = await supabase.from("users").insert({
+  //         username: editData.username,
+  //         profile_image: imageUrl,
+  //         designation: editData.designation,
+  //         email: editData.email,
+  //         mobile: editData.mobile,
+  //         role: editData.role,
+  //       });
 
-        if (insertError)
-          throw new Error(`Insert failed: ${insertError.message}`);
-      }
+  //       if (insertError)
+  //         throw new Error(`Insert failed: ${insertError.message}`);
+  //     }
 
-      // Re-fetch members to update the list
-      await fetchMembers();
-    } catch (error: any) {
-      console.error("Error during submission:", error.message);
-    }
-  };
+  //     // Re-fetch members to update the list
+  //     await fetchMembers();
+  //   } catch (error: any) {
+  //     console.error("Error during submission:", error.message);
+  //   }
+  // };
 
   const handleEditClick = (member: Member) => {
     setEditData({
@@ -165,6 +167,95 @@ const Members = () => {
   useEffect(() => {
     fetchMembers(); // Load members on component mount
   }, []);
+  const validateMobileNumber = (mobile: string) => {
+    if (mobile.length < 9) {
+      return "Please enter a valid mobile number with at least 9 digits";
+    }
+    if (mobile.length > 11) {
+      return "Please enter a valid mobile number with no more than 11 digits";
+    }
+    if (!/^[0-9]+$/.test(mobile)) {
+      return "Please enter a valid mobile number with no special characters";
+    }
+    return "";
+  };
+  const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    const validationError = validateMobileNumber(value);
+    setEditData({ ...editData, mobile: value });
+    setError(validationError);
+  };
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate fields
+    if (
+      !editData.username.trim() ||
+      !editData.designation.trim() ||
+      !editData.email.trim() ||
+      !editData.mobile.trim() ||
+      !editData.role.trim() ||
+      (!file && !editData.profile_image)
+    ) {
+      setError("Please fill in all fields before submitting.");
+      return;
+    }
+
+    try {
+      setError("");
+      let imageUrl = editData.profile_image;
+
+      if (file) {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("profiles")
+          .upload(`profiles/${file.name}`, file, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+
+        if (uploadError) throw new Error(`Image upload failed: ${uploadError.message}`);
+
+        const { data: publicUrlData } = supabase.storage
+          .from("profiles")
+          .getPublicUrl(`profiles/${file.name}`);
+        imageUrl = publicUrlData?.publicUrl || "";
+      }
+
+      if (editData.id) {
+        const { error: updateError } = await supabase
+          .from("users")
+          .update({
+            username: editData.username,
+            profile_image: imageUrl,
+            designation: editData.designation,
+            email: editData.email,
+            mobile: editData.mobile,
+            role: editData.role,
+          })
+          .eq("id", editData.id);
+
+        if (updateError) throw new Error(`Update failed: ${updateError.message}`);
+      } else {
+        const { error: insertError } = await supabase.from("users").insert({
+          username: editData.username,
+          profile_image: imageUrl,
+          designation: editData.designation,
+          email: editData.email,
+          mobile: editData.mobile,
+          role: editData.role,
+        });
+
+        if (insertError) throw new Error(`Insert failed: ${insertError.message}`);
+      }
+
+      await fetchMembers();
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error("Error during submission:", error.message);
+      setError("An error occurred. Please try again.");
+    }
+  };
+
 
   return (
     <>
@@ -212,6 +303,9 @@ const Members = () => {
                     {editData.id ? "Edit Member" : "Add Member"}
                   </DialogTitle>
                 </DialogHeader>
+                <DialogDescription className="font-inter ">
+                    Add a Member Details
+                  </DialogDescription>
                 <form onSubmit={handleAddSubmit}>
                   <Label
                     htmlFor="name"
@@ -226,7 +320,7 @@ const Members = () => {
                     onChange={(e) =>
                       setEditData({ ...editData, username: e.target.value })
                     }
-                    className="space-y-2"
+                    className="mt-1"
                   />
                   <br></br>
                   <Label
@@ -237,11 +331,13 @@ const Members = () => {
                   </Label>
                   <Input
                     id="designation"
+                    type="text"
                     placeholder="Enter the designation"
                     value={editData.designation}
                     onChange={(e) =>
                       setEditData({ ...editData, designation: e.target.value })
                     }
+                    className="mt-1"
                   />
                   <br></br>
                   <Label
@@ -258,6 +354,7 @@ const Members = () => {
                     onChange={(e) =>
                       setEditData({ ...editData, email: e.target.value })
                     }
+                    className="mt-1"
                   />
                   <br></br>
                   <Label
@@ -269,12 +366,13 @@ const Members = () => {
                   <Input
                     id="number"
                     type="tel"
-                    placeholder="Enter the mobile number"
+                    placeholder="+61 0000 0000"
+                  
                     value={editData.mobile}
-                    onChange={(e) =>
-                      setEditData({ ...editData, mobile: e.target.value })
-                    }
+                    onChange={handleMobileChange}
+                  className="mt-1"
                   />
+                   {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
                   <br></br>
                   <Label
                     htmlFor="role"
@@ -290,6 +388,7 @@ const Members = () => {
                     onChange={(e) =>
                       setEditData({ ...editData, role: e.target.value })
                     }
+                    className="mt-1"
                   />
                   <br></br>
                   <Label
@@ -304,6 +403,7 @@ const Members = () => {
                     onChange={(e) =>
                       setFile(e.target.files ? e.target.files[0] : null)
                     }
+                    className="mt-1"
                   />
                   <div className="flex justify-between">
                     <Button
