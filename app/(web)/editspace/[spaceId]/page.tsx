@@ -88,39 +88,29 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   };
 
   const handleUpdateTeam = async () => {
-    for (let i = 0; i < teams.length; i++) {
-      if (teams[i].members.length === 0) {
-        setTeamNameError(true);
-        return;
-      } else if (teams[i].members.length > 0) {
-        try {
-          const { data, error } = await supabase
-            .from("teams")
-            .update({ members: teams[i].members })
-            .eq("id", teams[i].id)
-            .eq("space_id", spaceId)
-            .single();
-
-          if (error) {
-            console.error("Error updating team name:", error);
-            return;
-          }
-
-          if (data) {
-            console.log("Team name updated successfully:", data);
-            fetchTeams();
-            fetchSpace();
-
-            // setTeamNameSheetOpen(false);
-            setTeamNameError(false);
-          }
-        } catch (error) {
-          console.error("Error updating team name:", error);
+    try {
+      for (const team of teams) {
+        const { data, error } = await supabase
+          .from("teams")
+          .update({ members: team.members }) // Update members in the database
+          .eq("id", team.id)
+          .eq("space_id", spaceId);
+  
+        if (error) {
+          console.error("Error updating team:", error);
+          notify("Error saving changes. Please try again.", false);
+          return;
         }
       }
+  
+      notify(" Teams updated successfully!", true);
+      fetchTeams(); // Refresh teams to sync with the database
+    } catch (error) {
+      console.error("Error saving changes:", error);
+      notify("An error occurred. Please try again.", false);
     }
-    notify("Team updated successfully", true);
   };
+  
 
   const handleDelete = async () => {
     try {
@@ -158,20 +148,22 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
       .from("teams")
       .select("*")
       .eq("space_id", spaceId);
-
+  
     if (error) {
-      console.log(error);
+      console.error("Error fetching teams:", error);
       return;
     }
-
+  
     if (data) {
-      const teamData = data.map((team) => ({
-        ...team,
-      }));
-      setTeams(teamData as Team[]);
+      setTeams(
+        data.map((team) => ({
+          ...team,
+          members: team.members || [], // Ensure members array is not null
+        }))
+      );
     }
   };
-
+  
   // Fetch all spaces from Supabase
   const fetchSpace = async () => {
     const { data, error } = await supabase
@@ -245,35 +237,22 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const onAllTeamMembersSavebutton = () => {
     // console.log(teams);
   };
-  const onTeamDataTrigger = (user: any, teamId: any, type: any) => {
-    if (type == "add") {
-      teams.forEach((e) => {
-        if (e.id == teamId) {
-          const isAlreadyAdded = e.members.some(
-            (member: any) => member.id === user.id
-          );
-          if (!isAlreadyAdded) {
-            e.members.push(user);
-          }
-        }
-      });
-      // console.log(teams);
-      fetchTeams();
-    } else {
-      teams.forEach((e) => {
-        if (e.id == teamId) {
-          // e.members.(user)
-          e.members.forEach((m: any, index: any) => {
-            if (m.id == user.id) {
-              e.members.splice(index, 1);
+  const onTeamDataTrigger = (user: any, teamId: number, type: string) => {
+    setTeams((prevTeams) =>
+      prevTeams.map((team) =>
+        team.id === teamId
+          ? {
+              ...team,
+              members:
+                type === "add"
+                  ? [...team.members, user] // Add member
+                  : team.members.filter((m: any) => m.id !== user.id), // Remove member
             }
-          });
-        }
-      });
-    }
-    // console.log(teams);
-    fetchTeams();
+          : team
+      )
+    );
   };
+  
   return (
     <>
       <WebNavbar />

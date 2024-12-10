@@ -223,7 +223,7 @@ const TeamCard: React.FC<{
       // Close the dialog and refresh the page
       setIsOpen(false);
         fetchTeams();
-        fetchSpaces();
+        // fetchSpaces();
       // Notify the user
       notify("Team deleted successfully", true);
 
@@ -550,27 +550,7 @@ const TeamCard: React.FC<{
                 </div>
               )}
             </div>
-            <div className=" items-end pl-[200px]  w-full">
-              {/* <Button
-                                type="submit"
-                                variant={"outline"}
-                                className="w-[120px] border border-gray-200 text-gray-800 font-medium"
-                                onClick={handleClose}
-                            >
-                                Cancel
-                            </Button> */}
-
-              {/* <button
-                type="submit"
-                className="w-[120px] h-[40px]  font-medium rounded-lg   bg-primaryColor-700 hover:bg-blue-600 text-white cursor-pointer"
-                onClick={() =>
-                    handleUpdateTeam(team.id, spaceId,
-                     )
-                  }
-              >
-                Save
-              </button> */}
-            </div>
+           
           </CardContent>
         </Card>
       </>
