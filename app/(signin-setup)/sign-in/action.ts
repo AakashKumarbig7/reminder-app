@@ -24,8 +24,6 @@ export async function getLoggedInUserData() {
   const { data } = await supabase.auth.getUser();
 
   if (data?.user) {
-    // const { user } = data;
-    // console.log("data in getUserData 1 ", user.id);
     return data.user;
   } else {
     return null;

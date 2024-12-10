@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import { createUser1 } from "./action";
 
 interface Member {
   id: string;
@@ -39,6 +40,7 @@ interface Member {
   email: string;
   mobile: string;
   role: string;
+  password: string;
 }
 
 const Members = () => {
@@ -55,6 +57,7 @@ const Members = () => {
     email: "",
     mobile: "",
     role: "",
+    password: "",
   });
   const [error, setError] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -140,6 +143,7 @@ const Members = () => {
       email: member.email,
       mobile: member.mobile,
       role: member.role,
+      password: member.password,
     });
     setIsDialogOpen(true); // Open the dialog with pre-filled data
   };
@@ -236,6 +240,12 @@ const Members = () => {
 
         if (updateError) throw new Error(`Update failed: ${updateError.message}`);
       } else {
+
+        const signUpResponse = await createUser1(editData.email, editData.password);
+        if (signUpResponse?.data == null) {
+          console.error("Sign up error:", signUpResponse);
+        }
+
         const { error: insertError } = await supabase.from("users").insert({
           username: editData.username,
           profile_image: imageUrl,
@@ -289,6 +299,7 @@ const Members = () => {
                       email: "",
                       mobile: "",
                       role: "",
+                      password: "",
                     })
                   }
                   className="rounded-lg text-sm text-white border flex items-center h-[41px] bg-primaryColor-700 space-x-2 px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
@@ -358,6 +369,26 @@ const Members = () => {
                   />
                   <br></br>
                   <Label
+                    htmlFor="password"
+                    className="text-gray-900 text-inter font-medium text-sm"
+                  >
+                    Password:
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter the password"
+                    value={editData.password}
+                    onChange={(e) =>
+                    {
+                      setEditData({ ...editData, password: e.target.value })
+                      console.log(editData.password);
+                    }
+                    }
+                    className="mt-1"
+                  />
+                  <br></br>
+                  <Label
                     htmlFor="number"
                     className="text-gray-900 text-inter font-medium text-sm"
                   >
@@ -418,6 +449,7 @@ const Members = () => {
                           email: "",
                           mobile: "",
                           role: "",
+                          password: "",
                         });
                         setFile(null);
                         setIsDialogOpen(false); // Close the dialog
