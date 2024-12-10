@@ -2,9 +2,18 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import WebNavbar from "@/app/(web)/components/navbar";
-import { Trash2, CirclePlus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { Trash2, CirclePlus, Plus } from "lucide-react";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import toast, { Toaster } from "react-hot-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import AddTeam from "@/app/(web)/components/addteam";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -17,21 +26,10 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import toast, { Toaster } from "react-hot-toast";
-import { supabase } from "@/utils/supabase/supabaseClient";
-import { Card, CardContent } from "@/components/ui/card";
-import AddTeam from "../../components/addteam";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import TeamCard from "../../components/teamCard";
-interface Tab {
-  id: number;
-  space_name: string;
-  email: string;
-  username: string;
-  designation: string;
-  role: string;
-  department: string;
-}
+
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
     style: {
@@ -158,7 +156,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   
     if (data) {
       setTeams(
-        data.map((team) => ({
+        data.map((team:any) => ({
           ...team,
           members: team.members || [], // Ensure members array is not null
         }))
@@ -255,10 +253,12 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     );
   };
   
+  
   return (
     <>
       {/* <WebNavbar /> */}
-      <div className="px-3 space-y-[18px]">
+      <Toaster />
+      <div className="px-3 h-full   space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <div className="px-3 flex w-full items-center justify-between">
             {/* Title Section */}
@@ -273,7 +273,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
                     className="border border-gray-200 w-[41px] h-[41px] flex items-center justify-center rounded-[8px] cursor-pointer hover:bg-slate-50"
                     onClick={() => setIsOpen(true)}
                   >
-                    <Trash2 className="h-6 w-6" />
+                    <Trash2 className="h-5 w-5" />
                   </button>
                 </DialogTrigger>
 
@@ -326,7 +326,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
           </div>
         </div>
 
-        <div className="rounded-lg bg-white h-full w-full shadow-md">
+        <div className="rounded-lg bg-white h-full pb-[200px] w-full shadow-md">
           <div className="px-3">
             <div className="w-full pt-[12px] items-center space-y-2">
               <Label

@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { logout } from "@/app/(signin-setup)/logout/action";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import {useRouter} from "next/navigation";
 
 interface loggedUserDataProps {
   loggedUserData : any
@@ -29,7 +30,7 @@ interface loggedUserDataProps {
 const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   // const [loggedUserData, setLoggedUserData] = useState<any>(null);
-
+   const router =useRouter();
   const handleLogout = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoggingOut(true); // Show loader when logging out
@@ -85,7 +86,7 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
               </div>
               <div className="py-3 my-3 text-gray-700 border-t border-b border-gray-200 px-3 cursor-pointer">
                 <p className="text-sm font-normal pb-3">Your Profile</p>
-                <p className="text-sm font-normal">Settings</p>
+                <button onClick={() => router.push('/spaceSetting')} className="text-sm font-normal cursor-pointer ">Settings</button>
               </div>
               <form onSubmit={handleLogout} className="flex">
                 <TooltipProvider>

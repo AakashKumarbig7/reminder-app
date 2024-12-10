@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CarouselItem } from "@/components/ui/carousel";
 import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/dialog";
 import Userimage from "@/public/images/Ellipse 7.png";
 import EditPage from "@/app/(web)/editspace/[spaceId]/page";
-import { supabase } from "@/utils/supabase/supabaseClient";
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
     style: {
@@ -81,7 +81,7 @@ const TeamCard: React.FC<{
     }
 
     if (data) {
-      const teamData = data.map((team) => ({
+      const teamData = data.map((team:any) => ({
         ...team,
       }));
       setTeams(teamData as Team[]);
@@ -106,7 +106,7 @@ const TeamCard: React.FC<{
       }
 
       const matchingUsers =
-        data?.filter((user) => user.email.includes(inputValue)) || [];
+        data?.filter((user:any) => user.email.includes(inputValue)) || [];
 
       if (matchingUsers.length > 0) {
         setMatchingUsers(matchingUsers);
@@ -174,7 +174,7 @@ const TeamCard: React.FC<{
     //   )
     // );
 
-    // sendDataToParent(user, teamId, "add");
+    sendDataToParent(user, teamId, "add");
 
     setEmailInput("");
     setHighlightedIndex(-1);
@@ -338,7 +338,7 @@ const TeamCard: React.FC<{
   return (
     <CarouselItem
       key={team.id}
-      className="w-[339px] h-auto min-h-[200px] basis-[28%]"
+      className="w-[339px] h-auto   basis-[28%]"
     >
       <>
         <Card>
@@ -532,8 +532,8 @@ const TeamCard: React.FC<{
                               : "text-gray-500"
                           }`}
                         >
-                          {member.designation?.length > 25
-                            ? `${member.designation?.slice(0, 26)}...`
+                          {member.designation?.length > 16
+                            ? `${member.designation?.slice(0, 15)}...`
                             : member.designation}
                         </span>
                         <button
@@ -559,3 +559,4 @@ const TeamCard: React.FC<{
 };
 
 export default TeamCard;
+

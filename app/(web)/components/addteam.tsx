@@ -332,8 +332,8 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
                           : "text-gray-500"
                       }`}
                     >
-                      {member.designation?.length > 25
-                        ? `${member.designation?.slice(0, 26)}...`
+                      {member.designation?.length > 16
+                        ? `${member.designation?.slice(0, 15)}...`
                         : member.designation}
                     </span>
                     <button
