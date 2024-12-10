@@ -1,5 +1,5 @@
 "use client";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "@/components/ui/drawer";
 import { Command, CommandList } from "@/components/ui/command";

@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/sheet";
 
 import { Trash2, CirclePlus, Plus } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
 import toast, { Toaster } from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
+import { supabase } from "@/utils/supabase/supabaseClient";
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
     style: {

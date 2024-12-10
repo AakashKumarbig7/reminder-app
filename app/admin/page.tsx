@@ -6,7 +6,7 @@ import TaskStatus from "@/components/taskStatus";
 import Spaces from "@/components/spaces";
 import Teams from "@/components/teams";
 import Emoji from "@/components/emoji";
-import { fetchTasks } from "@/lib/data";
+// import { fetchTasks } from "@/lib/data";
 
 interface Mention {
   id: number;
@@ -14,7 +14,7 @@ interface Mention {
 }
 
 export default async function HomePage() {
-  const tasks = await fetchTasks();
+  // const tasks = await fetchTasks();
 
   return (
     <>

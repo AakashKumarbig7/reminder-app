@@ -1,11 +1,15 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { supabase } from "@/utils/supabase/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 
 interface Props {
   text: string;
-  setText: (text: string) => void;
-  setTaskErrorMessage: (error: boolean) => void;
+  setText: any;
+  taskErrorMessage: any;
+  setTaskErrorMessage: any;
+  allTasks: any;
+  teamId: number;
+  taskId: number;
 }
 
 interface MentionableEntity {
@@ -24,10 +28,14 @@ const entityTypeColors: Record<EntityType, string> = {
   Space: "#df478e",
 };
 
-const MentionInput: React.FC<Props> = ({
+const WebMentionInput: React.FC<Props> = ({
   text,
   setText,
+  taskErrorMessage,
   setTaskErrorMessage,
+  allTasks,
+  teamId,
+  taskId,
 }) => {
   const [suggestions, setSuggestions] = useState<MentionableEntity[]>([]);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(
@@ -61,9 +69,9 @@ const MentionInput: React.FC<Props> = ({
     const mentions = text.match(/@\w+/g) || []; // Find all mentions
     const content = text.replace(/@\w+/g, "").trim();
     if (content.length < 0 && mentions.length < 0) {
-      setTaskErrorMessage(true);
+      setTaskErrorMessage({status : true, errorId : taskId});
     } else {
-      setTaskErrorMessage(false);
+      setTaskErrorMessage({status : false, errorId : taskId});
       if (editableRef.current) {
         const plainText = editableRef.current.innerText || "";
         setText(plainText);
@@ -157,7 +165,7 @@ const MentionInput: React.FC<Props> = ({
   }, {} as Record<EntityType, MentionableEntity[]>);
 
   return (
-    <div style={{ position: "relative", width: "100%" }}>
+    <div style={{ position: "relative", width: "100%" }} className="py-1.5">
       {Object.keys(groupedSuggestions).length > 0 && (
         <div
           style={{
@@ -171,11 +179,11 @@ const MentionInput: React.FC<Props> = ({
             backgroundColor: "#f9f9f9",
             position: "absolute",
             zIndex: 10,
-            bottom: "100px",
+            bottom: "-120px",
             left: 0,
             textAlign: "left",
             minHeight: "auto",
-            maxHeight: "400px",
+            maxHeight: "200px",
             overflowY: "scroll",
           }}
         >
@@ -210,27 +218,68 @@ const MentionInput: React.FC<Props> = ({
           ))}
         </div>
       )}
-      <div
-        contentEditable
-        ref={editableRef}
-        onInput={handleInput}
-        onKeyDown={handleKeyDown}
-        // className='text-red-500'
-        // className={`${mentionColor} ? 'text-red-500' : 'text-black'`}
-        style={{
-          width: "100%",
-          padding: "10px",
-          minHeight: "100px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          whiteSpace: "pre-wrap",
-          wordWrap: "break-word",
-          outline: "none",
-          textAlign: "left",
-        }}
-      />
+      {allTasks && teamId && taskId ? (
+        allTasks.map(
+          (task: any) =>
+            teamId === task.team_id &&
+            taskId === task.id && (
+              <div
+                key={task.id}
+                contentEditable
+                ref={editableRef}
+                onInput={handleInput}
+                onKeyDown={handleKeyDown}
+                // className='text-red-500'
+                // className={`${mentionColor} ? 'text-red-500' : 'text-black'`}
+                style={{
+                  width: "100%",
+                  minHeight: "65px",
+                  borderRadius: "5px",
+                  // border: "1px solid #ddd",
+                  whiteSpace: "pre-wrap",
+                  wordWrap: "break-word",
+                  outline: "none",
+                  textAlign: "left",
+                  // margin:"10px"
+                }}
+                className={`${
+                  (taskErrorMessage.errorId === task.id && taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"
+                } text-sm`}
+              >
+                {/* {task.mentions.map((mention : any, index : any) => <span key={index} className="font-bold text-primaryColor-700">{mention}</span>)} {task.task_content}  */}
+                <span className="font-bold text-primaryColor-700">
+                  {task.mentions}
+                </span>{" "}
+                {task.task_content}
+              </div>
+            )
+        )
+      ) : (
+        <div
+          contentEditable
+          ref={editableRef}
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
+          // className='text-red-500'
+          // className={`${mentionColor} ? 'text-red-500' : 'text-black'`}
+          style={{
+            width: "100%",
+            minHeight: "65px",
+            borderRadius: "5px",
+            // border: "1px solid #ddd",
+            whiteSpace: "pre-wrap",
+            wordWrap: "break-word",
+            outline: "none",
+            textAlign: "left",
+            // margin:"10px"
+          }}
+          className={`${
+            (taskErrorMessage.status === true) ? "border border-red-500 p-1" : "border-none"
+          } text-sm`}
+        ></div>
+      )}
     </div>
   );
 };
 
-export default MentionInput;
+export default WebMentionInput;

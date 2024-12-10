@@ -29,7 +29,7 @@ import { Trash2, Pencil, ClipboardPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 interface Member {
   id: string;
@@ -259,7 +259,7 @@ const Members = () => {
 
   return (
     <>
-      <WebNavbar />
+      {/* <WebNavbar /> */}
       <div className="px-3">
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex justify-between w-full">

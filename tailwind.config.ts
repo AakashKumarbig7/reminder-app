@@ -13,6 +13,9 @@ const config: Config = {
 			geist : ["Geist", "sans-serif"],
 			inter : ["Inter", "sans-serif"],
 		},
+		boxShadow: {
+			'task-shadow': 'blue 0px 5px 15px',
+		  },
   		colors: {
            
 			greyblack: "#393939",

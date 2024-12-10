@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/tooltip";
 import WebNavbar from "@/app/(web)/components/navbar";
 import { ClipboardPlus, Trash2, Pencil } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 
@@ -31,6 +30,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/utils/supabase/supabaseClient";
+
 
 
 interface Space {
@@ -61,7 +62,7 @@ export default function SpaceSetting({}) {
       }
 
       setSpaces(
-        data.map((space) => ({ id: space.id, name: space.space_name }))
+        data.map((space : any) => ({ id: space.id, name: space.space_name }))
       );
     } catch (err) {
       alert("Unexpected error occurred.");
@@ -145,13 +146,13 @@ const handleDeleteDialogClose = async () => {
       }
 
       // Step 2: Map spaces to their basic structure
-      const spaces = spacesData.map((space) => ({
+      const spaces = spacesData.map((space : any) => ({
         id: space.id,
         name: space.space_name,
       }));
 
       // Step 3: Fetch teams associated with these spaces
-      const spaceIds = spaces.map((space) => space.id); // Extract space IDs
+      const spaceIds = spaces.map((space : any) => space.id); // Extract space IDs
 
       const { data: teamsData, error: teamsError } = await supabase
         .from("teams") // Assuming "teams" table exists
@@ -167,7 +168,7 @@ const handleDeleteDialogClose = async () => {
       // Step 4: Map teams by their associated space ID
       const teamsBySpaceId: Record<string, string[]> = {}; // Initialize mapping
       if (teamsData) {
-        teamsData.forEach((team) => {
+        teamsData.forEach((team : any) => {
           if (!teamsBySpaceId[team.space_id]) {
             teamsBySpaceId[team.space_id] = [];
           }
@@ -176,7 +177,7 @@ const handleDeleteDialogClose = async () => {
       }
 
       // Step 5: Combine spaces with their teams
-      const enrichedSpaces = spaces.map((space) => ({
+      const enrichedSpaces = spaces.map((space : any) => ({
         ...space,
         teams: teamsBySpaceId[space.id] || [], // Default to empty array if no teams
       }));
@@ -196,7 +197,7 @@ const handleDeleteDialogClose = async () => {
 
   return (
     <>
-      <WebNavbar />
+      {/* <WebNavbar /> */}
       <div className="px-3">
         {/* Header with navigation and New Space button */}
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">

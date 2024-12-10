@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CarouselItem } from "@/components/ui/carousel";
 import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import Userimage from "@/public/images/Ellipse 7.png";
 import EditPage from "@/app/(web)/editspace/[spaceId]/page";
+import { supabase } from "@/utils/supabase/supabaseClient";
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
     style: {
@@ -174,7 +174,7 @@ const TeamCard: React.FC<{
     //   )
     // );
 
-    sendDataToParent(user, teamId, "add");
+    // sendDataToParent(user, teamId, "add");
 
     setEmailInput("");
     setHighlightedIndex(-1);

@@ -2,18 +2,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import WebNavbar from "@/app/(web)/components/navbar";
-import { Trash2, CirclePlus, Plus } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
-import toast, { Toaster } from "react-hot-toast";
-import { Card, CardContent } from "@/components/ui/card";
-import AddTeam from "@/app/(web)/components/addteam";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Trash2, CirclePlus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -26,10 +17,21 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button"; // Ensure this exists in your project
+import { Button } from "@/components/ui/button";
+import toast, { Toaster } from "react-hot-toast";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import { Card, CardContent } from "@/components/ui/card";
+import AddTeam from "../../components/addteam";
 import TeamCard from "../../components/teamCard";
-
+interface Tab {
+  id: number;
+  space_name: string;
+  email: string;
+  username: string;
+  designation: string;
+  role: string;
+  department: string;
+}
 const notify = (message: string, success: boolean) =>
   toast[success ? "success" : "error"](message, {
     style: {
@@ -255,9 +257,8 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   
   return (
     <>
-      <WebNavbar />
-      <Toaster />
-      <div className="px-3 h-full   space-y-[18px]">
+      {/* <WebNavbar /> */}
+      <div className="px-3 space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <div className="px-3 flex w-full items-center justify-between">
             {/* Title Section */}
