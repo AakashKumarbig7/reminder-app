@@ -35,26 +35,6 @@ const SettingsPage = () => {
       route.push("/spaceSetting");
       setLoading(false);
     }
-
-    const getUser = async () => {
-      const user = await getLoggedInUserData();
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("userId", user?.id)
-        .single();
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-      console.log(data);
-      setLoggedUserData(data);
-    };
-
-    getUser();
-
   }, [route]);
 
   if (loading) {
@@ -70,7 +50,6 @@ const SettingsPage = () => {
 
   return (
     <>
-        <WebNavbar loggedUserData={loggedUserData as any} />
       <SpaceSetting/> 
     </>
   );

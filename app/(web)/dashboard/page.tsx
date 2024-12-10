@@ -60,7 +60,7 @@ const WebDashboard = () => {
 
   return (
     <>
-      <WebNavbar loggedUserData={loggedUserData as any} />
+      {/* <WebNavbar loggedUserData={loggedUserData as any} /> */}
       <SpaceBar loggedUserData={loggedUserData as any} />
     </>
   );

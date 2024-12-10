@@ -11,7 +11,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import toast, { Toaster } from "react-hot-toast";
 import SpaceTeam from "./teams";
 
 import {
@@ -76,8 +75,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [spaceDetails, setSpaceDetails] = useState<any[]>([]);
   const [spaceName, setSpaceName] = useState<string>("");
   const [deletedSpace, setDeletedSpace] = useState<any[]>([]);
-  const [deletedTasks, setDeletedTasks] = useState<any[]>([]);
-  const [deletedTeams, setDeletedTeams] = useState<any[]>([]);
 
   useEffect(() => {
     fetchSpaces();

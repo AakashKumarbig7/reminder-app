@@ -43,7 +43,6 @@ import { useRouter } from "next/navigation";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/utils/supabase/supabaseClient";
 
 interface SearchBarProps {
@@ -633,7 +632,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   return (
     <div>
-      <Toaster />
       {teams.length > 0 ? (
         <div className="w-full py-4 px-0">
           <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">
@@ -641,7 +639,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
               {teams.map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="max-w-[340px] w-[340px] basis-[28%] max-h-[72vh] h-[72vh] overflow-y-auto relative playlist-scroll"
+                  className="max-w-[340px] w-[340px] basis-[28%] max-h-[80vh] h-[78vh] overflow-y-auto relative playlist-scroll"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="w-full h-full p-0">

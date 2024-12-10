@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { logout } from "@/app/(signin-setup)/logout/action";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import { useRouter } from "next/navigation";
 
 interface loggedUserDataProps {
   loggedUserData : any
@@ -28,7 +29,12 @@ interface loggedUserDataProps {
 
 const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
-  // const [loggedUserData, setLoggedUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectOpen, setSelectOpen] = useState<boolean>(false);
+  const [totalTasks, setTotalTasks] = useState<number>(0);
+  const [inprogressTasks, setInProgressTasks] = useState<number>(0);
+  const [feedbackTasks, setFeedbackTasks] = useState<number>(0);
+  const route = useRouter();
 
   const handleLogout = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -37,8 +43,25 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
     setIsLoggingOut(false); // Hide loader after logout completes
   };
 
-  console.log(loggedUserData, " loggedUserData");
+  const taskData = async () => {
+    const {data, error} = await supabase
+    .from("tasks")
+    .select("task_status")
+    .eq("is_deleted", false)
+    if (error) {
+      console.log(error);
+    }
 
+    if (data) {
+      setInProgressTasks(data.map((task) => task.task_status).filter((task) => task === "In progress").length);
+      setFeedbackTasks(data.map((task) => task.task_status).filter((task) => task === "feedback").length);
+      setTotalTasks(data.length);
+    }
+  }
+
+  useEffect(() => {
+    taskData();
+  }, [totalTasks, inprogressTasks, feedbackTasks]);
 
   return (
     <>
@@ -48,12 +71,49 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
           alt="Logo"
           width={84}
           height={44}
-          className="w-[84px] h-[44px]"
+          className="w-[84px] h-[44px] cursor-pointer"
+          onClick={() => route.push("/dashboard")}
         />
+        
         <div className="flex items-center gap-2">
-          {/* <Button className="bg-white text-black hover:bg-gray-50"><LogOut /></Button> */}
+        <div className="max-w-[300px] w-[273px] h-[42px] bg-white shadow-none pl-2 font-bold justify-start gap-3 rounded-[10px] flex items-center">
+          <div className="w-full border-r border-zinc-300">
+            <p className="text-[8px]">Overall Task</p>
+            {
+              loggedUserData?.role === "owner" ? (
+                <p className="text-sm font-bold text-red-500">{totalTasks}</p>
+              ) : (
+                <p className="text-sm font-bold text-red-500">0</p>
+              )
+            }
+            
+          </div>
+          <div className="w-full border-r border-zinc-300">
+            <p className="text-[8px]">In Progress</p>
+            {
+              loggedUserData?.role === "owner" ? (
+                <p className="text-sm font-bold text-orange-500">{inprogressTasks}</p>
+              ) : (
+                <p className="text-sm font-bold text-orange-500">0</p>
+              )
+            }
+          </div>
+          <div className="w-full">
+            <p className="text-[8px]">Internal Feedback</p>
+            {
+              loggedUserData?.role === "owner" ? (
+                <p className="text-sm font-bold text-green-500">{feedbackTasks}</p>
+              ) : (
+                <p className="text-sm font-bold text-green-500">0</p>
+              )
+            }
+          </div>
+        </div>
 
-          <Select>
+          <Select
+          open = {selectOpen}
+          onOpenChange={setSelectOpen}
+          >
             <SelectTrigger className="w-[200px] h-[44px] bg-white focus-visible:border-none focus-visible:outline-none text-sm font-bold shadow-none pl-2 justify-start gap-1">
               <div className="w-full flex items-center justify-between">
                 <div className="flex items-center gap-1">
@@ -85,7 +145,7 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
               </div>
               <div className="py-3 my-3 text-gray-700 border-t border-b border-gray-200 px-3 cursor-pointer">
                 <p className="text-sm font-normal pb-3">Your Profile</p>
-                <p className="text-sm font-normal">Settings</p>
+                <p className="text-sm font-normal" onClick={() => {route.push("/spaceSetting"); setSelectOpen(false)}}>Settings</p>
               </div>
               <form onSubmit={handleLogout} className="flex">
                 <TooltipProvider>

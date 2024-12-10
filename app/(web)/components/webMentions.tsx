@@ -54,23 +54,7 @@ const WebMentionInput: React.FC<Props> = ({
   const editableRef = useRef<HTMLDivElement | null>(null);
   const [mentionColor, setMentionColor] = useState(false);
 
-  // const [getAllTasks, setGetAllTasks] = useState(() => ({}));
-
-  // Fetch mentionable entities from the database
-  // const getMentions = async () => {
-  //   const { data, error } = await supabase
-  //     .from("users")
-  //     .select("*");
-  //   if (error) {
-  //     console.error("Database Error:", error);
-  //     return;
-  //   }
-  //   setMentionableEntities(data.map((user) => user.members));
-  //   console.log(data, " mentionable entities");
-  // };
-
   useEffect(() => {
-    // getMentions();
   }, [mentionTrigger, setMentionTrigger]);
 
   // Handle user input to detect mentions and update text
@@ -303,7 +287,6 @@ const WebMentionInput: React.FC<Props> = ({
                     : "pointer-events-auto"
                 }`}
               >
-                {/* {task.mentions.map((mention : any, index : any) => <span key={index} className="font-bold text-primaryColor-700">{mention}</span>)} {task.task_content}  */}
                 <span className="font-bold text-primaryColor-700">
                   {task.mentions}
                 </span>{" "}
@@ -311,7 +294,8 @@ const WebMentionInput: React.FC<Props> = ({
               </div>
             )
         )
-      ) : (
+      ) : 
+      (
         <div
           contentEditable
           ref={editableRef}
@@ -333,7 +317,8 @@ const WebMentionInput: React.FC<Props> = ({
               : "border-none"
           } text-sm`}
         ></div>
-      )}
+      )
+      }
     </div>
   );
 };
