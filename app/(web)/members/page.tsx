@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import WebNavbar from "@/app/(web)/components/navbar";
 import {
   Tooltip,
@@ -31,6 +31,17 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { createUser1 } from "./action";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 interface Member {
   id: string;
@@ -43,24 +54,56 @@ interface Member {
   password: string;
 }
 
+const formSchema = z.object({
+  picture: z
+    .any()
+    .refine(
+      (file) => file?.length === 1,
+      "*Supported image formats include JPEG, PNG"
+    )
+    .refine(
+      (file) => file[0]?.type === "image/png" || file[0]?.type === "image/jpeg",
+      "Must be a png or jpeg"
+    )
+    .refine((file) => file[0]?.size <= 5000000, "Max file size is 5MB."),
+  companyName: z.string().min(2, {
+    message: "Company name is not recognised. Please try again.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address",
+  }),
+  mobile: z
+    .string()
+    .min(9, {
+      message: "Please enter a valid mobile number with at least 9 digits",
+    })
+    .max(11, {
+      message: "Please enter a valid mobile number with no more than 11 digits",
+    })
+    .regex(/^[0-9]+$/, {
+      message: "Please enter a valid mobile number with no special characters",
+    }),
+});
+
 const Members = () => {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
-  const [editData, setEditData] = useState({
-    id: "",
-    username: "",
-    profile_image: "",
-    designation: "",
-    email: "",
-    mobile: "",
-    role: "",
-    password: "",
-  });
   const [error, setError] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      picture: "",
+      companyName: "",
+      email: "",
+      mobile: "",
+    },
+  });
 
   // Fetch members from Supabase
   const fetchMembers = async () => {
@@ -134,19 +177,6 @@ const Members = () => {
   //   }
   // };
 
-  const handleEditClick = (member: Member) => {
-    setEditData({
-      id: member.id,
-      username: member.username,
-      profile_image: member.profile_image,
-      designation: member.designation,
-      email: member.email,
-      mobile: member.mobile,
-      role: member.role,
-      password: member.password,
-    });
-    setIsDialogOpen(true); // Open the dialog with pre-filled data
-  };
   const handleDelete = async (memberId: string) => {
     try {
       // Delete the member from the database
@@ -169,8 +199,23 @@ const Members = () => {
   };
 
   useEffect(() => {
+
+    const redirectToTask = () => {
+      router.push("/home");
+    };
+
+    if (window.innerWidth <= 992) {
+      redirectToTask();
+      setLoading(false);
+      return;
+    } else {
+      router.push("/members");
+      setLoading(false);
+    }
+
     fetchMembers(); // Load members on component mount
   }, []);
+
   const validateMobileNumber = (mobile: string) => {
     if (mobile.length < 9) {
       return "Please enter a valid mobile number with at least 9 digits";
@@ -183,89 +228,17 @@ const Members = () => {
     }
     return "";
   };
-  const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    const validationError = validateMobileNumber(value);
-    setEditData({ ...editData, mobile: value });
-    setError(validationError);
-  };
-  const handleAddSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
 
-    // Validate fields
-    if (
-      !editData.username.trim() ||
-      !editData.designation.trim() ||
-      !editData.email.trim() ||
-      !editData.mobile.trim() ||
-      !editData.role.trim() ||
-      (!file && !editData.profile_image)
-    ) {
-      setError("Please fill in all fields before submitting.");
-      return;
-    }
-
-    try {
-      setError("");
-      let imageUrl = editData.profile_image;
-
-      if (file) {
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("profiles")
-          .upload(`profiles/${file.name}`, file, {
-            cacheControl: "3600",
-            upsert: true,
-          });
-
-        if (uploadError) throw new Error(`Image upload failed: ${uploadError.message}`);
-
-        const { data: publicUrlData } = supabase.storage
-          .from("profiles")
-          .getPublicUrl(`profiles/${file.name}`);
-        imageUrl = publicUrlData?.publicUrl || "";
-      }
-
-      if (editData.id) {
-        const { error: updateError } = await supabase
-          .from("users")
-          .update({
-            username: editData.username,
-            profile_image: imageUrl,
-            designation: editData.designation,
-            email: editData.email,
-            mobile: editData.mobile,
-            role: editData.role,
-          })
-          .eq("id", editData.id);
-
-        if (updateError) throw new Error(`Update failed: ${updateError.message}`);
-      } else {
-
-        const signUpResponse = await createUser1(editData.email, editData.password);
-        if (signUpResponse?.data == null) {
-          console.error("Sign up error:", signUpResponse);
-        }
-
-        const { error: insertError } = await supabase.from("users").insert({
-          username: editData.username,
-          profile_image: imageUrl,
-          designation: editData.designation,
-          email: editData.email,
-          mobile: editData.mobile,
-          role: editData.role,
-        });
-
-        if (insertError) throw new Error(`Insert failed: ${insertError.message}`);
-      }
-
-      await fetchMembers();
-      setIsDialogOpen(false);
-    } catch (error: any) {
-      console.error("Error during submission:", error.message);
-      setError("An error occurred. Please try again.");
-    }
-  };
-
+  if (loading) {
+    return (
+      <div className="loader w-full h-screen flex justify-center items-center">
+        <div className="flex items-center gap-1">
+          <p className="w-5 h-5 bg-black rounded-full animate-bounce"></p>
+          <p className="text-2xl font-bold">Loading...</p>
+        </div>
+      </div>
+    ); // Simple loader UI
+  }
 
   return (
     <>
@@ -287,186 +260,12 @@ const Members = () => {
                 Access
               </button>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <button
-                  onClick={() =>
-                    setEditData({
-                      id: "",
-                      username: "",
-                      profile_image: "",
-                      designation: "",
-                      email: "",
-                      mobile: "",
-                      role: "",
-                      password: "",
-                    })
-                  }
-                  className="rounded-lg text-sm text-white border flex items-center h-[41px] bg-primaryColor-700 space-x-2 px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
-                >
-                  <ClipboardPlus className="h-5 w-5" />
-                  <span className="leading-none">Add Member</span>
-                </button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[534px] font-inter">
-                <DialogHeader>
-                  <DialogTitle className="text-base  text-gray-500 font-semibold font-geist">
-                    {editData.id ? "Edit Member" : "Add Member"}
-                  </DialogTitle>
-                </DialogHeader>
-                <DialogDescription className="font-inter ">
-                    Add a Member Details
-                  </DialogDescription>
-                <form onSubmit={handleAddSubmit}>
-                  <Label
-                    htmlFor="name"
-                    className="text-gray-900 text-inter font-medium text-sm"
-                  >
-                    Name:
-                  </Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter the name"
-                    value={editData.username}
-                    onChange={(e) =>
-                      setEditData({ ...editData, username: e.target.value })
-                    }
-                    className="mt-1"
-                  />
-                  <br></br>
-                  <Label
-                    htmlFor="designation"
-                    className="text-gray-900 text-inter font-medium text-sm"
-                  >
-                    Designation:
-                  </Label>
-                  <Input
-                    id="designation"
-                    type="text"
-                    placeholder="Enter the designation"
-                    value={editData.designation}
-                    onChange={(e) =>
-                      setEditData({ ...editData, designation: e.target.value })
-                    }
-                    className="mt-1"
-                  />
-                  <br></br>
-                  <Label
-                    htmlFor="email"
-                    className="text-gray-900 text-inter font-medium text-sm"
-                  >
-                    Email:
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter the email"
-                    value={editData.email}
-                    onChange={(e) =>
-                      setEditData({ ...editData, email: e.target.value })
-                    }
-                    className="mt-1"
-                  />
-                  <br></br>
-                  <Label
-                    htmlFor="password"
-                    className="text-gray-900 text-inter font-medium text-sm"
-                  >
-                    Password:
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter the password"
-                    value={editData.password}
-                    onChange={(e) =>
-                    {
-                      setEditData({ ...editData, password: e.target.value })
-                      console.log(editData.password);
-                    }
-                    }
-                    className="mt-1"
-                  />
-                  <br></br>
-                  <Label
-                    htmlFor="number"
-                    className="text-gray-900 text-inter font-medium text-sm"
-                  >
-                    Mobile:
-                  </Label>
-                  <Input
-                    id="number"
-                    type="tel"
-                    placeholder="+61 0000 0000"
-                  
-                    value={editData.mobile}
-                    onChange={handleMobileChange}
-                  className="mt-1"
-                  />
-                   {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-                  <br></br>
-                  <Label
-                    htmlFor="role"
-                    className="text-gray-900 text-inter font-medium text-sm"
-                  >
-                    Role:
-                  </Label>
-                  <Input
-                    id="role"
-                    type="text"
-                    placeholder="Enter the role"
-                    value={editData.role}
-                    onChange={(e) =>
-                      setEditData({ ...editData, role: e.target.value })
-                    }
-                    className="mt-1"
-                  />
-                  <br></br>
-                  <Label
-                    htmlFor="file"
-                    className="text-gray-900 text-inter font-medium text-sm"
-                  >
-                    Profile Image:
-                  </Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    onChange={(e) =>
-                      setFile(e.target.files ? e.target.files[0] : null)
-                    }
-                    className="mt-1"
-                  />
-                  <div className="flex justify-between">
-                    <Button
-                      className="text-sm mt-4 text-gray-700 h-[41px] w-[126px] bg-gray-100 rounded-md hover:bg-gray-200"
-                      onClick={() => {
-                        // Reset form state
-                        setEditData({
-                          id: "",
-                          username: "",
-                          profile_image: "",
-                          designation: "",
-                          email: "",
-                          mobile: "",
-                          role: "",
-                          password: "",
-                        });
-                        setFile(null);
-                        setIsDialogOpen(false); // Close the dialog
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="mt-4 text-white text-sm hover:bg-blue-600 hover:text-white bg-primaryColor-700 h-[41px] w-[126px]"
-                    >
-                      {editData.id ? "Update Member" : "Add Member"}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button
+              className="rounded-lg text-sm text-white border flex items-center h-[41px] bg-primaryColor-700 space-x-2 px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
+              onClick={() => window.open("/add-member", "_blank")}
+              ><ClipboardPlus className="h-5 w-5" />
+              Add member
+              </Button>
           </div>
         </div>
         <div className="pt-[18px] rounded-lg">
@@ -512,7 +311,12 @@ const Members = () => {
                           <TooltipTrigger asChild>
                             <button
                               className="p-2 rounded hover:bg-gray-100"
-                              onClick={() => handleEditClick(member)}
+                              onClick={() => {
+                                window.open(
+                                  `/edit-member/${member.id}`,
+                                  "_blank"
+                                )
+                              }}
                             >
                               <Pencil className="h-5 w-5" />
                             </button>

@@ -121,7 +121,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         console.error("Error deleting tabs:", spaceError);
         return;
       }
-
       // notify("Space updated successfully", true);
       fetchSpaces();
       fetchTeamData();

@@ -1,9 +1,11 @@
 "use server";
 
+import { createClient } from "@/utils/supabase/server";
 import { supabase } from "@/utils/supabase/supabaseClient";
 
 
 export async function createUser1(email : string, password : string) {
+    const supabase = createClient();
     const { data: authData, error: authError } =  await supabase.auth.admin.createUser({
         email: email,
         password: password,
