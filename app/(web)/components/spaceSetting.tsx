@@ -353,7 +353,7 @@ const handleDeleteDialogClose = async () => {
             <button  onClick={() => router.push(`/members`)} className="rounded-lg text-sm border w-[104px] h-[41px] text-gray-400">
               Members
             </button>
-            <button className="rounded-lg text-sm border w-[89px] h-[41px] text-gray-400">
+            <button onClick={() => router.push(`/access`)} className="rounded-lg text-sm border w-[89px] h-[41px] text-gray-400">
               Access
             </button>
           </div>
@@ -412,7 +412,7 @@ const handleDeleteDialogClose = async () => {
 
         {/* Table displaying spaces */}
         <div className="pt-[18px]">
-          <Table className="border-b border-gray-200 bg-white rounded-[8px]">
+          <Table className="border-b border-gray-200 bg-white rounded-[10px]">
             <TableHeader className="bg-gray-50 rounded-[8px]" >
               <TableRow>
                 <TableHead className="px-4 py-4 text-sm">SPACE NAME</TableHead>

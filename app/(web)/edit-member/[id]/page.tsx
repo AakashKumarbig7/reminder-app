@@ -19,6 +19,8 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { passwordReset } from "./action";
+import WebNavbar from "../../components/navbar";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 
 interface Props {
   params: {
@@ -85,7 +87,7 @@ const formSchema = z
 
 const EditMember = (props: Props) => {
   const { id } = props.params;
-  const router = useRouter();
+  const route = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
@@ -95,6 +97,8 @@ const EditMember = (props: Props) => {
   const [confirmShowPassword, setConfirmShowPassword] = useState(false);
   const [saveLoader, setSaveLoader] = useState(false);
   const [existingUserData, setExistingUserData] = useState<any>({});
+  const [cancelLoader, setCancelLoader] = useState(false);
+  const [loggedUserData, setLoggedUserData] = useState<any>(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -198,11 +202,47 @@ const EditMember = (props: Props) => {
     setSaveLoader(false);
   };
 
+  const generatePassword = () => {
+    const password = Math.random().toString(36).slice(-8);
+    setModalPassword(password);
+    form.setValue("password", password);
+    form.setValue("confirmPassword", password);
+  };
+
   useEffect(() => {
+    const getUser = async () => {
+      const user = await getLoggedInUserData();
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("userId", user?.id)
+        .single();
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+      console.log(data);
+      setLoggedUserData(data);
+    };
+
+    getUser();
     getUserData();
   }, []);
   return (
     <>
+      <WebNavbar
+       loggedUserData={loggedUserData as any} 
+       navbarItems={false}
+       searchValue=''
+       setSearchValue=''
+       teamFilterValue=''
+       setTeamFilterValue=''
+       taskStatusFilterValue=''
+       setTaskStatusFilterValue=''
+       filterFn=''
+        />
       <div
         className="w-full relative pb-5"
         style={{ minHeight: "calc(100vh - 60px)" }}
@@ -211,269 +251,326 @@ const EditMember = (props: Props) => {
           Add Member
         </h1> */}
         <div className="w-full p-4 pt-14">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-              <FormField
-                control={form.control}
-                name="picture"
-                render={({ field }) => (
-                  <FormItem className="mt-0 pb-2">
-                    <FormControl>
-                      <div className="flex justify-center mt-5">
-                        <div className="relative w-32 h-32 rounded-full border-2 border-gray-300">
-                          <Input
-                            type="file"
-                            accept="image/png, image/jpeg"
-                            placeholder="Upload Image"
-                            className="absolute w-full h-full opacity-0 cursor-pointer z-20"
-                            onChange={(e) => {
-                              field.onChange(e.target.files);
-                              handleImageChange(e.target.files as any);
-                            }}
-                          />
-                          <Image
-                            src={imageUrl || ""}
-                            alt="Profile Image"
-                            layout="fill"
-                            objectFit="cover"
-                            className="rounded-full z-0 text-transparent"
-                          />
-                          <Plus
-                            size={20}
-                            className="bg-primaryColor-700 text-gray-300 p-0.5 rounded-full absolute top-[8px] right-[8px]"
-                          />
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-center" />
-                  </FormItem>
-                )}
-              />
-
-              <div className="w-4/5 mx-auto">
-                <div className="flex justify-start gap-5 items-center mb-8">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem className="w-1/2 relative">
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            className="border border-gray-300"
-                            placeholder="Enter Company Name here"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="absolute -bottom-6 left-0" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem className="mt-0 w-1/2 relative">
-                        <FormLabel className="mb-2">Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            disabled
-                            className="border border-gray-300"
-                            placeholder="Email"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="absolute -bottom-6 left-0" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div
-                  className="flex justify-start gap-5 items-center mb-8"
-                  style={{ marginTop: "32px !important" }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="Designation"
-                    render={({ field }) => (
-                      <FormItem className="w-1/2 relative">
-                        <FormLabel>Designation</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            className="border border-gray-300"
-                            placeholder="Enter Company Name here"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="absolute -bottom-6 left-0" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="mobile"
-                    render={({ field }) => (
-                      <FormItem className="w-1/2 relative">
-                        <FormLabel>Mobile Number</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            className="border border-gray-300"
-                            placeholder="+61 0000 0000"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="absolute -bottom-6 left-0" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div
-                  className="flex justify-start gap-5 items-center"
-                  style={{ marginTop: "32px !important" }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem className="w-1/2 relative">
-                        <FormLabel>Role</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            className="border border-gray-300"
-                            placeholder="Enter role name here"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="absolute -bottom-6 left-0" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="department"
-                    render={({ field }) => (
-                      <FormItem className="w-1/2 relative">
-                        <FormLabel>Department</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            className="border border-gray-300"
-                            placeholder="Enter department name here"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="absolute -bottom-6 left-0" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex justify-start gap-5 items-center mt-8">
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem className="w-1/2 relative">
-                        <div className="flex justify-between items-center">
-                          <FormLabel className="mb-3">Password</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Input
-                            placeholder="**********"
-                            type={modalShowPassword ? "text" : "password"}
-                            className="border border-gray-300"
-                            {...field}
-                            value={field.value}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              setModalPassword(e.target.value);
-                            }}
-                          />
-                        </FormControl>
-                        <span
-                          className="absolute md:right-0 -right-0 top-[34px] cursor-pointer w-7 md:w-8 lg:w-11 flex items-center justify-center"
-                          onClick={() =>
-                            setModalShowPassword(!modalShowPassword)
-                          }
-                        >
-                          {modalShowPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </span>
-                        <FormMessage className="absolute -bottom-6 left-0" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem className="relative w-1/2">
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type={confirmShowPassword ? "text" : "password"}
-                            placeholder="Confirm Password"
-                            className="border border-gray-300 -mt-5"
-                            {...field}
-                          />
-                        </FormControl>
-                        <span
-                          className="absolute md:right-0 -right-0 top-[32px] cursor-pointer w-7 md:w-8 lg:w-11 flex items-center justify-center"
-                          onClick={() =>
-                            setConfirmShowPassword(!confirmShowPassword)
-                          }
-                        >
-                          {confirmShowPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </span>
-                        <FormMessage className="absolute -bottom-6 left-0" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className={`bg-primaryColor-700 hover:bg-primaryColor-700 w-[128px] h-[40px] hover:opacity-75 absolute -top-[0px] right-[16px]`}
-                disabled={saveLoader}
+          <div className="bg-white pt-4 pb-10 mt-5 rounded-md">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-3"
               >
-                {saveLoader ? (
-                  <svg
-                    className="animate-spin h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
+                <FormField
+                  control={form.control}
+                  name="picture"
+                  render={({ field }) => (
+                    <FormItem className="mt-0 pb-2">
+                      <FormControl>
+                        <div className="flex justify-center mt-5">
+                          <div className="relative w-32 h-32 rounded-full border-2 border-gray-300">
+                            <Input
+                              type="file"
+                              accept="image/png, image/jpeg"
+                              placeholder="Upload Image"
+                              className="absolute w-full h-full opacity-0 cursor-pointer z-20"
+                              onChange={(e) => {
+                                field.onChange(e.target.files);
+                                handleImageChange(e.target.files as any);
+                              }}
+                            />
+                            <Image
+                              src={imageUrl || ""}
+                              alt="Profile Image"
+                              layout="fill"
+                              objectFit="cover"
+                              className="rounded-full z-0 text-transparent"
+                            />
+                            <Plus
+                              size={20}
+                              className="bg-primaryColor-700 text-gray-300 p-0.5 rounded-full absolute top-[8px] right-[8px]"
+                            />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-center" />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="w-[95%] mx-auto">
+                  <div className="flex justify-start gap-5 items-center mb-8">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem className="w-1/2 relative">
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              className="border border-gray-300"
+                              placeholder="Enter Company Name here"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="absolute -bottom-6 left-0" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem className="mt-0 w-1/2 relative">
+                          <FormLabel className="mb-2">Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              disabled
+                              className="border border-gray-300"
+                              placeholder="Email"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="absolute -bottom-6 left-0" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div
+                    className="flex justify-start gap-5 items-center mb-8"
+                    style={{ marginTop: "32px !important" }}
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="#fff"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="#fff"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                ) : (
-                  "Update Member"
-                )}
-              </Button>
-            </form>
-          </Form>
+                    <FormField
+                      control={form.control}
+                      name="Designation"
+                      render={({ field }) => (
+                        <FormItem className="w-1/2 relative">
+                          <FormLabel>Designation</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              className="border border-gray-300"
+                              placeholder="Enter Company Name here"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="absolute -bottom-6 left-0" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="mobile"
+                      render={({ field }) => (
+                        <FormItem className="w-1/2 relative">
+                          <FormLabel>Mobile Number</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              className="border border-gray-300"
+                              placeholder="+61 0000 0000"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="absolute -bottom-6 left-0" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div
+                    className="flex justify-start gap-5 items-center"
+                    style={{ marginTop: "32px !important" }}
+                  >
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem className="w-1/2 relative">
+                          <FormLabel>Role</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              className="border border-gray-300"
+                              placeholder="Enter role name here"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="absolute -bottom-6 left-0" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="department"
+                      render={({ field }) => (
+                        <FormItem className="w-1/2 relative">
+                          <FormLabel>Department</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              className="border border-gray-300"
+                              placeholder="Enter department name here"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="absolute -bottom-6 left-0" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex justify-start gap-5 items-center mt-8">
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem className="w-1/2 relative">
+                          <div className="flex justify-between items-center">
+                            <FormLabel className="mb-3">Password</FormLabel>
+                            <p
+                              className="w-fit bg-primaryColor-700 text-white px-1 rounded text-xs cursor-pointer"
+                              onClick={generatePassword}
+                            >
+                              Generate
+                            </p>
+                          </div>
+                          <FormControl>
+                            <Input
+                              placeholder="**********"
+                              type={modalShowPassword ? "text" : "password"}
+                              className="border border-gray-300"
+                              {...field}
+                              value={field.value}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                setModalPassword(e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <span
+                            className="absolute md:right-0 -right-0 top-[34px] cursor-pointer w-7 md:w-8 lg:w-11 flex items-center justify-center"
+                            onClick={() =>
+                              setModalShowPassword(!modalShowPassword)
+                            }
+                          >
+                            {modalShowPassword ? (
+                              <EyeOff className="w-5 h-5" />
+                            ) : (
+                              <Eye className="w-5 h-5" />
+                            )}
+                          </span>
+                          <FormMessage className="absolute -bottom-6 left-0" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem className="relative w-1/2">
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              type={confirmShowPassword ? "text" : "password"}
+                              placeholder="Confirm Password"
+                              className="border border-gray-300 -mt-5"
+                              {...field}
+                            />
+                          </FormControl>
+                          <span
+                            className="absolute md:right-0 -right-0 top-[32px] cursor-pointer w-7 md:w-8 lg:w-11 flex items-center justify-center"
+                            onClick={() =>
+                              setConfirmShowPassword(!confirmShowPassword)
+                            }
+                          >
+                            {confirmShowPassword ? (
+                              <EyeOff className="w-5 h-5" />
+                            ) : (
+                              <Eye className="w-5 h-5" />
+                            )}
+                          </span>
+                          <FormMessage className="absolute -bottom-6 left-0" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="bg-white w-[98%] h-[60px] absolute -top-[8px] right-[16px] rounded-md flex justify-between items-center px-3">
+                  <h2 className="text-[16px] font-inter font-bold text-[#000000]">
+                    User profile
+                  </h2>
+
+                  <div className="flex items-center gap-5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-[40px] w-20"
+                      onClick={() => {
+                        setCancelLoader(true);
+                        setTimeout(() => {
+                          route.push("/members");
+                          setCancelLoader(false);
+                        }, 1000);
+                      }}
+                      disabled={cancelLoader}
+                    >
+                      {cancelLoader ? (
+                        <svg
+                          className="animate-spin h-6 w-6"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="#1A56DB"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-100"
+                            fill="#1A56DB"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        "Cancel"
+                      )}
+                    </Button>
+                    <Button
+                      type="submit"
+                      className={`bg-primaryColor-700 hover:bg-primaryColor-700 w-[128px] h-[40px] hover:opacity-75`}
+                      disabled={saveLoader}
+                    >
+                      {saveLoader ? (
+                        <svg
+                          className="animate-spin h-6 w-6"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="#fff"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="#fff"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        "Update Member"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </Form>
+          </div>
         </div>
       </div>
     </>

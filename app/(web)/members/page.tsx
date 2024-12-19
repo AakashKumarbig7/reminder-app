@@ -42,6 +42,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 
 interface Member {
   id: string;
@@ -94,6 +95,8 @@ const Members = () => {
   const [error, setError] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saveLoader, setSaveLoader] = useState(false);
+  const [loggedUserData, setLoggedUserData] = useState<any>(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -199,7 +202,6 @@ const Members = () => {
   };
 
   useEffect(() => {
-
     const redirectToTask = () => {
       router.push("/home");
     };
@@ -213,8 +215,26 @@ const Members = () => {
       setLoading(false);
     }
 
+    const getUser = async () => {
+      const user = await getLoggedInUserData();
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("userId", user?.id)
+        .single();
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+      console.log(data);
+      setLoggedUserData(data);
+    };
+
+    getUser();
     fetchMembers(); // Load members on component mount
-  }, []);
+  }, [router]);
 
   const validateMobileNumber = (mobile: string) => {
     if (mobile.length < 9) {
@@ -242,7 +262,17 @@ const Members = () => {
 
   return (
     <>
-      {/* <WebNavbar /> */}
+      <WebNavbar
+       loggedUserData={loggedUserData as any}
+       navbarItems={false}
+       searchValue=''
+       setSearchValue=''
+       teamFilterValue=''
+       setTeamFilterValue=''
+       taskStatusFilterValue=''
+       setTaskStatusFilterValue=''
+       filterFn=''
+        />
       <div className="px-3">
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex justify-between w-full">
@@ -256,16 +286,49 @@ const Members = () => {
               <button className="rounded-lg text-sm border w-[104px] h-[41px] text-white hover:bg-blue-600 hover:text-white bg-primaryColor-700">
                 Members
               </button>
-              <button className="rounded-lg text-sm border w-[89px] h-[41px] hover:bg-slate-50 text-gray-400">
+              <button onClick={() => router.push(`/access`)} className="rounded-lg text-sm border w-[89px] h-[41px] hover:bg-slate-50 text-gray-400">
                 Access
               </button>
             </div>
             <Button
-              className="rounded-lg text-sm text-white border flex items-center h-[41px] bg-primaryColor-700 space-x-2 px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
-              onClick={() => window.open("/add-member", "_blank")}
-              ><ClipboardPlus className="h-5 w-5" />
-              Add member
-              </Button>
+              className="rounded-lg text-sm text-white border flex items-center max-w-[142px] w-[142px] h-[41px] bg-primaryColor-700 space-x-2 px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
+              onClick={() => {
+                setSaveLoader(true);
+                setTimeout(() => {
+                  router.push("/add-member");
+                  setSaveLoader(false);
+                }, 1000);
+              }}
+              disabled={saveLoader}
+            >
+              {saveLoader ? (
+                <svg
+                  className="animate-spin h-6 w-6"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#fff"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="#fff"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                <>
+                  <ClipboardPlus className="h-5 w-5" />
+                  Add member
+                </>
+              )}
+            </Button>
           </div>
         </div>
         <div className="pt-[18px] rounded-lg">
@@ -312,10 +375,7 @@ const Members = () => {
                             <button
                               className="p-2 rounded hover:bg-gray-100"
                               onClick={() => {
-                                window.open(
-                                  `/edit-member/${member.id}`,
-                                  "_blank"
-                                )
+                                router.push(`/edit-member/${member.id}`);
                               }}
                             >
                               <Pencil className="h-5 w-5" />
