@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
+
 import {
   Table,
   TableBody,
@@ -36,13 +37,9 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 
 
 interface Space {
-  id: string;
+  id: number;
   name: string;
   teams?: string[]; // Teams property added
-}
-interface BackupData {
-  space: Space;
-  teams: string[];
 }
 
 export default function SpaceSetting({}) {
@@ -51,30 +48,30 @@ export default function SpaceSetting({}) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [backupData, setBackupData] = useState<BackupData | null>(null);// For undo functionality
   const router = useRouter();
 
   // Fetch spaces from Supabase
-  // const fetchSpaces = async () => {
-  //   try {
-  //     const { data, error } = await supabase
-  //       .from("spaces")
-  //       .select("id, space_name");
+  const fetchSpaces = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("spaces")
+        .select("id, space_name")
+        .eq("is_deleted",false);
 
-  //     if (error) {
-  //       alert("Failed to fetch spaces. Please try again.");
-  //       console.error("Error fetching spaces:", error.message);
-  //       return;
-  //     }
+      if (error) {
+        alert("Failed to fetch spaces. Please try again.");
+        console.error("Error fetching spaces:", error.message);
+        return;
+      }
 
-  //     setSpaces(
-  //       data.map((space : any) => ({ id: space.id, name: space.space_name }))
-  //     );
-  //   } catch (err) {
-  //     alert("Unexpected error occurred.");
-  //     console.error("Unexpected error:", err);
-  //   }
-  // };
+      setSpaces(
+        data.map((space : any) => ({ id: space.id, name: space.space_name }))
+      );
+    } catch (err) {
+      alert("Unexpected error occurred.");
+      console.error("Unexpected error:", err);
+    }
+  };
 
   // Add a new space
   const addSpace = async () => {
@@ -82,12 +79,13 @@ export default function SpaceSetting({}) {
       try {
         const { data, error } = await supabase
           .from("spaces")
-          .insert([{ space_name: newSpaceName }]);
+          .insert([{ space_name: newSpaceName ,is_deleted:false}])
+          .select();
 
           
 
         if (error) {
-          
+          alert("Failed to create space. Please try again.");
           console.error("Error inserting space:", error.message);
           return;
         }
@@ -95,7 +93,7 @@ export default function SpaceSetting({}) {
         fetchSpaces();
        
       } catch (err) {
-       
+        alert("Unexpected error occurred.");
         console.error("Unexpected error:", err);
       }
     }
@@ -105,57 +103,211 @@ export default function SpaceSetting({}) {
     setIsDialogOpen(false); // Close the dialog
     fetchSpaces(); // Refresh the spaces after insertion
   }
+  // const fetchTeams = async (id:any) => {
+  //   const { data, error } = await supabase
+  //     .from("teams")
+  //     .select("*")
+  //     .eq("is_deleted",false)
+  //     .eq("space_id",id );
+     
+  
+  //   if (error) {
+  //     console.error("Error fetching teams:", error);
+  //     return;
+  //   }
+  
+  //   // if (data) {
+  //   //   setTeams(
+  //   //     data.map((team:any) => ({
+  //   //       ...team,
+  //   //       members: team.members || [], // Ensure members array is not null
+  //   //     }))
+  //   //   );
+  //   // }
+  // };
+  
 
   // Delete a space
-  // const deleteSpace = async (id: string) => {
-  //   try {
-  //     setIsDeleting(true);
+  const deleteSpace = async (id:number) => {
+    let backupData: {
+      tasks: any[];
+      teams: any[];
+      space: any;
+    } = { tasks: [], teams: [], space: null };
+    console.log("hi")
   
-  //     // Step 1: Delete teams associated with the space
-  //     const { error: teamError } = await supabase
-  //       .from("teams")
-  //       .delete()
-  //       .eq("space_id", id); // Assuming `space_id` links teams to spaces
+    // Fetch tasks
+    const { data: tasks, error: tasksError } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("is_deleted", false)
+      .eq("space_id", id);
   
-  //     if (teamError) {
-  //       console.error("Error deleting associated teams:", teamError.message);
-       
-  //       return;
-  //     }
+    if (tasksError) {
+      console.error("Error fetching tasks:", tasksError);
+      return;
+    }
+    backupData.tasks = tasks || [];
+    // console.log(tasksError)
   
-  //     // Step 2: Delete the space
-  //     const { error: spaceError } = await supabase
-  //       .from("spaces")
-  //       .delete()
-  //       .eq("id", id);
+    // Fetch teams
+    const { data: teams, error: teamsError } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("is_deleted", false)
+      .eq("space_id", id);
   
-  //     if (spaceError) {
-  //       console.error("Error deleting space:", spaceError.message);
+    if (teamsError) {
+      console.error("Error fetching teams:", teamsError);
+      return;
+    }
+    backupData.teams = teams || [];
+  
+    // Fetch space
+    const { data: space, error: spaceError } = await supabase
+      .from("spaces")
+      .select("*")
+      .eq("id", id)
+      .single();
+  
+    if (spaceError) {
+      console.error("Error fetching space:", spaceError);
+      return;
+    }
+    backupData.space = space;
+    console.log("hello")
+  
+    // Mark tasks as deleted
+    const { error: tasksDeleteError } = await supabase
+      .from("tasks")
+      .update({ is_deleted: true })
+      .eq("space_id", id);
+  
+    if (tasksDeleteError) {
+      console.error("Error deleting tasks:", tasksDeleteError);
+      return;
+    }
+  
+    // Mark teams as deleted
+    const { error: teamsDeleteError } = await supabase
+      .from("teams")
+      .update({ is_deleted: true })
+      .eq("space_id", id);
+  
+    if (teamsDeleteError) {
+      console.error("Error deleting teams:", teamsDeleteError);
+      return;
+    }
+  
+    // Mark space as deleted
+    const { error: spaceDeleteError } = await supabase
+      .from("spaces")
+      .update({ is_deleted: true })
+      .eq("id", id);
+  
+    if (spaceDeleteError) {
+      console.error("Error deleting space:", spaceDeleteError);
+      return;
+    }
+  
+    // Update UI
+    fetchSpaces();
+   fetchSpacesWithTeams();
+    setIsOpen(false);
+  
     
-  //       return;
-  //     }
   
-  //     // Refresh UI or data
-  //     setIsOpen(false);
-  //     fetchSpaces(); // Refresh the spaces list after deletion
-  //   } catch (err) {
+    toast({
+      title: "Deleted Successfully!",
+      description: "Space deleted successfully!",
+      action: (
+        <ToastAction
+          altText="Undo"
+          onClick={async () => {
+            await handleSpaceUndo(backupData);
+          }}
+        >
+          Undo
+        </ToastAction>
+      ),
+    });
+  };
+  
+  // Undo functionality
+  const handleSpaceUndo = async (backupData: {
+    tasks: any[];
+    teams: any[];
+    space: any;
+  }) => {
+    // Restore tasks
+    if (backupData.tasks.length > 0) {
+      const { error: tasksRestoreError } = await supabase
+        .from("tasks")
+        .update({ is_deleted: false })
+        .in(
+          "id",
+          backupData.tasks.map((task) => task.id)
+        );
+  
+      if (tasksRestoreError) {
+        console.error("Error restoring tasks:", tasksRestoreError);
+        return;
+      }
+    }
+  
+    // Restore teams
+    if (backupData.teams.length > 0) {
+      const { error: teamsRestoreError } = await supabase
+        .from("teams")
+        .update({ is_deleted: false })
+        .in(
+          "id",
+          backupData.teams.map((team) => team.id)
+        );
+  
+      if (teamsRestoreError) {
+        console.error("Error restoring teams:", teamsRestoreError);
+        return;
+      }
+    }
+  
+    // Restore space
+    if (backupData.space) {
+      const { error: spaceRestoreError } = await supabase
+        .from("spaces")
+        .update({ is_deleted: false })
+        .eq("id", backupData.space.id);
+  
+      if (spaceRestoreError) {
+        console.error("Error restoring space:", spaceRestoreError);
+        return;
+      }
+    }
+  
+    // Refresh UI
+    fetchSpaces();
+    fetchSpacesWithTeams();
+    router.refresh();
     
-  //     console.error("Unexpected error:", err);
-  //   } finally {
-  //     setIsDeleting(false);
-  //   }
-  // };
+    toast({
+      title: "Undo Successful!",
+      description: "Space, tasks, and teams have been restored.",
+    });
+  };
+  
+
   
 const handleDeleteDialogClose = async () => {
   setIsOpen(false);
   fetchSpaces();
 }
-  const fetchSpacesWithTeams = async () => {
+  const  fetchSpacesWithTeams = async () => {
     try {
       // Step 1: Fetch spaces from Supabase
       const { data: spacesData, error: spacesError } = await supabase
         .from("spaces")
-        .select("id, space_name"); // Fetch space ID and name
+        .select("id, space_name") // Fetch space ID and name
+        .eq("is_deleted",false);
 
       if (spacesError) {
         alert("Failed to fetch spaces. Please try again.");
@@ -211,134 +363,12 @@ const handleDeleteDialogClose = async () => {
       console.error("Unexpected error:", err);
     }
   };
-  const fetchSpaces = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("spaces")
-        .select("id, space_name")
-        .eq("is_deleted", false); // Fetch only active spaces
-
-      if (error) {
-        console.error("Error fetching spaces:", error.message);
-        return;
-      }
-
-      setSpaces(
-        data.map((space: any) => ({
-          id: space.id,
-          name: space.space_name,
-        }))
-      );
-    } catch (err) {
-      console.error("Unexpected error:", err);
-    }
-  };
-
-  const deleteSpace = async (id: string) => {
-    try {
-      // Fetch backup data
-      const { data: space, error: spaceError } = await supabase
-        .from("spaces")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      const { data: teams, error: teamsError } = await supabase
-        .from("teams")
-        .select("*")
-        .eq("space_id", id);
-
-      if (spaceError || teamsError) {
-        console.error("Error fetching data for backup.");
-        return;
-      }
-
-      setBackupData({ space, teams }); // Store backup for undo
-
-      // Soft-delete teams
-      const { error: teamDeleteError } = await supabase
-        .from("teams")
-        .update({ is_deleted: true })
-        .eq("space_id", id);
-
-      if (teamDeleteError) {
-        console.error("Error deleting teams:", teamDeleteError.message);
-        return;
-      }
-
-      // Soft-delete space
-      const { error: spaceDeleteError } = await supabase
-        .from("spaces")
-        .update({ is_deleted: true })
-        .eq("id", id);
-
-      if (spaceDeleteError) {
-        console.error("Error deleting space:", spaceDeleteError.message);
-        return;
-      }
-
-      fetchSpaces(); // Refresh spaces list
-
-      // Show toast with undo action
-      toast({
-        title: "Deleted Successfully!",
-        description: "Space deleted successfully.",
-        action: (
-          <ToastAction
-            altText="Undo"
-            onClick={handleUndo}
-          >
-            Undo
-          </ToastAction>
-        ),
-      });
-    } catch (err) {
-      console.error("Unexpected error:", err);
-    }
-  };
-
-  const handleUndo = async () => {
-    if (!backupData) return;
-
-    try {
-      // Restore teams
-      if (backupData.teams) {
-        const { error: teamRestoreError } = await supabase
-          .from("teams")
-          .update({ is_deleted: false })
-          .in("id", backupData.teams.map((team: any) => team.id));
-
-        if (teamRestoreError) {
-          console.error("Error restoring teams:", teamRestoreError.message);
-          return;
-        }
-      }
-
-      // Restore space
-      const { error: spaceRestoreError } = await supabase
-        .from("spaces")
-        .update({ is_deleted: false })
-        .eq("id", backupData.space.id);
-
-      if (spaceRestoreError) {
-        console.error("Error restoring space:", spaceRestoreError.message);
-        return;
-      }
-
-      fetchSpaces(); // Refresh spaces list
-      setBackupData(null); // Clear backup
-    } catch (err) {
-      console.error("Unexpected error:", err);
-    }
-  };
-
 
   // Fetch spaces on component mount
   useEffect(() => {
     fetchSpaces();
     fetchSpacesWithTeams();
   }, []);
-  
 
   return (
     <>

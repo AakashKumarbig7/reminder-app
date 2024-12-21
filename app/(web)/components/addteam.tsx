@@ -51,7 +51,8 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
     const { data, error } = await supabase
       .from("teams")
       .select("*")
-      .eq("space_id", spaceId);
+      .eq("space_id", spaceId)
+      .eq("is_deleted",false);
 
     if (error) {
       console.log(error);
@@ -160,6 +161,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
               entity_name: member.entity_name,
             })),
             space_id: spaceId,
+            is_deleted: false,
           });
 
         if (insertError) {

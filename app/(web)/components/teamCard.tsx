@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-
-import toast from "react-hot-toast";
+import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+// import toast from "react-hot-toast";
 import {
   Dialog,
   DialogContent,
@@ -21,16 +22,16 @@ import {
 } from "@/components/ui/dialog";
 import Userimage from "@/public/images/Ellipse 7.png";
 import EditPage from "@/app/(web)/editspace/[spaceId]/page";
-const notify = (message: string, success: boolean) =>
-  toast[success ? "success" : "error"](message, {
-    style: {
-      borderRadius: "10px",
-      background: "#fff",
-      color: "#000",
-    },
-    position: "top-right",
-    duration: 3000,
-  });
+// const notify = (message: string, success: boolean) =>
+//   toast[success ? "success" : "error"](message, {
+//     style: {
+//       borderRadius: "10px",
+//       background: "#fff",
+//       color: "#000",
+//     },
+//     position: "top-right",
+//     duration: 3000,
+//   });
 interface Team {
   id: number;
   team_name: string;
@@ -51,7 +52,6 @@ const TeamCard: React.FC<{
   spaceId: any;
   sendDataToParent: any;
 }> = ({ team, spaceId, sendDataToParent }) => {
- 
   const [teamName, setTeamName] = useState(team.team_name);
   const [teamNameError, setTeamNameError] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -63,7 +63,6 @@ const TeamCard: React.FC<{
   const [teamMemberError, setTeamMemberError] = useState(false);
   const [isopen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
- 
 
   const fetchSpaces = async () => {
     let { data: spaces, error } = await supabase.from("spaces").select("*");
@@ -73,6 +72,7 @@ const TeamCard: React.FC<{
     const { data, error } = await supabase
       .from("teams")
       .select("*")
+      .eq("is_deleted", false)
       .eq("space_id", spaceId);
 
     if (error) {
@@ -81,7 +81,7 @@ const TeamCard: React.FC<{
     }
 
     if (data) {
-      const teamData = data.map((team:any) => ({
+      const teamData = data.map((team: any) => ({
         ...team,
       }));
       setTeams(teamData as Team[]);
@@ -106,7 +106,7 @@ const TeamCard: React.FC<{
       }
 
       const matchingUsers =
-        data?.filter((user:any) => user.email.includes(inputValue)) || [];
+        data?.filter((user: any) => user.email.includes(inputValue)) || [];
 
       if (matchingUsers.length > 0) {
         setMatchingUsers(matchingUsers);
@@ -157,7 +157,7 @@ const TeamCard: React.FC<{
     const isAlreadyAdded = addedMembers.some((member) => member.id === user.id);
 
     if (isAlreadyAdded) {
-      notify("User is already added to this team", false);
+      // notify("User is already added to this team", false);
       return;
     }
     // else
@@ -190,15 +190,13 @@ const TeamCard: React.FC<{
     );
   };
 
-  const handleDeleteTeam = async (teamId: number) => {
+  const handleDeleteTeam = async (id: number) => {
     try {
-      setIsDeleting(true); // Optional, if you have a loading state
-
       // Delete tasks associated with the team first
       const { error: taskError } = await supabase
         .from("tasks")
-        .delete()
-        .eq("team_id", teamId);
+        .update({ is_deleted: true })
+        .eq("team_id", id);
 
       if (taskError) {
         console.error("Error deleting tasks:", taskError);
@@ -210,8 +208,8 @@ const TeamCard: React.FC<{
       // Now delete the team
       const { error: teamError } = await supabase
         .from("teams")
-        .delete()
-        .eq("id", teamId);
+        .update({ is_deleted: true })
+        .eq("id", id);
 
       if (teamError) {
         console.error("Error deleting team:", teamError);
@@ -220,19 +218,60 @@ const TeamCard: React.FC<{
 
       console.log("Team deleted successfully.");
 
-      // Close the dialog and refresh the page
+      // Additional cleanup actions
       setIsOpen(false);
-        fetchTeams();
-        // fetchSpaces();
-      // Notify the user
-      notify("Team deleted successfully", true);
-
-      // Refresh the page after a short delay (optional for better UX)
-      
+      fetchTeams();
+      toast({
+        title: "Deleted Successfully!",
+        description: "Team deleted successfully!",
+        action: (
+          <ToastAction altText="Undo" onClick={() => handleTeamUndo(id)}>
+            Undo
+          </ToastAction>
+        ),
+      });
     } catch (error) {
       console.error("Unexpected error during deletion:", error);
-    } finally {
-      setIsDeleting(false);
+    }
+  };
+  const handleTeamUndo = async (teamId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ is_deleted: false })
+        .eq("team_id", teamId);
+
+      if (error) {
+        console.error("Error undoing delete:", error);
+        return;
+      }
+
+      // Now delete the team
+      const { error: teamError } = await supabase
+        .from("teams")
+        .update({ is_deleted: false })
+        .eq("id", teamId);
+
+      if (teamError) {
+        console.error("Error deleting team:", teamError);
+        return;
+      }
+
+      // Additional cleanup actions
+      // setTeamNameDialogOpen(false);
+      fetchTeams();
+      toast({
+        title: "Undo Successful",
+        description: "The deleted team has been restored.",
+        duration: 5000,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to restore the deleted team. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   };
 
@@ -336,10 +375,7 @@ const TeamCard: React.FC<{
   }, [spaceId]);
 
   return (
-    <CarouselItem
-      key={team.id}
-      className="w-[339px] h-auto   basis-[28%]"
-    >
+    <CarouselItem key={team.id} className="w-[339px] h-auto   basis-[28%]">
       <>
         <Card>
           <CardContent className="p-[18px] w-full h-full">
@@ -456,55 +492,8 @@ const TeamCard: React.FC<{
                   Please fill the field
                 </p>
               )}
-
-              {/* {addedMembers.length > 0 && (
-                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
-                  {addedMembers.map((member, index) => (
-                    <div
-                      key={member.id}
-                      className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
-                    >
-                      <div className="flex items-center gap-1">
-                        <Image
-                          src={Userimage}
-                          alt="user image"
-                          width={36}
-                          height={36}
-                          className="w-6 h-6 rounded-full"
-                        />
-                        <span>{member.username || member.name}</span>
-                      </div>
-                      <span
-                        className={`${
-                          member.role === "superadmin"
-                            ? "text-[#0E9F6E]"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {member.designation?.length > 25
-                          ? `${member.designation?.slice(0, 26)}...`
-                          : member.designation}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeMember(member, index, team.id);
-                        }}
-                        className="focus:outline-none space_delete_button text-gray-400"
-                      >
-                        <Trash2 className="text-black" size={18} />
-                      </button>
-                    </div>
-                  ))}
-                  {teamNameError && (
-                    <p className="text-red-500 text-sm mt-1">
-                      Please fill the field
-                    </p>
-                  )}
-                </div>
-              )} */}
               {addedMembers.length > 0 && (
-                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
+                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md max-h-64 overflow-y-auto">
                   {addedMembers
                     .filter(
                       (member, index, self) =>
@@ -515,13 +504,13 @@ const TeamCard: React.FC<{
                         key={member.id}
                         className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
                       >
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 overflow-y-auto">
                           <Image
-                            src={Userimage}
+                            src={member.profile_image}
                             alt="user image"
                             width={36}
                             height={36}
-                            className="w-6 h-6 rounded-full"
+                            className="w-[32px] h-[32px] rounded-full"
                           />
                           <span>{member.username || member.name}</span>
                         </div>
@@ -532,8 +521,8 @@ const TeamCard: React.FC<{
                               : "text-gray-500"
                           }`}
                         >
-                          {member.designation?.length > 16
-                            ? `${member.designation?.slice(0, 15)}...`
+                          {member.designation?.length > 9
+                            ? `${member.designation?.slice(0, 8)}...`
                             : member.designation}
                         </span>
                         <button
@@ -550,7 +539,6 @@ const TeamCard: React.FC<{
                 </div>
               )}
             </div>
-           
           </CardContent>
         </Card>
       </>
@@ -559,4 +547,4 @@ const TeamCard: React.FC<{
 };
 
 export default TeamCard;
-
+ 

@@ -22,6 +22,7 @@ import { logout } from "@/app/(signin-setup)/logout/action";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
+import { Filter } from 'lucide-react';
 
 interface loggedUserDataProps {
   loggedUserData : any
@@ -76,8 +77,13 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
         />
         
         <div className="flex items-center gap-2">
+        <Button className="bg-white  hover:bg-white rounded-lg">
+          <Filter className="text-black" />
+          </Button>
         <div className="max-w-[300px] w-[273px] h-[42px] bg-white shadow-none pl-2 font-bold justify-start gap-3 rounded-[10px] flex items-center">
+        
           <div className="w-full border-r border-zinc-300">
+           
             <p className="text-[8px]">Overall Task</p>
             {
               loggedUserData?.role === "owner" ? (

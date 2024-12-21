@@ -61,7 +61,9 @@ const Members = () => {
 
   // Fetch members from Supabase
   const fetchMembers = async () => {
-    const { data, error } = await supabase.from("users").select("*");
+    const { data, error } = await supabase
+    .from("users")
+    .select("*");
     if (error) {
       console.error("Error fetching members:", error.message);
     } else {

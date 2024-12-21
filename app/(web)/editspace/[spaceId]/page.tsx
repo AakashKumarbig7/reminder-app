@@ -4,9 +4,10 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import WebNavbar from "@/app/(web)/components/navbar";
 import { Trash2, CirclePlus, Plus } from "lucide-react";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import AddTeam from "@/app/(web)/components/addteam";
+import { ToastAction } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,
@@ -30,16 +31,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import TeamCard from "../../components/teamCard";
 
-const notify = (message: string, success: boolean) =>
-  toast[success ? "success" : "error"](message, {
-    style: {
-      borderRadius: "10px",
-      background: "#fff",
-      color: "#000",
-    },
-    position: "top-right",
-    duration: 3000,
-  });
+// const notify = (message: string, success: boolean) =>
+//   toast[success ? "success" : "error"](message, {
+//     style: {
+//       borderRadius: "10px",
+//       background: "#fff",
+//       color: "#000",
+//     },
+//     position: "top-right",
+//     duration: 3000,
+//   });
 interface Team {
   id: number;
   team_name: string;
@@ -79,6 +80,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [datafromChild, setdatafromchild] = useState("");
+  const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
 
   const router = useRouter();
   const { spaceId } = params;
@@ -98,56 +100,195 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   
         if (error) {
           console.error("Error updating team:", error);
-          notify("Error saving changes. Please try again.", false);
+          // notify("Error saving changes. Please try again.", false);
           return;
         }
       }
   
-      notify(" Teams updated successfully!", true);
+      // notify(" Teams updated successfully!", true);
       fetchTeams(); // Refresh teams to sync with the database
     } catch (error) {
       console.error("Error saving changes:", error);
-      notify("An error occurred. Please try again.", false);
+      // notify("An error occurred. Please try again.", false);
     }
   };
   
 
-  const handleDelete = async () => {
-    try {
-      setIsDeleting(true);
-
-      // First, delete all the teams related to this space
-      const { error: teamsError } = await supabase
-        .from("teams")
-        .delete()
-        .eq("space_id", spaceId);
-
-      if (teamsError)
-        throw new Error("Error deleting teams: " + teamsError.message);
-
-      // Now delete the space
-      const { error } = await supabase
-        .from("spaces")
-        .delete()
-        .eq("id", spaceId);
-
-      if (error) throw new Error("Error deleting space: " + error.message);
-
-      // Close the dialog and redirect
-      setIsOpen(false);
-      router.push("/spaceSetting"); // Update to your actual spaces settings route
-    } catch (error: any) {
-      console.error("Failed to delete space:", error.message);
-    } finally {
-      setIsDeleting(false);
+  const handleDelete = async (spaceId:any) => {
+    let backupData: {
+      tasks: any[];
+      teams: any[];
+      space: any;
+    } = { tasks: [], teams: [], space: null };
+    console.log("hi")
+  
+    // Fetch tasks
+    const { data: tasks, error: tasksError } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("is_deleted", false)
+      .eq("space_id", spaceId);
+  
+    if (tasksError) {
+      console.error("Error fetching tasks:", tasksError);
+      return;
     }
+    backupData.tasks = tasks || [];
+    // console.log(tasksError)
+  
+    // Fetch teams
+    const { data: teams, error: teamsError } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("is_deleted", false)
+      .eq("space_id", spaceId);
+  
+    if (teamsError) {
+      console.error("Error fetching teams:", teamsError);
+      return;
+    }
+    backupData.teams = teams || [];
+  
+    // Fetch space
+    const { data: space, error: spaceError } = await supabase
+      .from("spaces")
+      .select("*")
+      .eq("id", spaceId)
+      .single();
+  
+    if (spaceError) {
+      console.error("Error fetching space:", spaceError);
+      return;
+    }
+    backupData.space = space;
+    console.log("hello")
+  
+    // Mark tasks as deleted
+    const { error: tasksDeleteError } = await supabase
+      .from("tasks")
+      .update({ is_deleted: true })
+      .eq("space_id", spaceId);
+  
+    if (tasksDeleteError) {
+      console.error("Error deleting tasks:", tasksDeleteError);
+      return;
+    }
+  
+    // Mark teams as deleted
+    const { error: teamsDeleteError } = await supabase
+      .from("teams")
+      .update({ is_deleted: true })
+      .eq("space_id", spaceId);
+  
+    if (teamsDeleteError) {
+      console.error("Error deleting teams:", teamsDeleteError);
+      return;
+    }
+  
+    // Mark space as deleted
+    const { error: spaceDeleteError } = await supabase
+      .from("spaces")
+      .update({ is_deleted: true })
+      .eq("id", spaceId);
+  
+    if (spaceDeleteError) {
+      console.error("Error deleting space:", spaceDeleteError);
+      return;
+    }
+  
+    // Update UI
+    fetchSpace();
+    fetchTeams();
+    setIsOpen(false);
+  
+    
+  
+    toast({
+      title: "Deleted Successfully!",
+      description: "Space deleted successfully!",
+      action: (
+        <ToastAction
+          altText="Undo"
+          onClick={async () => {
+            await handleSpaceUndo(backupData);
+          }}
+        >
+          Undo
+        </ToastAction>
+      ),
+    });
   };
+  
+  // Undo functionality
+  const handleSpaceUndo = async (backupData: {
+    tasks: any[];
+    teams: any[];
+    space: any;
+  }) => {
+    // Restore tasks
+    if (backupData.tasks.length > 0) {
+      const { error: tasksRestoreError } = await supabase
+        .from("tasks")
+        .update({ is_deleted: false })
+        .in(
+          "id",
+          backupData.tasks.map((task) => task.id)
+        );
+  
+      if (tasksRestoreError) {
+        console.error("Error restoring tasks:", tasksRestoreError);
+        return;
+      }
+    }
+  
+    // Restore teams
+    if (backupData.teams.length > 0) {
+      const { error: teamsRestoreError } = await supabase
+        .from("teams")
+        .update({ is_deleted: false })
+        .in(
+          "id",
+          backupData.teams.map((team) => team.id)
+        );
+  
+      if (teamsRestoreError) {
+        console.error("Error restoring teams:", teamsRestoreError);
+        return;
+      }
+    }
+  
+    // Restore space
+    if (backupData.space) {
+      const { error: spaceRestoreError } = await supabase
+        .from("spaces")
+        .update({ is_deleted: false })
+        .eq("id", backupData.space.id);
+  
+      if (spaceRestoreError) {
+        console.error("Error restoring space:", spaceRestoreError);
+        return;
+      }
+    }
+  
+    // Refresh UI
+    fetchSpace();
+    fetchTeams();
+    router.refresh();
+    
+    toast({
+      title: "Undo Successful!",
+      description: "Space, tasks, and teams have been restored.",
+    });
+  };
+  
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
       .from("teams")
       .select("*")
+      .eq("is_deleted",false)
       .eq("space_id", spaceId);
+     
   
     if (error) {
       console.error("Error fetching teams:", error);
@@ -169,6 +310,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
+      .eq("is_deleted",false)
       .order("space_name", { ascending: true });
 
     if (error) {
@@ -185,6 +327,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     const { data, error } = await supabase
       .from("spaces")
       .select("id")
+      .eq("is_deleted",false)
       .eq("space_name", spaceName)
       .single();
 
@@ -218,6 +361,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
         const { data, error } = await supabase
           .from("spaces")
           .select("space_name")
+          .eq("is_deleted",false)
           .eq("id", spaceId)
           .single();
 
@@ -257,7 +401,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   return (
     <>
       {/* <WebNavbar /> */}
-      <Toaster />
+      {/* <Toaster /> */}
       <div className="px-3 h-full   space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <div className="px-3 flex w-full items-center justify-between">
@@ -298,7 +442,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
                     {/* Delete button */}
                     <button
                       className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
-                      onClick={handleDelete}
+                      onClick={() =>handleDelete(spaceId)}
                       disabled={isDeleting}
                     >
                       {isDeleting ? "Deleting..." : "Delete"}
@@ -388,7 +532,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
           </div>
         </div>
       </div>
-    </>
+    </>                      
   );
 };
 export default EditSpace;
