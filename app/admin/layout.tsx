@@ -1,5 +1,4 @@
 
-import ProtectedRoute from "@/components/auth/protectedRoute";
 import Footer from "@/app/(mob)/footer/footer";
 
 export default function Layout({
@@ -8,11 +7,11 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <ProtectedRoute allowedRoles={['admin']}>
+    // <ProtectedRoute allowedRoles={['admin']}>
     <div>
       {children}
       <Footer />
     </div>
-     </ProtectedRoute>
+    //  </ProtectedRoute>
   );
 }

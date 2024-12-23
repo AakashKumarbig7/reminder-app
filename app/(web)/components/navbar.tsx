@@ -3,14 +3,10 @@ import Image from "next/image";
 import {
   Select,
   SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronDown, LogOut, Search, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -19,16 +15,34 @@ import {
 } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";
 import { logout } from "@/app/(signin-setup)/logout/action";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
-import { Filter } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import FilterComponent from "./filter";
 
 interface loggedUserDataProps {
-  loggedUserData : any
+  loggedUserData: any;
+  navbarItems: any;
+  searchValue: any;
+  setSearchValue: any;
+  teamFilterValue: any;
+  setTeamFilterValue: any;
+  taskStatusFilterValue: any;
+  setTaskStatusFilterValue: any;
+  filterFn: any;
 }
 
-const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
+const WebNavbar: React.FC<loggedUserDataProps> = ({
+  loggedUserData,
+  navbarItems,
+  searchValue,
+  setSearchValue,
+  teamFilterValue,
+  setTeamFilterValue,
+  taskStatusFilterValue,
+  setTaskStatusFilterValue,
+  filterFn,
+}) => {
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
@@ -45,20 +59,28 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
   };
 
   const taskData = async () => {
-    const {data, error} = await supabase
-    .from("tasks")
-    .select("task_status")
-    .eq("is_deleted", false)
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("task_status")
+      .eq("is_deleted", false);
     if (error) {
       console.log(error);
     }
 
     if (data) {
-      setInProgressTasks(data.map((task) => task.task_status).filter((task) => task === "In progress").length);
-      setFeedbackTasks(data.map((task) => task.task_status).filter((task) => task === "feedback").length);
+      setInProgressTasks(
+        data
+          .map((task) => task.task_status)
+          .filter((task) => task === "In progress").length
+      );
+      setFeedbackTasks(
+        data
+          .map((task) => task.task_status)
+          .filter((task) => task === "feedback").length
+      );
       setTotalTasks(data.length);
     }
-  }
+  };
 
   useEffect(() => {
     taskData();
@@ -75,65 +97,94 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
           className="w-[84px] h-[44px] cursor-pointer"
           onClick={() => route.push("/dashboard")}
         />
-        
-        <div className="flex items-center gap-2">
-        <Button className="bg-white  hover:bg-white rounded-lg">
-          <Filter className="text-black" />
-          </Button>
-        <div className="max-w-[300px] w-[273px] h-[42px] bg-white shadow-none pl-2 font-bold justify-start gap-3 rounded-[10px] flex items-center">
-        
-          <div className="w-full border-r border-zinc-300">
-           
-            <p className="text-[8px]">Overall Task</p>
-            {
-              loggedUserData?.role === "owner" ? (
-                <p className="text-sm font-bold text-red-500">{totalTasks}</p>
-              ) : (
-                <p className="text-sm font-bold text-red-500">0</p>
-              )
-            }
-            
-          </div>
-          <div className="w-full border-r border-zinc-300">
-            <p className="text-[8px]">In Progress</p>
-            {
-              loggedUserData?.role === "owner" ? (
-                <p className="text-sm font-bold text-orange-500">{inprogressTasks}</p>
-              ) : (
-                <p className="text-sm font-bold text-orange-500">0</p>
-              )
-            }
-          </div>
-          <div className="w-full">
-            <p className="text-[8px]">Internal Feedback</p>
-            {
-              loggedUserData?.role === "owner" ? (
-                <p className="text-sm font-bold text-green-500">{feedbackTasks}</p>
-              ) : (
-                <p className="text-sm font-bold text-green-500">0</p>
-              )
-            }
-          </div>
-        </div>
 
-          <Select
-          open = {selectOpen}
-          onOpenChange={setSelectOpen}
-          >
+        <div className="flex items-center gap-2">
+          {navbarItems && (
+            <>
+              <div className="relative">
+                <Search
+                  size={14}
+                  className="absolute top-3.5 left-2.5 text-gray-500"
+                />
+                <Input
+                // type="search"
+                  placeholder="Search"
+                  value={searchValue}
+                  className="w-[384px] h-[42px] pl-8 pr-7 bg-white shadow-none font-medium justify-start gap-3 rounded-[10px] flex items-center"
+                  onChange={(e) => setSearchValue(e.target.value)}
+                />
+                <X
+                  size={14}
+                  className="absolute top-3.5 right-2.5 cursor-pointer"
+                  onClick={() => setSearchValue("")}
+                />
+              </div>
+              <FilterComponent
+              teamFilterValue={teamFilterValue}
+              setTeamFilterValue={setTeamFilterValue}
+              taskStatusFilterValue={taskStatusFilterValue}
+              setTaskStatusFilterValue={setTaskStatusFilterValue}
+              filterFn={filterFn}
+               />
+              <div className="max-w-[300px] w-[273px] h-[42px] bg-white shadow-none pl-2 font-bold justify-start gap-3 rounded-[10px] flex items-center">
+                <div className="w-full border-r border-zinc-300">
+                  <p className="text-[8px]">Overall Task</p>
+                  {loggedUserData?.role === "owner" ? (
+                    <p className="text-sm font-bold text-red-500">
+                      {totalTasks}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-bold text-red-500">0</p>
+                  )}
+                </div>
+                <div className="w-full border-r border-zinc-300">
+                  <p className="text-[8px]">In Progress</p>
+                  {loggedUserData?.role === "owner" ? (
+                    <p className="text-sm font-bold text-orange-500">
+                      {inprogressTasks}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-bold text-orange-500">0</p>
+                  )}
+                </div>
+                <div className="w-full">
+                  <p className="text-[8px]">Internal Feedback</p>
+                  {loggedUserData?.role === "owner" ? (
+                    <p className="text-sm font-bold text-green-500">
+                      {feedbackTasks}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-bold text-green-500">0</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          <Select open={selectOpen} onOpenChange={setSelectOpen}>
             <SelectTrigger className="w-[200px] h-[44px] bg-white focus-visible:border-none focus-visible:outline-none text-sm font-bold shadow-none pl-2 justify-start gap-1">
               <div className="w-full flex items-center justify-between">
                 <div className="flex items-center gap-1">
-            <Image
-                  src={loggedUserData?.profile_image}
-                  alt="Logo"
-                  width={36}
-                  height={36}
-                  className="w-[32px] h-[32px] rounded-full"
-                />
-              <SelectValue className="" placeholder={loggedUserData?.username.length > 14 ? loggedUserData?.username.slice(0, 14) + "..." : loggedUserData?.username} />
-              </div>
-                <p><ChevronDown size={20} /></p>
+                  <Image
+                    src={loggedUserData?.profile_image}
+                    alt="Logo"
+                    width={36}
+                    height={36}
+                    className="w-[32px] h-[32px] rounded-full"
+                  />
+                  <SelectValue
+                    className=""
+                    placeholder={
+                      loggedUserData?.username.length > 14
+                        ? loggedUserData?.username.slice(0, 14) + "..."
+                        : loggedUserData?.username
+                    }
+                  />
                 </div>
+                <p>
+                  <ChevronDown size={20} />
+                </p>
+              </div>
             </SelectTrigger>
             <SelectContent className="w-[200px] py-3">
               <div className="flex items-center justify-start gap-1.5 px-3">
@@ -145,13 +196,34 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
                   className="w-[32px] h-[32px] rounded-full"
                 />
                 <div>
-                  <p className="text-sm font-semibold">{loggedUserData?.username.length > 16 ? loggedUserData?.username.slice(0, 16) + "..." : loggedUserData?.username}</p>
-                  <p className="text-sm font-normal">{loggedUserData?.email.length > 16 ? loggedUserData?.email.slice(0, 16) + "..." : loggedUserData?.email}</p>
+                  <p className="text-sm font-semibold">
+                    {loggedUserData?.username.length > 16
+                      ? loggedUserData?.username.slice(0, 16) + "..."
+                      : loggedUserData?.username}
+                  </p>
+                  <p className="text-sm font-normal">
+                    {loggedUserData?.email.length > 16
+                      ? loggedUserData?.email.slice(0, 16) + "..."
+                      : loggedUserData?.email}
+                  </p>
                 </div>
               </div>
               <div className="py-3 my-3 text-gray-700 border-t border-b border-gray-200 px-3 cursor-pointer">
-                <p className="text-sm font-normal pb-3">Your Profile</p>
-                <p className="text-sm font-normal" onClick={() => {route.push("/spaceSetting"); setSelectOpen(false)}}>Settings</p>
+                <p className={`text-sm font-normal ${loggedUserData?.role === "owner" ? "pb-3" : "pb-0"}`}>Your Profile</p>
+                {
+                  loggedUserData?.role === "owner" && (
+                    <p
+                  className="text-sm font-normal"
+                  onClick={() => {
+                    route.push("/spaceSetting");
+                    setSelectOpen(false);
+                  }}
+                >
+                  Settings
+                </p>
+                  )
+                }
+                
               </div>
               <form onSubmit={handleLogout} className="flex">
                 <TooltipProvider>
@@ -160,11 +232,42 @@ const WebNavbar : React.FC<loggedUserDataProps> = ({ loggedUserData}) => {
                       <div
                         typeof="submit"
                         className="rounded bg-button_orange text-white cursor-pointer hover:bg-button_orange relative"
+                        style={
+                          isLoggingOut
+                            ? { pointerEvents: "none" }
+                            : {}
+                        }
                       >
+                        {isLoggingOut ? (
+                        <div className="ml-20 flex items-center justify-center text-center">
+                          <svg
+                            className="animate-spin h-5 w-5"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="#1A56DB"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="#1A56DB"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </div>
+                      ) : (
                         <p className="text-sm text-[#F05252] px-3 flex items-center gap-2 cursor-pointer">
                           <LogOut size={20} />
                           Sign Out
                         </p>
+                      )}
+                        
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>

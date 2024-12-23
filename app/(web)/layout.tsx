@@ -27,6 +27,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           };
       
           getUser();
+
+          localStorage.setItem('user', JSON.stringify(loggedUserData));
     }, []);
     return (
         <div className="min-h-screen h-full w-full bg-webbg text-black font-inter">
@@ -34,7 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Toaster />
                 <div className="w-full flex">
                     <div className="w-full">
-                    <WebNavbar loggedUserData={loggedUserData as any} />
+                    {/* <WebNavbar loggedUserData={loggedUserData as any} /> */}
                         {children}
                     </div>
                 </div>

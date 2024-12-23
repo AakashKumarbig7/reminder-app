@@ -49,7 +49,14 @@ interface SearchBarProps {
   spaceId: number;
   teamData: any;
   setTeamData: any;
-  loggedUserData : any;
+  loggedUserData: any;
+  searchValue: string;
+  setSearchValue: any;
+  teamFilterValue: string | null;
+  setTeamFilterValue: any;
+  taskStatusFilterValue: string | null;
+  setTaskStatusFilterValue: any;
+  setFilterFn: any;
 }
 
 interface Team {
@@ -73,7 +80,14 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   spaceId,
   teamData,
   setTeamData,
-  loggedUserData
+  loggedUserData,
+  searchValue,
+  setSearchValue,
+  teamFilterValue,
+  setTeamFilterValue,
+  taskStatusFilterValue,
+  setTaskStatusFilterValue,
+  setFilterFn,
 }) => {
   const route = useRouter();
   const styledInputRef = useRef<HTMLDivElement>(null);
@@ -100,6 +114,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   const [mentionTrigger, setMentionTrigger] = useState(false);
   const [role, setRole] = useState("");
+  const [sortedValue, setSortedValue] = useState<string | null>("");
 
   // Helper function to toggle options for a specific team
   const toggleUpdateOption = (teamId: any) => {
@@ -141,74 +156,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     return date.toLocaleDateString("en-GB", options); // 'en-GB' gives the format "23 Aug 2024"
   };
 
-  const handleAddTask = async (teamId: any, spaceId: number) => {
-    setTeams((prevTeams) =>
-      prevTeams.map((team) =>
-        team.id === teamId
-          ? {
-              ...team,
-              tasks: [
-                { id: team.tasks.length + 1, inputValue: "" }, // Add the new task at the beginning
-                ...team.tasks,
-              ],
-            }
-          : team
-      )
-    );
-
-    // Insert the new task into the database
-    try {
-      const addDays = (date: Date, days: number) => {
-        const result = new Date(date);
-        result.setDate(result.getDate() + days);
-        return result;
-      };
-
-      const { data: insertedTask, error: insertError } = await supabase
-        .from("tasks")
-        .insert({
-          time: formatDate(new Date()),
-          status: taskStatus,
-          team_id: teamId,
-          space_id: spaceId,
-          due_date: formatDate(addDays(new Date(), 1)),
-          is_deleted: false,
-        })
-        .select()
-        .order("id", { ascending: false });
-
-      if (insertError) {
-        throw insertError;
-      }
-      console.log(
-        insertedTask.map((task: any) => task.id),
-        " added task id"
-      );
-      console.log(insertedTask, "added task");
-      // setCreateTask({ status: true, taskId: insertedTask[0] });
-
-      // Fetch updated tasks for the team
-      const { data: fetchedTasks, error: fetchError } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("is_deleted", false)
-        .eq("space_id", spaceId)
-        .eq("team_id", teamId);
-
-      if (fetchError) {
-        console.error(fetchError);
-        return;
-      }
-
-      if (fetchedTasks) {
-        console.log(fetchedTasks, "team data");
-        fetchTasks();
-      }
-    } catch (error) {
-      console.error("Error adding or fetching tasks:", error);
-    }
-  };
-
   const handleDeleteTask = async (teamId: number, taskId: number) => {
     const { data, error } = await supabase
       .from("tasks")
@@ -242,9 +189,9 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         .update({ is_deleted: false })
         .eq("team_id", teamId)
         .eq("id", taskId);
-  
+
       if (error) throw error;
-  
+
       fetchTasks(); // Refresh the tasks list
       toast({
         title: "Undo Successful",
@@ -391,10 +338,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         title: "Deleted Successfully!",
         description: "Team deleted successfully!",
         action: (
-          <ToastAction
-            altText="Undo"
-            onClick={() => handleTeamUndo(teamId)}
-          >
+          <ToastAction altText="Undo" onClick={() => handleTeamUndo(teamId)}>
             Undo
           </ToastAction>
         ),
@@ -443,7 +387,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         duration: 5000,
       });
     }
-  }
+  };
 
   const handleUpdateTeam = async (
     teamId: number,
@@ -476,7 +420,11 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         fetchTeams();
         setTeamNameSheetOpen(false);
         setTeamNameError(false);
-        // notify("Team updated successfully", true);
+        toast({
+          title: "Updated Successfully!",
+          description: "Changes updated successfully!",
+          duration: 5000,
+        });
         // }
       } catch (error) {
         console.error("Error updating team name:", error);
@@ -603,6 +551,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     setUpdateTaskId({ teamId: 0, taskId: 0 });
   };
 
+  // setFilterFn(handleFilterTasksAndTeams);
+
   useEffect(() => {
     fetchTeams();
     fetchTasks();
@@ -612,6 +562,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   useEffect(() => {
     const getUser = async () => {
       const user = await getLoggedInUserData();
+      console.log(user, " user");
 
       const { data, error } = await supabase
         .from("users")
@@ -629,6 +580,132 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
     getUser();
   }, []);
+
+  const filterBySearchValue = (
+    items: any[],
+    key: string,
+    searchValue: string
+  ) => {
+    // Validate searchValue and convert to lowercase if it's a string
+    const lowercasedSearchValue = typeof searchValue === 'string' ? searchValue.toLowerCase() : '';
+
+    return items.filter((item) => {
+      const itemValue = item[key];
+
+      // Ensure item[key] is a string before calling toLowerCase
+      if (typeof itemValue === 'string') {
+        return itemValue.toLowerCase().includes(lowercasedSearchValue);
+      }
+
+      // Exclude the item if the value is not a string
+      return false;
+    });
+  };
+
+  const parseDateTime = (dateTimeString: string) => {
+    const [datePart, timePart] = dateTimeString.split(",");
+    const [day, month, year] = datePart.split(".");
+    return new Date(`${year}-${month}-${day}T${timePart}`);
+  };
+
+  const sortItems = (
+    items: any[] | any[], // Assuming FolderData is the type for folders
+    sortOrder: string | null,
+    key: "task_content" | "mentions" // Key to sort by: screenname for screens, name for folders
+  ) => {
+    switch (sortOrder) {
+      case "asc":
+        return [...items].sort((a, b) => a[key].localeCompare(b[key]));
+      case "desc":
+        return [...items].sort((a, b) => b[key].localeCompare(a[key]));
+      case "date-asc":
+        return [...items].sort(
+          (a, b) =>
+            parseDateTime(a.time).getTime() - parseDateTime(b.time).getTime()
+        );
+      case "date-desc":
+        return [...items].sort(
+          (a, b) =>
+            parseDateTime(b.time).getTime() - parseDateTime(a.time).getTime()
+        );
+      default:
+        return items;
+    }
+  };
+
+  const filteredTasks = sortItems(
+    filterBySearchValue(allTasks, "task_content", searchValue as string),
+    sortedValue,
+    "mentions"
+  );
+
+  const handleAddTask = async (teamId: any, spaceId: number) => {
+    setTeams((prevTeams) =>
+      prevTeams.map((team) =>
+        team.id === teamId
+          ? {
+              ...team,
+              tasks: [
+                { id: team.tasks.length + 1, inputValue: "" }, // Add the new task at the beginning
+                ...team.tasks,
+              ],
+            }
+          : team
+      )
+    );
+
+    // Insert the new task into the database
+    try {
+      const addDays = (date: Date, days: number) => {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+      };
+
+      const { data: insertedTask, error: insertError } = await supabase
+        .from("tasks")
+        .insert({
+          time: formatDate(new Date()),
+          status: taskStatus,
+          team_id: teamId,
+          space_id: spaceId,
+          due_date: formatDate(addDays(new Date(), 1)),
+          is_deleted: false,
+        })
+        .select()
+        .order("id", { ascending: false });
+
+      if (insertError) {
+        throw insertError;
+      }
+      console.log(
+        insertedTask.map((task: any) => task.id),
+        " added task id"
+      );
+      console.log(insertedTask, "added task");
+      // setCreateTask({ status: true, taskId: insertedTask[0] });
+
+      // Fetch updated tasks for the team
+      const { data: fetchedTasks, error: fetchError } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("is_deleted", false)
+        .eq("space_id", spaceId)
+        .eq("team_id", teamId);
+
+      if (fetchError) {
+        console.error(fetchError);
+        return;
+      }
+
+      if (fetchedTasks) {
+        console.log(fetchedTasks, "team data");
+        fetchTasks();
+      }
+    } catch (error) {
+      console.error("Error adding or fetching tasks:", error);
+    }
+  };
 
   return (
     <div>
@@ -648,13 +725,11 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                       >
                         <div className="flex justify-between items-center relative">
                           <p className="text-lg font-semibold text-black font-geist">
-                            {team.team_name.length > 20 ? (
-                              team.team_name.slice(0, 20) + "..."
-                            ) : (
-                              team.team_name
-                            )}
+                            {team.team_name.length > 20
+                              ? team.team_name.slice(0, 20) + "..."
+                              : team.team_name}
                           </p>
-                          {loggedUserData?.role === "owner" && (
+                          {(loggedUserData?.role === "owner" || (loggedUserData?.role === "user" && loggedUserData?.access?.team === true || loggedUserData?.access?.all === true)) && (
                             <DropdownMenu
                             // open={updateOptionStates}
                             // onOpenChange={setUpdateOptionStates}
@@ -944,7 +1019,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                             </DropdownMenu>
                           )}
                         </div>
-                        {loggedUserData?.role === "owner" && (
+                        {(loggedUserData?.role === "owner" || (loggedUserData?.role === "user" && loggedUserData?.access?.task === true || loggedUserData?.access?.all === true)) && (
                           <Button
                             variant={"outline"}
                             className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
@@ -958,25 +1033,26 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                           </Button>
                         )}
                       </div>
-                      <div className="w-full px-4 pb-4">
-                        {allTasks.map(
-                          (task: any) =>
-                            task.team_id === team.id && (
-                              <div
-                                key={task.id}
-                                className="flex flex-col gap-2.5 mt-3"
-                              >
-                                {/* {task.team_id === team.id && ( */}
+                      {allTasks.length > 0 ? (
+                        <div className="w-full px-4 pb-4">
+                          {allTasks.map(
+                            (task: any) =>
+                              task.team_id === team.id && (
                                 <div
                                   key={task.id}
-                                  className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist hover:border-blue-600 task_box"
+                                  className="flex flex-col gap-2.5 mt-3"
                                 >
-                                  <div className="flex justify-between items-center">
-                                    {/* <p>{task.id}</p> */}
-                                    <p className="text-xs font-semibold text-[#A6A6A7]">
-                                      {formatDate(new Date())}
-                                    </p>
-                                    {/* <Trash2
+                                  {/* {task.team_id === team.id && ( */}
+                                  <div
+                                    key={task.id}
+                                    className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist hover:border-blue-600 task_box"
+                                  >
+                                    <div className="flex justify-between items-center">
+                                      {/* <p>{task.id}</p> */}
+                                      <p className="text-xs font-semibold text-[#A6A6A7]">
+                                        {formatDate(new Date())}
+                                      </p>
+                                      {/* <Trash2
                                     size={18}
                                     className="text-[#EC4949] cursor-pointer"
                                     onClick={() => {
@@ -989,187 +1065,204 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                       handleDeleteTask(team.id, task.id);
                                     }}
                                   /> */}
-                                    {loggedUserData?.role === "owner" && (
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Ellipsis
-                                            size={18}
-                                            className="cursor-pointer"
-                                          />
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
-                                          <DropdownMenuItem
-                                            className="px-3 pt-2 pb-0"
-                                            onClick={() => {
-                                              handleEditTask(team.id, task.id);
-                                            }}
-                                          >
-                                            Edit
-                                          </DropdownMenuItem>
-                                          <p>
-                                            <Dialog
-                                              open={taskDeleteOpen}
-                                              onOpenChange={setTaskDeleteOpen}
+                                      {(loggedUserData?.role === "owner" || (loggedUserData?.role === "user" && loggedUserData?.access?.task === true || loggedUserData?.access?.all === true)) && (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Ellipsis
+                                              size={18}
+                                              className="cursor-pointer"
+                                            />
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
+                                            <DropdownMenuItem
+                                              className="px-3 pt-2 pb-0"
+                                              onClick={() => {
+                                                handleEditTask(
+                                                  team.id,
+                                                  task.id
+                                                );
+                                              }}
                                             >
-                                              <DialogTrigger
-                                                className="p-0 px-3"
-                                                asChild
+                                              Edit
+                                            </DropdownMenuItem>
+                                            <p>
+                                              <Dialog
+                                                open={taskDeleteOpen}
+                                                onOpenChange={setTaskDeleteOpen}
                                               >
-                                                <Button
-                                                  className="border-none w-full"
-                                                  variant="outline"
+                                                <DialogTrigger
+                                                  className="p-0 px-3"
+                                                  asChild
                                                 >
-                                                  Delete
-                                                </Button>
-                                              </DialogTrigger>
-                                              <DialogContent className="sm:max-w-[425px]">
-                                                <DialogHeader>
-                                                  <DialogTitle>
-                                                    Delete Task
-                                                  </DialogTitle>
-                                                  <DialogDescription>
-                                                    Do you want to delete this
-                                                    task ?
-                                                  </DialogDescription>
-                                                </DialogHeader>
-
-                                                <div className="flex justify-center items-center w-full gap-4">
                                                   <Button
+                                                    className="border-none w-full"
                                                     variant="outline"
-                                                    className="w-1/3"
-                                                    type="submit"
-                                                    onClick={() =>
-                                                      setTaskDeleteOpen(false)
-                                                    }
-                                                  >
-                                                    Cancel
-                                                  </Button>
-                                                  <Button
-                                                    className="bg-red-600 hover:bg-red-500 w-1/3"
-                                                    type="button"
-                                                    onClick={() =>
-                                                      handleDeleteTask(
-                                                        team.id,
-                                                        task.id
-                                                      )
-                                                    }
                                                   >
                                                     Delete
                                                   </Button>
-                                                </div>
-                                              </DialogContent>
-                                            </Dialog>
-                                          </p>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    )}
-                                  </div>
-                                  <WebMentionInput
-                                    text={text}
-                                    setText={setText}
-                                    taskErrorMessage={taskErrorMessage}
-                                    setTaskErrorMessage={setTaskErrorMessage}
-                                    allTasks={allTasks}
-                                    teamId={team.id}
-                                    taskId={task.id}
-                                    taskStatus={task.task_created}
-                                    mentionTrigger={mentionTrigger}
-                                    setMentionTrigger={setMentionTrigger}
-                                  />
-                                  <div
-                                    className={`flex ${
-                                      loggedUserData?.role === "owner"
-                                        ? "justify-between"
-                                        : "justify-end"
-                                    } items-center`}
-                                  >
-                                    {loggedUserData?.role === "owner" && (
-                                      <div
-                                        className={`task.${task.id} === true cursor-not-allowed`}
-                                      >
-                                        <TaskDateUpdater
-                                          team={team}
-                                          task={task}
-                                          fetchTasks={fetchTasks}
-                                          taskStatus={task.task_created}
-                                        />
-                                      </div>
-                                    )}
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-[425px]">
+                                                  <DialogHeader>
+                                                    <DialogTitle>
+                                                      Delete Task
+                                                    </DialogTitle>
+                                                    <DialogDescription>
+                                                      Do you want to delete this
+                                                      task ?
+                                                    </DialogDescription>
+                                                  </DialogHeader>
 
-                                    {task.task_created !== true ? (
-                                      <Button
-                                        variant={"outline"}
-                                        className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
-                                        onClick={() => {
-                                          handleUpdateTask(team.id, task.id),
-                                            setText("");
-                                        }}
-                                      >
-                                        Create
-                                      </Button>
-                                    ) : (
-                                      <Select
-                                        defaultValue={task.task_status}
-                                        onValueChange={async (value) => {
-                                          const { data, error } = await supabase
-                                            .from("tasks")
-                                            .update({ task_status: value })
-                                            .eq("id", task.id)
-                                            .eq("team_id", team.id)
-                                            .single();
-                                          if (error) {
-                                            console.error(
-                                              "Error updating task status:",
-                                              error
-                                            );
-                                          }
-                                          setTaskStatus(value);
-                                          // notify(
-                                          //   `Task status updated to "${value}"`,
-                                          //   true
-                                          // );
-                                          fetchTasks();
-                                        }}
-                                      >
-                                        <SelectTrigger
-                                          className={`w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none ${
-                                            task.task_status === "todo"
-                                              ? "text-reddish bg-[#F8DADA]"
-                                              : task.task_status ===
-                                                "In progress"
-                                              ? "text-[#EEA15A] bg-[#F8F0DA]"
-                                              : task.task_status === "feedback"
-                                              ? "text-[#142D57] bg-[#DEE9FC]"
-                                              : "text-[#3FAD51] bg-[#E5F8DA]"
-                                          }`}
+                                                  <div className="flex justify-center items-center w-full gap-4">
+                                                    <Button
+                                                      variant="outline"
+                                                      className="w-1/3"
+                                                      type="submit"
+                                                      onClick={() =>
+                                                        setTaskDeleteOpen(false)
+                                                      }
+                                                    >
+                                                      Cancel
+                                                    </Button>
+                                                    <Button
+                                                      className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                      type="button"
+                                                      onClick={() =>
+                                                        handleDeleteTask(
+                                                          team.id,
+                                                          task.id
+                                                        )
+                                                      }
+                                                    >
+                                                      Delete
+                                                    </Button>
+                                                  </div>
+                                                </DialogContent>
+                                              </Dialog>
+                                            </p>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      )}
+                                    </div>
+                                    <WebMentionInput
+                                      text={text}
+                                      setText={setText}
+                                      taskErrorMessage={taskErrorMessage}
+                                      setTaskErrorMessage={setTaskErrorMessage}
+                                      allTasks={allTasks}
+                                      teamId={team.id}
+                                      taskId={task.id}
+                                      taskStatus={task.task_created}
+                                      mentionTrigger={mentionTrigger}
+                                      setMentionTrigger={setMentionTrigger}
+                                    />
+                                    <div
+                                      className={`flex justify-between items-center`}
+                                    >
+                                      {/* {loggedUserData?.role === "owner" && ( */}
+                                        <div
+                                          className={`task.${task.id} === true cursor-not-allowed`}
                                         >
-                                          <SelectValue placeholder="status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="todo">
-                                            To Do
-                                          </SelectItem>
-                                          <SelectItem value="In progress">
-                                            In Progress
-                                          </SelectItem>
-                                          <SelectItem value="feedback">
-                                            Feedback
-                                          </SelectItem>
-                                          {loggedUserData?.role === "owner" && (
-                                            <SelectItem value="Completed">
-                                              Completed
+                                          <TaskDateUpdater
+                                            team={team}
+                                            task={task}
+                                            fetchTasks={fetchTasks}
+                                            taskStatus={task.task_created}
+                                          />
+                                        </div>
+                                      {/* )} */}
+
+                                      {task.task_created !== true ? (
+                                        <Button
+                                          variant={"outline"}
+                                          className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
+                                          onClick={() => {
+                                            handleUpdateTask(team.id, task.id),
+                                              setText("");
+                                          }}
+                                        >
+                                          Create
+                                        </Button>
+                                      ) : (
+                                        (loggedUserData?.role === "user" && task.task_status === "Completed") ? (
+                                          <Button
+                                            className="w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none text-[#3FAD51] bg-[#E5F8DA] hover:bg-[#E5F8DA] hover:text-[#3FAD51]"
+                                          >
+                                            Completed
+                                          </Button>
+                                        ) : (
+                                          
+                                          <Select
+                                          defaultValue={task.task_status}
+                                          onValueChange={async (value) => {
+                                            const { data, error } =
+                                              await supabase
+                                                .from("tasks")
+                                                .update({ task_status: value })
+                                                .eq("id", task.id)
+                                                .eq("team_id", team.id)
+                                                .single();
+                                            if (error) {
+                                              console.error(
+                                                "Error updating task status:",
+                                                error
+                                              );
+                                            }
+                                            setTaskStatus(value);
+                                            // notify(
+                                            //   `Task status updated to "${value}"`,
+                                            //   true
+                                            // );
+                                            fetchTasks();
+                                          }}
+                                        >
+                                          <SelectTrigger
+                                            className={`w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none ${
+                                              task.task_status === "todo"
+                                                ? "text-reddish bg-[#F8DADA]"
+                                                : task.task_status ===
+                                                  "In progress"
+                                                ? "text-[#EEA15A] bg-[#F8F0DA]"
+                                                : task.task_status ===
+                                                  "feedback"
+                                                ? "text-[#142D57] bg-[#DEE9FC]"
+                                                : "text-[#3FAD51] bg-[#E5F8DA]"
+                                            }`}
+                                          >
+                                            <SelectValue placeholder="status" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="todo">
+                                              To Do
                                             </SelectItem>
-                                          )}
-                                        </SelectContent>
-                                      </Select>
-                                    )}
+                                            <SelectItem value="In progress">
+                                              In Progress
+                                            </SelectItem>
+                                            <SelectItem value="feedback">
+                                              Feedback
+                                            </SelectItem>
+                                            {loggedUserData?.role ===
+                                              "owner" && (
+                                              <SelectItem value="Completed">
+                                                Completed
+                                              </SelectItem>
+                                            )}
+                                          </SelectContent>
+                                        </Select>
+                                        )
+                                        
+                                      )}
+                                    </div>
                                   </div>
+                                  {/* )} */}
                                 </div>
-                                {/* )} */}
-                              </div>
-                            )
-                        )}
-                      </div>
+                              )
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex justify-center items-center font-inter font-medium text-md text-[#9A9A9A] pt-3 pb-5">
+                          <p>No tasks found</p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </CarouselItem1>
@@ -1178,7 +1271,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
           </Carousel1>
         </div>
       ) : (
-        <div className="w-full min-h-[80vh] flex justify-center items-center">
+        <div className="w-full min-h-[80vh] flex justify-center items-center text-[#9A9A9A]">
           <p className="text-lg font-semibold">No teams found</p>
         </div>
       )}

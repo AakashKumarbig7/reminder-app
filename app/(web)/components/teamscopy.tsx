@@ -1,509 +1,1285 @@
+"use client";
 
+import { useEffect, useRef, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Ellipsis, Plus, Settings, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import WebMentionInput from "./webMentions";
+import { Carousel1, CarouselContent1, CarouselItem1 } from "./webCarousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import "react-datepicker/dist/react-datepicker.css";
+import TaskDateUpdater from "./dueDate";
+import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
+import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
+interface SearchBarProps {
+  spaceId: number;
+  teamData: any;
+  setTeamData: any;
+  loggedUserData: any;
+  searchValue: string;
+  setSearchValue: any;
+  teamFilterValue: string | null;
+  setTeamFilterValue: any;
+  taskStatusFilterValue: string | null;
+  setTaskStatusFilterValue: any;
+  setFilterFn: any;
+}
 
-// "use client";
-// import Image from "next/image";
-// import { useRouter } from "next/navigation";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { useForm } from "react-hook-form";
-// import { z } from "zod";
-// import { useEffect, useState } from "react";
-// import { Button } from "@/components/ui/button";
-// import {
-//   Form,
-//   FormControl,
-//   FormField,
-//   FormItem,
-//   FormLabel,
-//   FormMessage,
-// } from "@/components/ui/form";
-// import { Input } from "@/components/ui/input";
-// import { Plus } from "@/public/svg/page";
-// import { supabase } from "@/utils/supabase/supabaseClient";
-// // import toast, { Toaster } from "react-hot-toast";
-// import { getUserData } from "@/app/(signIn-setup)/sign-in/action";
-// import { ChevronRight, Eye, EyeOff, Loader2, Upload } from "lucide-react";
-// import { passwordReset } from "./action";
-// import { toast, useToast } from "@/components/hooks/use-toast";
-// import { ToastAction } from "@/components/ui/toast";
-// import { Toaster } from "@/components/ui/toaster";
-// import { UploadProfileSkeleton } from "@/components/skeleton-ui";
+interface Team {
+  id: number;
+  team_name: string;
+  tasks: { id: number; inputValue: string }[];
+}
 
-// // Define the validation schema using Zod
-// const formSchema = z
-//   .object({
-//     picture: z.any(),
-//     // .refine(
-//     //   (file) => file?.length === 1,
-//     //   "*Supported image formats include JPEG, PNG"
-//     // )
-//     // .refine(
-//     //   (file) => file[0]?.type === "image/png" || file[0]?.type === "image/jpeg",
-//     //   "Must be a PNG or JPEG"
-//     // )
-//     // .refine((file) => file[0]?.size <= 5000000, "Max file size is 5MB.")
-//     companyName: z.string().min(2, {
-//       message: "Company name is not recognized. Please try again.",
-//     }),
-//     email: z.string().email({
-//       message: "Please enter a valid email address",
-//     }),
-//     mobile: z
-//       .string()
-//       .min(9, {
-//         message: "Please enter a valid mobile number with at least 9 digits",
-//       })
-//       .max(11, {
-//         message:
-//           "Please enter a valid mobile number with no more than 11 digits",
-//       })
-//       .regex(/^[0-9]+$/, {
-//         message:
-//           "Please enter a valid mobile number with no special characters",
-//       }),
-//     password: z.string().min(0, {
-//       message: "Password must be at least 6 characters long.",
-//     }),
-//     confirmPassword: z.string().min(0, {
-//       message: "Password must be at least 6 characters long.",
-//     }),
-//   })
-//   .refine((data) => data.password === data.confirmPassword, {
-//     message: "Confirm password doesn't match with password",
-//     path: ["confirmPassword"],
-//   });
+interface Tab {
+  id: number;
+  space_name: string;
+  email: string;
+  username: string;
+  designation: string;
+  role: string;
+  department: string;
+  task_created: number;
+}
 
-// const UserSettings = () => {
-//   const router = useRouter();
-//   const [imageUrl, setImageUrl] = useState<string>("");
-//   const [signedInUserEmail, setSignedInUserEmail] = useState<string | null>("");
-//   const [modalPassword, setModalPassword] = useState("");
-//   const [modalShowPassword, setModalShowPassword] = useState(false);
-//   const [confirmShowPassword, setConfirmShowPassword] = useState(false);
+const SpaceTeam: React.FC<SearchBarProps> = ({
+  spaceId,
+  teamData,
+  setTeamData,
+  loggedUserData,
+  searchValue,
+  setSearchValue,
+  teamFilterValue,
+  setTeamFilterValue,
+  taskStatusFilterValue,
+  setTaskStatusFilterValue,
+  setFilterFn,
+}) => {
+  const route = useRouter();
+  const styledInputRef = useRef<HTMLDivElement>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [text, setText] = useState<string>("");
+  const [taskErrorMessage, setTaskErrorMessage] = useState({
+    status: false,
+    errorId: 0,
+  });
+  const [taskStatus, setTaskStatus] = useState<string>("todo");
+  const [allTasks, setAllTasks] = useState<any>([]);
+  const [teamName, setTeamName] = useState<string>("");
+  const [teamNameDialogOpen, setTeamNameDialogOpen] = useState(false);
+  const [teamNameSheetOpen, setTeamNameSheetOpen] = useState(false);
+  const [updateOptionStates, setUpdateOptionStates] = useState<any>({});
+  const [addedMembers, setAddedMembers] = useState<any[]>([]);
+  const [matchingUsers, setMatchingUsers] = useState<Tab[]>([]);
+  const [noUserFound, setNoUserFound] = useState<boolean>(false);
+  const [emailInput, setEmailInput] = useState<string>("");
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [taskDeleteOpen, setTaskDeleteOpen] = useState(false);
+  const [updateTaskId, setUpdateTaskId] = useState({ teamId: 0, taskId: 0 });
+  const [teamNameError, setTeamNameError] = useState(false);
 
-//   const [saveLoader, setSaveLoader] = useState(false);
-//   const [skeletonLoader, setSkeletonLoader] = useState(true);
-//   const [cancelLoader, setCancelLoader] = useState(false);
+  const [mentionTrigger, setMentionTrigger] = useState(false);
+  const [role, setRole] = useState("");
+  const [sortedValue, setSortedValue] = useState<string | null>("");
 
-//   const form = useForm({
-//     resolver: zodResolver(formSchema),
-//     defaultValues: {
-//       picture: "",
-//       companyName: "",
-//       email: "",
-//       mobile: "",
-//       password: "",
-//       confirmPassword: "",
-//     },
-//   });
+  // Helper function to toggle options for a specific team
+  const toggleUpdateOption = (teamId: any) => {
+    setUpdateOptionStates((prev: any) => ({
+      ...prev,
+      [teamId]: !prev[teamId],
+    }));
+  };
 
-//   // const notify = (message: string, success: boolean) =>
-//   //   toast[success ? "success" : "error"](message, {
-//   //     style: {
-//   //       borderRadius: "10px",
-//   //       background: "#fff",
-//   //       color: "#000",
-//   //     },
-//   //     position: "top-right",
-//   //     duration: 2000,
-//   //   });
+  const fetchTeams = async () => {
+    if (!spaceId) return;
+    const { data, error } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("is_deleted", false)
+      .eq("space_id", spaceId);
 
-//   const handleImageChange = (files: FileList) => {
-//     if (files && files.length > 0) {
-//       const file = files[0];
-//       const reader = new FileReader();
-//       reader.onloadend = () => {
-//         setImageUrl(reader.result as string);
-//       };
-//       reader.readAsDataURL(file);
-//     }
-//   };
+    if (error) {
+      console.log(error);
+      return;
+    }
 
-//   const onSubmit = async (data: any) => {
-//     setSaveLoader(true);
-//     console.log("form data ", data);
-//     try {
-//       // const userData = await getUserData();
-//       const userId = localStorage.getItem("userId");
+    if (data) {
+      const teamData = data.map((team) => ({
+        ...team,
+        tasks: [], // Initialize each team with an empty tasks array
+      }));
+      setTeams(teamData as Team[]);
+    }
+  };
 
-//       let userProfileUrl = imageUrl;
+  const formatDate = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    };
 
-//       if (data.picture && data.picture.length > 0) {
-//         const userprofile = data.picture[0];
-//         if (userprofile.name) {
-//           const { data: uploadData, error: uploadError } =
-//             await supabase.storage
-//               .from("screen-images")
-//               .upload(`userProfile/${userprofile.name}`, userprofile, {
-//                 cacheControl: "3600",
-//                 upsert: true,
-//               });
+    return date.toLocaleDateString("en-GB", options); // 'en-GB' gives the format "23 Aug 2024"
+  };
 
-//           if (uploadError) {
-//             toast({                   
-//               title: "Error uploading profile image",
-//               description: uploadError.message,
-//             });
-//             return;
-//           }
+  const handleAddTask = async (teamId: any, spaceId: number) => {
+    setTeams((prevTeams) =>
+      prevTeams.map((team) =>
+        team.id === teamId
+          ? {
+              ...team,
+              tasks: [
+                { id: team.tasks.length + 1, inputValue: "" }, // Add the new task at the beginning
+                ...team.tasks,
+              ],
+            }
+          : team
+      )
+    );
 
-//           const { data: publicLogoURLData } = supabase.storage
-//             .from("screen-images")
-//             .getPublicUrl(uploadData.path);
-//           userProfileUrl = publicLogoURLData.publicUrl;
-//         }
-//       }
+    // Insert the new task into the database
+    try {
+      const addDays = (date: Date, days: number) => {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+      };
 
-//       const { error: updateError } = await supabase
-//         .from("userProfile")
-//         .update({
-//           email: data.email,
-//           companyName: data.companyName,
-//           mobile: data.mobile,
-//           profileImage: userProfileUrl,
-//           accessVerified: 1,
-//         })
-//         .eq("userId", userId);
+      const { data: insertedTask, error: insertError } = await supabase
+        .from("tasks")
+        .insert({
+          time: formatDate(new Date()),
+          status: taskStatus,
+          team_id: teamId,
+          space_id: spaceId,
+          due_date: formatDate(addDays(new Date(), 1)),
+          is_deleted: false,
+        })
+        .select()
+        .order("id", { ascending: false });
 
-//       if (updateError) {
-//         toast({
-//           title: "Error updating profile",
-//           description: updateError.message,
-//         });
-//         return;
-//       }
+      if (insertError) {
+        throw insertError;
+      }
+      console.log(
+        insertedTask.map((task: any) => task.id),
+        " added task id"
+      );
+      console.log(insertedTask, "added task");
+      // setCreateTask({ status: true, taskId: insertedTask[0] });
 
-//       toast({
-//         title: "Updated Successfully!.",
-//         description: "Profile updated successfully!",
-//       });
-//       fetchUserProfile();
-//       // console.log(data.password, " password");
-//       passwordReset(data.password);
-//       // console.log("modalPassword ", modalPassword);
-//       setSaveLoader(false);
-//       window.location.reload();
-//     } catch (error: Error | any) {
-//       toast({
-//         title: "Error updating profile",
-//         description: error.message,
-//       });
-//       console.error("Error updating profile:", error);
-//     }
-//   };
+      // Fetch updated tasks for the team
+      const { data: fetchedTasks, error: fetchError } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("is_deleted", false)
+        .eq("space_id", spaceId)
+        .eq("team_id", teamId);
 
-//   const generatePassword = () => {
-//     const password = Math.random().toString(36).slice(-8);
-//     setModalPassword(password);
-//     form.setValue("password", password);
-//     form.setValue("confirmPassword", password);
-//   };
+      if (fetchError) {
+        console.error(fetchError);
+        return;
+      }
 
-//   const fetchUserProfile = async () => {
-//     const user = localStorage.getItem("userId");
-//     // console.log("user id ", user?.id);
-//     setSkeletonLoader(true);
-//     try {
-     
-//       const { data: userProfileData, error: userProfileError } = await supabase
-//         .from("userProfile")
-//         .select("*")
-//         .eq("userId", user || null)
-//         .single();
- 
-//       if (userProfileError || !userProfileData) {
-//         console.error("Error fetching user profile:", userProfileError || "No user found.");
-//         toast({
-//           title: "Error fetching profile",
-//         description: "Profile not found",
-//         });
-//         if(!userProfileData){
-//           router.push("/user-profile");
-//         }
-//         form.setValue("email", "");
-//         form.setValue("companyName", "");
-//         form.setValue("mobile", "");
-//         setImageUrl("");
-//         setSkeletonLoader(false);
-//         console.log("user not found")
-//         return;
-//       }
- 
-//       setSkeletonLoader(false);
-//       form.setValue("email", userProfileData?.email || "");
-//       form.setValue("companyName", userProfileData?.companyName || "");
-//       form.setValue("mobile", userProfileData?.mobile || "");
-//       setImageUrl(userProfileData?.profileImage || "");
-//     } catch (error) {
-//       console.error("Error fetching user profile:", error);
-//       form.setValue("email", "");
-//       form.setValue("companyName", "");
-//       form.setValue("mobile", "");
-//       setImageUrl("");
-//       setSkeletonLoader(false);
-//     }
-//   };
- 
+      if (fetchedTasks) {
+        console.log(fetchedTasks, "team data");
+        fetchTasks();
+        fetchTeams();
+      }
+    } catch (error) {
+      console.error("Error adding or fetching tasks:", error);
+    }
+  };
 
-//   useEffect(() => {
-//     setSignedInUserEmail(localStorage.getItem("userEmail"));
-//     fetchUserProfile();
-//   }, []);
+  const handleDeleteTask = async (teamId: number, taskId: number) => {
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({ is_deleted: true })
+      .eq("team_id", teamId)
+      .eq("id", taskId);
 
-//   return (
-//     <div
-//       className="w-full relative pb-5"
-//       style={{ minHeight: "calc(100vh - 60px)" }}
-//     >
-//       <Toaster />
-//       <div className="pt-5">
-//         <div className="flex items-center gap-4 pl-4 pb-10">
-//           {/* <h4
-//             className="text-sm font-medium text-primary_color cursor-pointer"
-//             onClick={() => router.push("/dashboard")}
-//           >
-//             Setting
-//           </h4> */}
-//           <h4
-//             className="text-sm font-medium text-primary_color cursor-pointer"
-//             onClick={() => {
-//               setCancelLoader(true);
-//               setTimeout(() => {
-//                 router.push("/dashboard");
-//                 setCancelLoader(false);
-//               }, 2000);
-//             }}
-//             style={cancelLoader ? { pointerEvents: "none" } : {}}
-//           >
-//             {cancelLoader ? (
-//               <svg
-//                 className="animate-spin h-5 w-5"
-//                 xmlns="http://www.w3.org/2000/svg"
-//                 fill="none"
-//                 viewBox="0 0 24 24"
-//               >
-//                 <circle
-//                   className="opacity-25"
-//                   cx="12"
-//                   cy="12"
-//                   r="10"
-//                   stroke="#FF7C44"
-//                   strokeWidth="4"
-//                 ></circle>
-//                 <path
-//                   className="opacity-100"
-//                   fill="#FF7C44"
-//                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-//                 ></path>
-//               </svg>
-//             ) : (
-//               "Setting"
-//             )}
-//           </h4>
-//           <ChevronRight size={20} />
-//           <h4 className="text-sm font-medium text-primary_color">
-//             User Settings
-//           </h4>
-//         </div>
-//         {skeletonLoader ? (
-//           <UploadProfileSkeleton />
-//         ) : (
-//           <div className="w-full p-4">
-//             <Form {...form}>
-//               <form
-//                 onSubmit={form.handleSubmit(onSubmit)}
-//                 className="space-y-3"
-//               >
-//                 <FormField
-//                   control={form.control}
-//                   name="picture"
-//                   render={({ field }) => (
-//                     <FormItem className="mt-0 pb-2">
-//                       <FormControl>
-//                         <div className="flex justify-center mt-5">
-//                           <div className="relative w-32 h-32 rounded-full border-2 border-border_gray">
-//                             <Input
-//                               type="file"
-//                               accept="image/png, image/jpeg"
-//                               placeholder="Upload Image"
-//                               className="absolute w-full h-full opacity-0 cursor-pointer z-20"
-//                               onChange={(e) => {
-//                                 field.onChange(e.target.files);
-//                                 handleImageChange(e.target.files as any);
-//                               }}
-//                             />
-//                             <Image
-//                               src={imageUrl || ""}
-//                               alt="Profile Image"
-//                               layout="fill"
-//                               objectFit="cover"
-//                               className="rounded-full z-0 text-transparent"
-//                             />
-//                             <Plus />
-//                           </div>
-//                         </div>
-//                       </FormControl>
-//                       <FormMessage className="text-center" />
-//                     </FormItem>
-//                   )}
-//                 />
+    if (error) throw error;
 
-//                 <div className="w-1/2 space-y-2 mx-auto">
-//                   <FormField
-//                     control={form.control}
-//                     name="companyName"
-//                     render={({ field }) => (
-//                       <FormItem>
-//                         <FormLabel>Company Name</FormLabel>
-//                         <FormControl>
-//                           <Input
-//                             placeholder="Enter Company Name here"
-//                             {...field}
-//                           />
-//                         </FormControl>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
-//                   <FormField
-//                     control={form.control}
-//                     name="email"
-//                     render={({ field }) => (
-//                       <FormItem className="mt-0">
-//                         <FormLabel className="mb-2">Email</FormLabel>
-//                         <FormControl>
-//                           <Input disabled placeholder="Email" {...field} />
-//                         </FormControl>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
-//                   <FormField
-//                     control={form.control}
-//                     name="mobile"
-//                     render={({ field }) => (
-//                       <FormItem className="mt-0">
-//                         <FormLabel>Mobile Number</FormLabel>
-//                         <FormControl>
-//                           <Input
-//                             type="text"
-//                             placeholder="+61 0000 0000"
-//                             {...field}
-//                           />
-//                         </FormControl>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
-//                   <FormField
-//                     control={form.control}
-//                     name="password"
-//                     render={({ field }) => (
-//                       <FormItem className="relative">
-//                         <div className="flex justify-between items-center">
-//                           <FormLabel>Password</FormLabel>
-//                           <p
-//                             className="w-fit bg-button_orange text-white px-1 rounded text-xs cursor-pointer"
-//                             onClick={generatePassword}
-//                           >
-//                             Generate
-//                           </p>
-//                         </div>
-//                         <FormControl>
-//                           <Input
-//                             placeholder="**********"
-//                             type={modalShowPassword ? "text" : "password"}
-//                             {...field}
-//                             value={field.value}
-//                             onChange={(e) => {
-//                               field.onChange(e);
-//                               setModalPassword(e.target.value);
-//                             }}
-//                           />
-//                         </FormControl>
-//                         <span
-//                           className="absolute md:right-0 -right-0 top-[25px] cursor-pointer w-7 md:w-8 lg:w-11 flex items-center justify-center"
-//                           onClick={() =>
-//                             setModalShowPassword(!modalShowPassword)
-//                           }
-//                         >
-//                           {modalShowPassword ? (
-//                             <EyeOff className="w-5 h-5" />
-//                           ) : (
-//                             <Eye className="w-5 h-5" />
-//                           )}
-//                         </span>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
-//                   <FormField
-//                     control={form.control}
-//                     name="confirmPassword"
-//                     render={({ field }) => (
-//                       <FormItem className="mt-0 relative">
-//                         <FormLabel className="mb-2">Confirm Password</FormLabel>
-//                         <FormControl>
-//                           <Input
-//                             type={confirmShowPassword ? "text" : "password"}
-//                             placeholder="Confirm Password"
-//                             {...field}
-//                           />
-//                         </FormControl>
-//                         <span
-//                           className="absolute md:right-0 -right-0 top-[34px] cursor-pointer w-7 md:w-8 lg:w-11 flex items-center justify-center"
-//                           onClick={() =>
-//                             setConfirmShowPassword(!confirmShowPassword)
-//                           }
-//                         >
-//                           {confirmShowPassword ? (
-//                             <EyeOff className="w-5 h-5" />
-//                           ) : (
-//                             <Eye className="w-5 h-5" />
-//                           )}
-//                         </span>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
-//                 </div>
-//                 <Button
-//                   type="submit"
-//                   className={`bg-button_orange hover:bg-button_orange w-[128px] h-[40px] hover:opacity-75 absolute -top-[0px] right-[16px]`}
-//                   disabled={saveLoader}
-//                 >
-//                   {saveLoader ? (
-//                     <svg
-//                       className="animate-spin h-5 w-5"
-//                       xmlns="http://www.w3.org/2000/svg"
-//                       fill="none"
-//                       viewBox="0 0 24 24"
-//                     >
-//                       <circle
-//                         className="opacity-25"
-//                         cx="12"
-//                         cy="12"
-//                         r="10"
-//                         stroke="#fff"
-//                         strokeWidth="4"
-//                       ></circle>
-//                       <path
-//                         className="opacity-75"
-//                         fill="#fff"
-//                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-//                       ></path>
-//                     </svg>
-//                   ) : (
-//                     "Update Profile"
-//                   )}
-//                 </Button>
-//               </form>
-//             </Form>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
+    console.log(data, " deleted task");
+    fetchTasks();
+    setTaskDeleteOpen(false);
+    toast({
+      title: "Deleted Successfully!",
+      description: "Task deleted successfully!",
+      action: (
+        <ToastAction
+          altText="Undo"
+          onClick={() => handleTaskUndo(teamId, taskId)}
+        >
+          Undo
+        </ToastAction>
+      ),
+    });
+  };
 
-// export default UserSettings;
+  const handleTaskUndo = async (teamId: number, taskId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ is_deleted: false })
+        .eq("team_id", teamId)
+        .eq("id", taskId);
+
+      if (error) throw error;
+
+      fetchTasks(); // Refresh the tasks list
+      toast({
+        title: "Undo Successful",
+        description: "The task has been restored.",
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Error undoing delete:", error);
+      toast({
+        title: "Error",
+        description: "Failed to restore the task. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleUpdateTask = async (teamId: number, taskId: number) => {
+    try {
+      const mentions = text.match(/@\w+/g) || []; // Extract mentions
+      const content = text.replace(/@\w+/g, "").trim(); // Remove mentions and trim content
+
+      console.log(taskId, "taskId");
+
+      // Fetch the current task by ID and Team ID
+      const { data: taskData, error: fetchError } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("id", taskId)
+        .eq("team_id", teamId)
+        .single();
+
+      if (fetchError) {
+        console.error("Error fetching task:", fetchError);
+        throw fetchError;
+      }
+
+      if (taskData) {
+        console.log(taskData.task_content, "task data");
+        console.log(taskData, "current task data");
+
+        // Validate if both content and mentions are empty
+        if (!content && mentions.length === 0) {
+          setTaskErrorMessage({ status: true, errorId: taskId });
+          console.warn("Please enter both content and mentions.");
+          return;
+        }
+
+        // Reset the error message state if validation passes
+        setTaskErrorMessage({ status: false, errorId: taskId });
+
+        console.log(mentions, content, "parsed text");
+
+        // Update the task in the database
+        const { data: updatedTask, error: updateError } = await supabase
+          .from("tasks")
+          .update({
+            mentions,
+            task_content: content,
+            task_created: true,
+            task_status: "todo",
+          })
+          .eq("team_id", teamId)
+          .eq("id", taskId);
+
+        if (updateError) {
+          console.error("Error updating task:", updateError);
+          throw updateError;
+        }
+
+        resetInputAndFetchUpdates();
+        // notify("Task created successfully", true);
+      }
+    } catch (error) {
+      console.error("Error in handleUpdateTask:", error);
+    }
+  };
+
+  const resetInputAndFetchUpdates = () => {
+    setText(""); // Clear the input text
+    fetchTasks(); // Refresh task list
+    fetchTeams(); // Refresh team data
+    setMentionTrigger(!mentionTrigger);
+
+    const styledInput = styledInputRef.current;
+    if (styledInput) {
+      styledInput.innerText = ""; // Clear styled input
+      console.log("Styled input cleared.");
+    }
+  };
+
+  const fetchTasks = async () => {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("is_deleted", false)
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.error("Error fetching tasks:", error);
+      return;
+    }
+
+    if (data) {
+      setAllTasks(data);
+    }
+  };
+
+  const handleClose = () => {
+    setTeamNameSheetOpen(false);
+  };
+
+  const handleDeleteTeam = async (teamId: number) => {
+    try {
+      // Delete tasks associated with the team first
+      const { error: taskError } = await supabase
+        .from("tasks")
+        .update({ is_deleted: true })
+        .eq("team_id", teamId);
+
+      if (taskError) {
+        console.error("Error deleting tasks:", taskError);
+        return;
+      }
+
+      console.log("Tasks deleted successfully.");
+
+      // Now delete the team
+      const { error: teamError } = await supabase
+        .from("teams")
+        .update({ is_deleted: true })
+        .eq("id", teamId);
+
+      if (teamError) {
+        console.error("Error deleting team:", teamError);
+        return;
+      }
+
+      console.log("Team deleted successfully.");
+
+      // Additional cleanup actions
+      setTeamNameDialogOpen(false);
+      fetchTeams();
+      toast({
+        title: "Deleted Successfully!",
+        description: "Team deleted successfully!",
+        action: (
+          <ToastAction altText="Undo" onClick={() => handleTeamUndo(teamId)}>
+            Undo
+          </ToastAction>
+        ),
+      });
+    } catch (error) {
+      console.error("Unexpected error during deletion:", error);
+    }
+  };
+
+  const handleTeamUndo = async (teamId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ is_deleted: false })
+        .eq("team_id", teamId);
+
+      if (error) {
+        console.error("Error undoing delete:", error);
+        return;
+      }
+
+      // Now delete the team
+      const { error: teamError } = await supabase
+        .from("teams")
+        .update({ is_deleted: false })
+        .eq("id", teamId);
+
+      if (teamError) {
+        console.error("Error deleting team:", teamError);
+        return;
+      }
+
+      // Additional cleanup actions
+      setTeamNameDialogOpen(false);
+      fetchTeams();
+      toast({
+        title: "Undo Successful",
+        description: "The deleted team has been restored.",
+        duration: 5000,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to restore the deleted team. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleUpdateTeam = async (
+    teamId: number,
+    spaceId: number,
+    defaultTeamName: string
+  ) => {
+    console.log(teamId, spaceId);
+    if (addedMembers.length === 0) {
+      setTeamNameError(true);
+      return;
+    } else if (addedMembers.length > 0) {
+      try {
+        const { data, error } = await supabase
+          .from("teams")
+          .update({
+            team_name: teamName || defaultTeamName,
+            members: addedMembers,
+          })
+          .eq("id", teamId)
+          .eq("space_id", spaceId)
+          .single();
+
+        if (error) {
+          console.error("Error updating team name:", error);
+          return;
+        }
+
+        // if (data) {
+        console.log("Team name updated successfully:", data);
+        fetchTeams();
+        setTeamNameSheetOpen(false);
+        setTeamNameError(false);
+        // notify("Team updated successfully", true);
+        // }
+      } catch (error) {
+        console.error("Error updating team name:", error);
+      }
+    }
+  };
+
+  const getTeamData = async (teamId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("id", teamId)
+        .single();
+      if (error) {
+        console.error("Error fetching user data:", error);
+        return;
+      }
+
+      if (data) {
+        console.log("User data:", data);
+        setAddedMembers(data.members);
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+  const removeMember = (user: any, index: number) => {
+    setAddedMembers((prevMembers) =>
+      prevMembers.filter(
+        (member: any, i: number) => !(member.id === user.id && i === index)
+      )
+    );
+  };
+
+  const handleUserSelect = (user: Tab) => {
+    setTeamNameError(false);
+    setAddedMembers((prevMembers) => [...prevMembers, user]);
+
+    setEmailInput("");
+    setHighlightedIndex(-1);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (matchingUsers.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      // Move highlight down
+      setHighlightedIndex((prevIndex) =>
+        prevIndex < matchingUsers.length - 1 ? prevIndex + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      // Move highlight up
+      setHighlightedIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : matchingUsers.length - 1
+      );
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      // Select highlighted user on Enter
+      handleUserSelect(matchingUsers[highlightedIndex]);
+    }
+  };
+
+  const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmailInput(e.target.value);
+
+    try {
+      // Fetch all users from the database
+      const { data, error } = await supabase.from("users").select("*");
+
+      if (error) {
+        console.error("Error fetching users:", error);
+        return;
+      }
+
+      // Filter users whose email includes the input value
+      const matchingUsers =
+        data?.filter((user) => user.email.includes(emailInput)) || [];
+
+      if (matchingUsers.length > 0 || emailInput === "") {
+        setMatchingUsers(matchingUsers);
+        setNoUserFound(false);
+      } else {
+        setNoUserFound(true);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    }
+  };
+
+  const handleEditTask = async (teamId: number, taskId: number) => {
+    const { data: taskData, error: fetchError } = await supabase
+      .from("tasks")
+      .update({ task_created: false })
+      .eq("id", taskId)
+      .eq("team_id", teamId)
+      .select();
+    if (fetchError) {
+      console.log(fetchError);
+    }
+    setUpdateTaskId({ teamId, taskId });
+    fetchTasks();
+  };
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [highlightedIndex, matchingUsers]);
+
+  const recoverTask = async () => {
+    if (updateTaskId.taskId === 0) return;
+    const { data: taskData, error: fetchError } = await supabase
+      .from("tasks")
+      .update({ task_created: true })
+      .eq("is_deleted", false)
+      .eq("id", updateTaskId.taskId)
+      .eq("team_id", updateTaskId.teamId)
+      .select();
+    if (fetchError) {
+      console.log(fetchError);
+    }
+    setUpdateTaskId({ teamId: 0, taskId: 0 });
+  };
+
+  // setFilterFn(handleFilterTasksAndTeams);
+
+  useEffect(() => {
+    fetchTeams();
+    fetchTasks();
+    recoverTask();
+  }, [spaceId, teamData, setTeamData]);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const user = await getLoggedInUserData();
+      console.log(user, " user");
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("role")
+        .eq("userId", user?.id)
+        .single();
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+      console.log(data.role);
+      setRole(data.role);
+    };
+
+    getUser();
+  }, []);
+
+  // const filterBySearchValue = (
+  //   items: any[],
+  //   key: string,
+  //   searchValue: string
+  // ) => {
+  //   // Validate searchValue and convert to lowercase if it's a string
+  //   const lowercasedSearchValue = typeof searchValue === 'string' ? searchValue.toLowerCase() : '';
+
+  //   return items.filter((item) => {
+  //     const itemValue = item[key];
+
+  //     // Ensure item[key] is a string before calling toLowerCase
+  //     if (typeof itemValue === 'string') {
+  //       return itemValue.toLowerCase().includes(lowercasedSearchValue);
+  //     }
+
+  //     // Exclude the item if the value is not a string
+  //     return false;
+  //   });
+  // };
+
+  const parseDateTime = (dateTimeString: string) => {
+    const [datePart, timePart] = dateTimeString.split(",");
+    const [day, month, year] = datePart.split(".");
+    return new Date(`${year}-${month}-${day}T${timePart}`);
+  };
+
+  const sortItems = (
+    items: any[] | any[], // Assuming FolderData is the type for folders
+    sortOrder: string | null,
+    key: "task_content" | "mentions" // Key to sort by: screenname for screens, name for folders
+  ) => {
+    switch (sortOrder) {
+      case "asc":
+        return [...items].sort((a, b) => a[key].localeCompare(b[key]));
+      case "desc":
+        return [...items].sort((a, b) => b[key].localeCompare(a[key]));
+      case "date-asc":
+        return [...items].sort(
+          (a, b) =>
+            parseDateTime(a.time).getTime() - parseDateTime(b.time).getTime()
+        );
+      case "date-desc":
+        return [...items].sort(
+          (a, b) =>
+            parseDateTime(b.time).getTime() - parseDateTime(a.time).getTime()
+        );
+      default:
+        return items;
+    }
+  };
+
+  // const filteredTasks = sortItems(
+  //   filterBySearchValue(allTasks, "task_content", searchValue as string),
+  //   sortedValue,
+  //   "mentions"
+  // );
+
+  const filteredTasks = allTasks.filter(
+    (task: any) =>
+    {
+      return task.task_content?.toLowerCase().includes(searchValue.toLowerCase()) // Filter tasks by search term
+    }
+      // task.task_content?.toLowerCase().includes(searchValue.toLowerCase()) // Filter tasks by search term
+  );
+
+  // setAllTasks(filteredTasks);
+
+  console.log(filteredTasks, " filtered tasks");
+
+  return (
+    <div>
+      {teams.length > 0 ? (
+        <div className="w-full py-4 px-0">
+          <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">
+            <CarouselContent1 className="flex space-x-1">
+              {teams.map((team, index) => (
+                <CarouselItem1
+                  key={team.id}
+                  className="max-w-[340px] w-[340px] basis-[28%] max-h-[80vh] h-[78vh] overflow-y-auto relative playlist-scroll"
+                >
+                  <Card key={index}>
+                    <CardContent key={index} className="w-full h-full p-0">
+                      <div
+                        className={`p-[18px] pb-3 sticky top-0 bg-white z-50 rounded-xl`}
+                      >
+                        <div className="flex justify-between items-center relative">
+                          <p className="text-lg font-semibold text-black font-geist">
+                            {team.team_name.length > 20
+                              ? team.team_name.slice(0, 20) + "..."
+                              : team.team_name}
+                          </p>
+                          {loggedUserData?.role === "owner" && (
+                            <DropdownMenu
+                            // open={updateOptionStates}
+                            // onOpenChange={setUpdateOptionStates}
+                            >
+                              <DropdownMenuTrigger>
+                                <Ellipsis size={18} />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
+                                <p>
+                                  <Sheet
+                                    open={teamNameSheetOpen}
+                                    onOpenChange={setTeamNameSheetOpen}
+                                  >
+                                    <SheetTrigger className="p-0 pr-4" asChild>
+                                      <Button
+                                        className="border-none w-full"
+                                        variant="outline"
+                                        onClick={() => getTeamData(team.id)}
+                                      >
+                                        Edit
+                                      </Button>
+                                    </SheetTrigger>
+                                    <SheetContent
+                                      className="min-h-screen overflow-y-scroll"
+                                      style={{ maxWidth: "500px" }}
+                                    >
+                                      <SheetHeader>
+                                        <SheetTitle>Edit team</SheetTitle>
+                                      </SheetHeader>
+                                      <div className="mt-2">
+                                        <label
+                                          htmlFor="name"
+                                          className="text-sm text-[#111928] font-medium"
+                                        >
+                                          Team Name
+                                        </label>
+                                        <Input
+                                          className="mb-3 mt-1"
+                                          type="text"
+                                          placeholder="Team Name"
+                                          defaultValue={team.team_name}
+                                          onChange={(e) => {
+                                            setTeamName(e.target.value);
+                                          }}
+                                        />
+                                        <div className="mt-4 relative">
+                                          {matchingUsers.length > 0 &&
+                                            emailInput.length > 0 &&
+                                            !noUserFound && (
+                                              <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
+                                                {matchingUsers.length > 0 && (
+                                                  <ul>
+                                                    {matchingUsers.map(
+                                                      (user, index) => (
+                                                        <li
+                                                          key={user.id}
+                                                          className={`p-2 cursor-pointer ${
+                                                            index ===
+                                                            highlightedIndex
+                                                              ? "bg-gray-200"
+                                                              : "hover:bg-gray-100"
+                                                          }`}
+                                                          onClick={() =>
+                                                            handleUserSelect(
+                                                              user
+                                                            )
+                                                          }
+                                                          onMouseEnter={() =>
+                                                            setHighlightedIndex(
+                                                              index
+                                                            )
+                                                          }
+                                                        >
+                                                          {user.email}
+                                                        </li>
+                                                      )
+                                                    )}
+                                                  </ul>
+                                                )}
+                                              </div>
+                                            )}
+                                          {noUserFound && (
+                                            <div className="absolute bottom-[-28px] max-h-[160px] h-auto overflow-y-auto w-full bg-white border border-gray-300 rounded-md">
+                                              <ul>
+                                                <li className="p-2 cursor-pointer hover:bg-gray-100">
+                                                  No User Found
+                                                </li>
+                                              </ul>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div>
+                                          <label
+                                            htmlFor="members"
+                                            className="text-sm text-[#111928] font-medium"
+                                          >
+                                            Members
+                                          </label>
+                                          <Input
+                                            autoComplete="off"
+                                            id="members"
+                                            placeholder="Add guest email"
+                                            className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
+                                            onChange={getUserData}
+                                          />
+                                        </div>
+                                        {addedMembers.length > 0 && (
+                                          <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
+                                            {addedMembers.map(
+                                              (member, index) => (
+                                                <div
+                                                  key={member.id}
+                                                  className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
+                                                >
+                                                  <div className="flex items-center gap-1">
+                                                    <Image
+                                                      src={member.profile_image}
+                                                      alt="user image"
+                                                      width={36}
+                                                      height={36}
+                                                      className="w-[32px] h-[32px] rounded-full"
+                                                    />
+                                                    <span>
+                                                      {member.username ||
+                                                        member.name}
+                                                    </span>
+                                                  </div>
+                                                  <span
+                                                    className={`${
+                                                      member.role ===
+                                                      "superadmin"
+                                                        ? "text-[#0E9F6E]"
+                                                        : "text-gray-500"
+                                                    }`}
+                                                  >
+                                                    {member.designation
+                                                      ?.length > 25
+                                                      ? `${member.designation?.slice(
+                                                          0,
+                                                          26
+                                                        )}...`
+                                                      : member.designation}
+                                                  </span>
+                                                  <button
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      removeMember(
+                                                        member,
+                                                        index
+                                                      );
+                                                    }}
+                                                    className="focus:outline-none space_delete_button text-gray-400"
+                                                  >
+                                                    <Trash2
+                                                      className="text-black"
+                                                      size={18}
+                                                    />
+                                                  </button>
+                                                </div>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                      {teamNameError && (
+                                        <p className="text-red-500 text-sm mt-1">
+                                          Please fill the field
+                                        </p>
+                                      )}
+                                      <div className="flex justify-center gap-4 mt-5">
+                                        {/* <Button variant='outline' className="w-1/3" onClick={handleClose}>
+                                      Cancel
+                                    </Button> */}
+                                        <Dialog
+                                          open={teamNameDialogOpen}
+                                          onOpenChange={setTeamNameDialogOpen}
+                                        >
+                                          <DialogTrigger asChild>
+                                            <Button
+                                              className="border-none w-1/2 bg-red-600 hover:bg-red-500 hover:text-white text-white"
+                                              variant="outline"
+                                            >
+                                              Delete
+                                            </Button>
+                                          </DialogTrigger>
+                                          <DialogContent className="sm:max-w-[425px]">
+                                            <DialogHeader>
+                                              <DialogTitle>
+                                                Delete Team
+                                              </DialogTitle>
+                                              <DialogDescription>
+                                                Do you want to delete{" "}
+                                                <span className="font-bold">
+                                                  {team.team_name}?
+                                                </span>
+                                              </DialogDescription>
+                                            </DialogHeader>
+
+                                            <div className="flex justify-center items-center w-full gap-4">
+                                              <Button
+                                                variant="outline"
+                                                className="w-1/3"
+                                                type="submit"
+                                                onClick={() =>
+                                                  setTeamNameDialogOpen(false)
+                                                }
+                                              >
+                                                Cancel
+                                              </Button>
+                                              <Button
+                                                className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                type="button"
+                                                onClick={() =>
+                                                  handleDeleteTeam(team.id)
+                                                }
+                                              >
+                                                Delete
+                                              </Button>
+                                            </div>
+                                          </DialogContent>
+                                        </Dialog>
+                                        <Button
+                                          className="w-1/2"
+                                          onClick={() =>
+                                            handleUpdateTeam(
+                                              team.id,
+                                              spaceId,
+                                              team.team_name
+                                            )
+                                          }
+                                        >
+                                          Save changes
+                                        </Button>
+                                      </div>
+                                    </SheetContent>
+                                  </Sheet>
+                                </p>
+                                <p>
+                                  <Dialog
+                                    open={teamNameDialogOpen}
+                                    onOpenChange={setTeamNameDialogOpen}
+                                  >
+                                    <DialogTrigger className="p-0 px-3" asChild>
+                                      <Button
+                                        className="border-none w-full"
+                                        variant="outline"
+                                      >
+                                        Delete
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                      <DialogHeader>
+                                        <DialogTitle>Delete Team</DialogTitle>
+                                        <DialogDescription>
+                                          Do you want to delete{" "}
+                                          <span className="font-bold">
+                                            {team.team_name}?
+                                          </span>
+                                        </DialogDescription>
+                                      </DialogHeader>
+
+                                      <div className="flex justify-center items-center w-full gap-4">
+                                        <Button
+                                          variant="outline"
+                                          className="w-1/3"
+                                          type="submit"
+                                          onClick={() =>
+                                            setTeamNameDialogOpen(false)
+                                          }
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          className="bg-red-600 hover:bg-red-500 w-1/3"
+                                          type="button"
+                                          onClick={() =>
+                                            handleDeleteTeam(team.id)
+                                          }
+                                        >
+                                          Delete
+                                        </Button>
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
+                                </p>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                        {loggedUserData?.role === "owner" && (
+                          <Button
+                            variant={"outline"}
+                            className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
+                            onClick={() => {
+                              console.log("Team ID:", team.id);
+                              handleAddTask(team.id, spaceId);
+                            }}
+                          >
+                            <Plus size={18} />
+                            Add Task
+                          </Button>
+                        )}
+                      </div>
+                      {allTasks.length > 0 ? (
+                        <div className="w-full px-4 pb-4">
+                          {allTasks.map(
+                            (task: any) =>
+                              task.team_id === team.id && (
+                                <div
+                                  key={task.id}
+                                  className="flex flex-col gap-2.5 mt-3"
+                                >
+                                  {/* {task.team_id === team.id && ( */}
+                                  <div
+                                    key={task.id}
+                                    className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist hover:border-blue-600 task_box"
+                                  >
+                                    <div className="flex justify-between items-center">
+                                      {/* <p>{task.id}</p> */}
+                                      <p className="text-xs font-semibold text-[#A6A6A7]">
+                                        {formatDate(new Date())}
+                                      </p>
+                                      {/* <Trash2
+                                    size={18}
+                                    className="text-[#EC4949] cursor-pointer"
+                                    onClick={() => {
+                                      console.log(
+                                        "Deleting Task ID:",
+                                        task.id,
+                                        "for Team ID:",
+                                        team.id
+                                      );
+                                      handleDeleteTask(team.id, task.id);
+                                    }}
+                                  /> */}
+                                      {loggedUserData?.role === "owner" && (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Ellipsis
+                                              size={18}
+                                              className="cursor-pointer"
+                                            />
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
+                                            <DropdownMenuItem
+                                              className="px-3 pt-2 pb-0"
+                                              onClick={() => {
+                                                handleEditTask(
+                                                  team.id,
+                                                  task.id
+                                                );
+                                              }}
+                                            >
+                                              Edit
+                                            </DropdownMenuItem>
+                                            <p>
+                                              <Dialog
+                                                open={taskDeleteOpen}
+                                                onOpenChange={setTaskDeleteOpen}
+                                              >
+                                                <DialogTrigger
+                                                  className="p-0 px-3"
+                                                  asChild
+                                                >
+                                                  <Button
+                                                    className="border-none w-full"
+                                                    variant="outline"
+                                                  >
+                                                    Delete
+                                                  </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-[425px]">
+                                                  <DialogHeader>
+                                                    <DialogTitle>
+                                                      Delete Task
+                                                    </DialogTitle>
+                                                    <DialogDescription>
+                                                      Do you want to delete this
+                                                      task ?
+                                                    </DialogDescription>
+                                                  </DialogHeader>
+
+                                                  <div className="flex justify-center items-center w-full gap-4">
+                                                    <Button
+                                                      variant="outline"
+                                                      className="w-1/3"
+                                                      type="submit"
+                                                      onClick={() =>
+                                                        setTaskDeleteOpen(false)
+                                                      }
+                                                    >
+                                                      Cancel
+                                                    </Button>
+                                                    <Button
+                                                      className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                      type="button"
+                                                      onClick={() =>
+                                                        handleDeleteTask(
+                                                          team.id,
+                                                          task.id
+                                                        )
+                                                      }
+                                                    >
+                                                      Delete
+                                                    </Button>
+                                                  </div>
+                                                </DialogContent>
+                                              </Dialog>
+                                            </p>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      )}
+                                    </div>
+                                    <WebMentionInput
+                                      text={text}
+                                      setText={setText}
+                                      taskErrorMessage={taskErrorMessage}
+                                      setTaskErrorMessage={setTaskErrorMessage}
+                                      allTasks={allTasks}
+                                      teamId={team.id}
+                                      taskId={task.id}
+                                      taskStatus={task.task_created}
+                                      mentionTrigger={mentionTrigger}
+                                      setMentionTrigger={setMentionTrigger}
+                                    />
+                                    <div
+                                      className={`flex ${
+                                        loggedUserData?.role === "owner"
+                                          ? "justify-between"
+                                          : "justify-end"
+                                      } items-center`}
+                                    >
+                                      {loggedUserData?.role === "owner" && (
+                                        <div
+                                          className={`task.${task.id} === true cursor-not-allowed`}
+                                        >
+                                          <TaskDateUpdater
+                                            team={team}
+                                            task={task}
+                                            fetchTasks={fetchTasks}
+                                            taskStatus={task.task_created}
+                                          />
+                                        </div>
+                                      )}
+
+                                      {task.task_created !== true ? (
+                                        <Button
+                                          variant={"outline"}
+                                          className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
+                                          onClick={() => {
+                                            handleUpdateTask(team.id, task.id),
+                                              setText("");
+                                          }}
+                                        >
+                                          Create
+                                        </Button>
+                                      ) : (
+                                        <Select
+                                          defaultValue={task.task_status}
+                                          onValueChange={async (value) => {
+                                            const { data, error } =
+                                              await supabase
+                                                .from("tasks")
+                                                .update({ task_status: value })
+                                                .eq("id", task.id)
+                                                .eq("team_id", team.id)
+                                                .single();
+                                            if (error) {
+                                              console.error(
+                                                "Error updating task status:",
+                                                error
+                                              );
+                                            }
+                                            setTaskStatus(value);
+                                            // notify(
+                                            //   `Task status updated to "${value}"`,
+                                            //   true
+                                            // );
+                                            fetchTasks();
+                                          }}
+                                        >
+                                          <SelectTrigger
+                                            className={`w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none ${
+                                              task.task_status === "todo"
+                                                ? "text-reddish bg-[#F8DADA]"
+                                                : task.task_status ===
+                                                  "In progress"
+                                                ? "text-[#EEA15A] bg-[#F8F0DA]"
+                                                : task.task_status ===
+                                                  "feedback"
+                                                ? "text-[#142D57] bg-[#DEE9FC]"
+                                                : "text-[#3FAD51] bg-[#E5F8DA]"
+                                            }`}
+                                          >
+                                            <SelectValue placeholder="status" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="todo">
+                                              To Do
+                                            </SelectItem>
+                                            <SelectItem value="In progress">
+                                              In Progress
+                                            </SelectItem>
+                                            <SelectItem value="feedback">
+                                              Feedback
+                                            </SelectItem>
+                                            {loggedUserData?.role ===
+                                              "owner" && (
+                                              <SelectItem value="Completed">
+                                                Completed
+                                              </SelectItem>
+                                            )}
+                                          </SelectContent>
+                                        </Select>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {/* )} */}
+                                </div>
+                              )
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex justify-center items-center font-inter font-medium text-md text-[#9A9A9A] pt-3 pb-5">
+                          <p>No tasks found</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </CarouselItem1>
+              ))}
+            </CarouselContent1>
+          </Carousel1>
+        </div>
+      ) : (
+        <div className="w-full min-h-[80vh] flex justify-center items-center text-[#9A9A9A]">
+          <p className="text-lg font-semibold">No teams found</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SpaceTeam;

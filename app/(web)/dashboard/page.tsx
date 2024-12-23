@@ -1,6 +1,5 @@
 "use client";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import WebNavbar from "../components/navbar";
 import SpaceBar from "../components/spacebar";
 import "./style.css";
 import { useRouter } from "next/navigation";
@@ -40,6 +39,7 @@ const WebDashboard = () => {
         return;
       }
       console.log(data);
+      // localStorage.setItem("user", data);
       setLoggedUserData(data);
     };
 
@@ -60,8 +60,9 @@ const WebDashboard = () => {
 
   return (
     <>
-      {/* <WebNavbar loggedUserData={loggedUserData as any} /> */}
-      <SpaceBar loggedUserData={loggedUserData as any} />
+      <SpaceBar
+       loggedUserData={loggedUserData as any}
+        />
     </>
   );
 };

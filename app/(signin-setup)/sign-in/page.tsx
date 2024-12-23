@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,24 +11,19 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Search, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 // import Loading from "@/components/ui/loading";
 import { getLoggedInUserData, signIn } from "./action";
 import toast, { Toaster } from "react-hot-toast";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import Lottie from "lottie-react";
+import LottielabLogin1 from "../../../public/images/login_animation.json";
+import "./style.css";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -42,7 +36,7 @@ const formSchema = z.object({
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const route = useRouter();
   const [signinLoading, setSigninLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
@@ -51,7 +45,6 @@ const SignIn = () => {
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [folderError, setFolderError] = useState(false);
   const [folderNameInput, setFolderNameInput] = useState("");
-  const [logo, setLogo] = useState<string>("");
 
   const notify = (message: string, success: boolean) =>
     toast[success ? "success" : "error"](message, {
@@ -126,6 +119,7 @@ const SignIn = () => {
       }
 
       setCreateFolderOpen(false);
+      setFolderNameInput("");
     } catch (error: any) {
       notify(`Error: ${error.message}`, false); // Display catch block error as notification
     } finally {
@@ -133,14 +127,14 @@ const SignIn = () => {
     }
   };
 
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
+  // useEffect(() => {
+  //   setIsLoading(true);
+  //   const timer = setTimeout(() => {
+  //     setIsLoading(false);
+  //   }, 2000);
 
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -159,8 +153,8 @@ const SignIn = () => {
   return (
     <div className="md:flex sm:block justify-end min-h-screen font-inter">
       <Toaster />
-      <div className="md:w-3/5 sm:w-full h-screen flex flex-col justify-center relative">
-        <div className="lg:w-[515px] p-10 md:w-full w-full md:p-12 lg:p-0 m-auto">
+      <div className="md:w-1/2 sm:w-full h-screen flex flex-col justify-center relative">
+        <div className="lg:w-[515px] p-10 md:w-full w-full md:p-12 lg:p-0 m-auto lg_start_width">
           <div className="absolute top-4 left-4"></div>
           <h1 className="text-3xl font-bold mb-7">Sign In</h1>
           <Form {...form}>
@@ -206,7 +200,7 @@ const SignIn = () => {
                   </FormItem>
                 )}
               />
-              {/* <Dialog
+              <Dialog
                 open={createFolderOpen}
                 onOpenChange={setCreateFolderOpen}
               >
@@ -238,6 +232,7 @@ const SignIn = () => {
                           if (folderError) setFolderError(false);
                         }}
                       />
+                      <p className="text-xs mt-1.5 text-gray-500">Please enter the email address associated with your account *</p>
                     </div>
                   </div>
                   <DialogFooter className="mb-2">
@@ -247,7 +242,7 @@ const SignIn = () => {
                       </Button>
                     </DialogClose>
                     <Button
-                      className="bg-button_orange hover:bg-button_orange hover:opacity-75 w-2/4"
+                      className="bg-primaryColor-700 hover:bg-primaryColor-700 hover:opacity-75 w-2/4"
                       onClick={handleSendEmail}
                       disabled={emailLoading}
                     >
@@ -278,7 +273,7 @@ const SignIn = () => {
                     </Button>
                   </DialogFooter>
                 </DialogContent>
-              </Dialog> */}
+              </Dialog>
               <Button
                 type="submit"
                 className="w-full bg-[#14B8A6] hover:bg-[#2e998d]"
@@ -312,31 +307,18 @@ const SignIn = () => {
               </Button>
             </form>
           </Form>
-          {/* <button className="block mt-7 mb-1.5 border border-border_gray rounded py-2 text-sm font-medium text-center w-full">
-            Sign in with Google
-          </button>
-          <button className="block mb-7 border border-border_gray rounded py-2 text-sm font-medium text-center w-full">
-            Sign in with Facebook
-          </button> */}
-          {/* <h2 className="text-base font-bold">
-            Don't have an account?{" "}
-            <a href="/sign-up" className="text-button_orange">
-              Sign Up
-            </a>
-          </h2> */}
         </div>
       </div>
-      <div className="w-2/5 relative sm:none md:block flex justify-center items-center h-full">
-        {/* <Image
-          src="/images/signin.png"
-          alt="sign in"
-          layout="fill"
-          objectFit="cover"
-          quality={100}
-          priority
-          className="w-full h-screen"
-        /> */}
-        <p>Image will be placed here</p>
+      <div className="w-1/2 lottie_img sm:none md:block flex justify-center items-center h-screen">
+      <div className="w-full h-full relative flex justify-center items-center">
+        <Lottie
+          animationData={LottielabLogin1}
+          loop={true}
+          style={{ width: "100%", height: "80%" }}
+          className="lottie_img"
+        />
+        <div className="w-[200px] h-[100px] bg-white absolute md:bottom-[0px] lg:bottom-[25px] right-20 lottie_hide"></div>
+        </div>
       </div>
     </div>
   );
