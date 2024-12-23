@@ -1,6 +1,5 @@
 "use client";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import WebNavbar from "../components/navbar";
 import SpaceBar from "../components/spacebar";
 import "./style.css";
 import { useRouter } from "next/navigation";

@@ -18,13 +18,34 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import "./style.css";
+import Image from "next/image";
+import Link from "next/link";
+
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role : string
+}
+
+interface employeeData {
+  id: string;
+  name: string;
+  email: string;
+  access: {
+    space: boolean;
+    team: boolean;
+    task: boolean;
+    all: boolean;
+  };
+}
 
 const AccessPage = () => {
   const route = useRouter();
   const [loading, setLoading] = useState(true);
-  const [loggedUserData, setLoggedUserData] = useState<any>(null);
+  const [loggedUserData, setLoggedUserData] = useState<UserData | null>(null);
   const [searchValue, setSearchValue] = useState("");
-  const [employeesData, setEmployeesData] = useState<any>([]);
+  const [employeesData, setEmployeesData] = useState<employeeData[] | null>([]);
   const [saveLoader, setSaveLoader] = useState(false);
   const [cancelLoader, setCancelLoader] = useState(false);
 
@@ -68,7 +89,7 @@ const AccessPage = () => {
   const handleUpdate = async () => {
     setSaveLoader(true);
     try {
-      const updates = employeesData.map((emp: any) => ({
+      const updates = employeesData?.map((emp: any) => ({
         id: emp.id,
         access: emp.access,
       }));
@@ -91,7 +112,7 @@ const AccessPage = () => {
     }
   };
 
-  const filteredEmployees = employeesData.filter((employee: any) =>
+  const filteredEmployees : any = employeesData?.filter((employee: any) =>
     employee.username.toLowerCase().includes(searchValue.toLowerCase())
   );
 
@@ -139,6 +160,25 @@ const AccessPage = () => {
         </div>
       </div>
     ); // Simple loader UI
+  }
+
+  if (loggedUserData?.role === 'user'){
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <div className="flex flex-col items-center gap-3">
+          <Image
+            src="https://res.cloudinary.com/razeshzone/image/upload/v1588316204/house-key_yrqvxv.svg"
+            alt="denied"
+            width={200}
+            height={200}
+            className="w-[100px] h-[100px]"
+          />
+          <h1 className="text-9xl font-bold">403</h1>
+          <p className="text-2xl font-bold">Access Denied!</p>
+          <h4 className="text-sm text-gray-500 text-center font-inter">You don’t have access to this area of application. Speak <br /> to your administrator to unblock this feature. <br /> You can go back to <Link href="/dashboard" className="text-primaryColor-700 underline font-bold">Dashboard</Link></h4>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -292,7 +332,7 @@ const AccessPage = () => {
           </TableHeader>
           <TableBody>
             {filteredEmployees.length > 0 ? (
-              filteredEmployees.map((employee: any) => (
+              filteredEmployees?.map((employee: any) => (
                 <TableRow key={employee.id}>
                   <TableCell className="pl-4 text-sm font-semibold text-gray-900 capitalize py-4">
                     {employee.username}

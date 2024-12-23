@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import WebNavbar from "../components/navbar";
 import { access } from "fs";
+import Link from "next/link";
 
 // Define the validation schema using Zod
 const formSchema = z
@@ -88,7 +89,7 @@ const AddMember = () => {
       picture: "",
       name: "",
       Designation: "",
-      role: "",
+      role: "User",
       department: "",
       email: "",
       mobile: "",
@@ -250,6 +251,25 @@ const AddMember = () => {
     
         getUser();
   }, []);
+
+  if (loggedUserData?.role === 'user'){
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <div className="flex flex-col items-center gap-3">
+          <Image
+            src="https://res.cloudinary.com/razeshzone/image/upload/v1588316204/house-key_yrqvxv.svg"
+            alt="denied"
+            width={200}
+            height={200}
+            className="w-[100px] h-[100px]"
+          />
+          <h1 className="text-9xl font-bold">403</h1>
+          <p className="text-2xl font-bold">Access Denied!</p>
+          <h4 className="text-sm text-gray-500 text-center font-inter">You don’t have access to this area of application. Speak <br /> to your administrator to unblock this feature. <br /> You can go back to <Link href="/dashboard" className="text-primaryColor-700 underline font-bold">Dashboard</Link></h4>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -415,6 +435,8 @@ const AddMember = () => {
                               type="text"
                               className="border border-gray-300"
                               placeholder="Enter role name here"
+                              // defaultValue={"User"}
+                              disabled
                               {...field}
                             />
                           </FormControl>

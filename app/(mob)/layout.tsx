@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+
 // import "@/styles/";
 import Footer from "@/app/(mob)/footer/footer";
 // // import { GeistSans } from "geist/font/sans";

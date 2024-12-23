@@ -27,12 +27,16 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
   const userId = user?.id;
 
-  const publicRoutes = ["/sign-in"];
+  const publicRoutes = ["/sign-in", "/forget-password"];
 
   if (
     (user && request.nextUrl.pathname === "/sign-in")
   ) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  if (!user && !publicRoutes.includes(request.nextUrl.pathname)) {
+    return NextResponse.redirect(new URL('/forget-password', request.url));
   }
 
   if (!user && !publicRoutes.includes(request.nextUrl.pathname)) {
