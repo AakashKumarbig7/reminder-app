@@ -209,7 +209,7 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                 </div>
               </div>
               <div className="py-3 my-3 text-gray-700 border-t border-b border-gray-200 px-3 cursor-pointer">
-                <p className={`text-sm font-normal ${loggedUserData?.role === "owner" ? "pb-3" : "pb-0"}`}>Your Profile</p>
+                <p onClick={() => route.push("/user-profile")} className={`text-sm font-normal ${loggedUserData?.role === "owner" ? "pb-3" : "pb-0"}`}>Your Profile</p>
                 {
                   loggedUserData?.role === "owner" && (
                     <p

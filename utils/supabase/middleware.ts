@@ -1,3 +1,4 @@
+import { logout } from "@/app/(signin-setup)/logout/action";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -29,10 +30,21 @@ export async function updateSession(request: NextRequest) {
 
   const publicRoutes = ["/sign-in", "/forget-password"];
 
+  if(user && user?.user_metadata.status !==  "Active") {
+    console.log("User is not active");
+    logout();
+    return NextResponse.redirect(new URL("/sign-in", request.url));
+  }
+
   if (
     (user && request.nextUrl.pathname === "/sign-in")
   ) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  if (!user && !publicRoutes.includes(request.nextUrl.pathname)) {
+    // console.log(publicRoutes, "routes");
+    return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
   if (!user && !publicRoutes.includes(request.nextUrl.pathname)) {

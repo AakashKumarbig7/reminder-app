@@ -1,8 +1,13 @@
 "use client";
+import { useEffect, useState } from "react";
+import WebNavbar from "../components/navbar";
+import { useRouter } from "next/navigation";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -12,47 +17,40 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Eye, EyeOff, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabase/supabaseClient";
-import { createUser1 } from "../members/action";
-import { toast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
-import WebNavbar from "../components/navbar";
-import { access } from "fs";
-import Link from "next/link";
+import { passwordReset } from "./action";
 
-// Define the validation schema using Zod
+interface UserData {
+    id: string;
+    username: string;
+    email: string;
+    mobile : string;
+    password : string;
+    entityName : string;
+    profile_image : string;
+  }
+
 const formSchema = z
   .object({
-    picture: z
-      .custom<FileList>((fileList) => fileList && fileList.length === 1, {
-        message: "Please upload profile image",
-      })
-      .refine(
-        (fileList) =>
-          fileList[0]?.type === "image/png" ||
-          fileList[0]?.type === "image/jpeg",
-        {
-          message: "Only JPEG and PNG formats are supported",
-        }
-      )
-      .refine((fileList) => fileList[0]?.size <= 5_000_000, {
-        message: "Image size must be less than 5MB",
-      }),
+    picture: z.any(),
+    //   .custom<FileList>((fileList) => fileList && fileList.length === 1, {
+    //     message: "Please upload profile image",
+    //   })
+    //   .refine(
+    //     (fileList) =>
+    //       fileList[0]?.type === "image/png" ||
+    //       fileList[0]?.type === "image/jpeg",
+    //     {
+    //       message: "Only JPEG and PNG formats are supported",
+    //     }
+    //   )
+    //   .refine((fileList) => fileList[0]?.size <= 5_000_000, {
+    //     message: "Image size must be less than 5MB",
+    //   }),
     name: z.string().min(2, {
       message: "Please enter the name",
-    }),
-    Designation: z.string().min(2, {
-      message: "Please enter the designation",
-    }),
-    role: z.string().min(2, {
-      message: "Please enter the role",
-    }),
-    department: z.string().min(2, {
-      message: "Please enter the department",
     }),
     email: z.string().email({
       message: "Please enter a valid email address",
@@ -82,49 +80,53 @@ const formSchema = z
     path: ["confirmPassword"],
   });
 
-const AddMember = () => {
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      picture: "",
-      name: "",
-      Designation: "",
-      role: "User",
-      department: "",
-      email: "",
-      mobile: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
+const UserProfile = () => {
 
-  const route = useRouter();
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+          picture: "",
+          name: "",
+          email: "",
+          mobile: "",
+          password: "",
+          confirmPassword: "",
+        },
+      });
+
+      const handleImageChange = (files: FileList) => {
+        if (files && files.length > 0) {
+          const file = files[0];
+          const reader = new FileReader();
+          setFile(file);
+          reader.onloadend = () => {
+            setImageUrl(reader.result as string);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+  const router = useRouter();
+  const [loggedUserData, setLoggedUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saveLoader, setSaveLoader] = useState(false);
-  const [confirmShowPassword, setConfirmShowPassword] = useState(false);
-  const [modalShowPassword, setModalShowPassword] = useState(false);
-  const [modalPassword, setModalPassword] = useState("");
   const [imageUrl, setImageUrl] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
-  const [emailCheck, setEmailCheck] = useState(false);
-  const [loggedUserData, setLoggedUserData] = useState<any>(null);
+  const [modalPassword, setModalPassword] = useState("");
+  const [confirmShowPassword, setConfirmShowPassword] = useState(false);
+  const [modalShowPassword, setModalShowPassword] = useState(false);
   const [cancelLoader, setCancelLoader] = useState(false);
 
-  const handleImageChange = (files: FileList) => {
-    if (files && files.length > 0) {
-      const file = files[0];
-      const reader = new FileReader();
-      setFile(file);
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const generatePassword = () => {
+    const password = Math.random().toString(36).slice(-8);
+    setModalPassword(password);
+    form.setValue("password", password);
+    form.setValue("confirmPassword", password);
   };
 
   const onSubmit = async (data: any) => {
     const entityName = data.name.split(" ").join("_");
     try {
-      if (!emailCheck) {
         setSaveLoader(true);
         let imageUrl = data.profile_image;
         if (file) {
@@ -145,60 +147,43 @@ const AddMember = () => {
           imageUrl = publicUrlData?.publicUrl || "";
         }
 
-        const signUpResponse = await createUser1(data.email, data.password);
-        if (signUpResponse?.data == null) {
-          console.error("Sign up error:", signUpResponse);
-        }
+        // const signUpResponse = await createUser1(data.email, data.password);
+        // if (signUpResponse?.data == null) {
+        //   console.error("Sign up error:", signUpResponse);
+        // }
 
         const { data: memberData, error: memberError } = await supabase
-          .from("users")
-          .insert({
-            username: data.name,
-            designation: data.Designation,
-            role: data.role,
-            department: data.department,
-            email: data.email,
-            mobile: data.mobile,
-            profile_image: imageUrl,
-            userId: signUpResponse?.data?.user?.id,
-            entity_name: entityName,
-            password: data.password,
-            is_deleted: false,
-            access : {
-              "all" : false,
-              "task" : false,
-              "team" : false,
-              "space" : false
-            }
-          });
+        .from("users")
+        .update({
+          username: data.name || loggedUserData?.username,
+          mobile: data.mobile || loggedUserData?.mobile,
+          password: data.password || loggedUserData?.password,
+          profile_image: imageUrl || loggedUserData?.profile_image,
+          entity_name: entityName || loggedUserData?.entityName
+        })
+        .eq("id", loggedUserData?.id)
+        .select("*")
+        .single();
 
         if (memberError) {
-          console.error("Member creation error:", memberError);
+          console.log(memberError);
           toast({
             title: "Error",
             description: "Something went wrong, please try again later.",
-            variant: "destructive",
           });
           setSaveLoader(false);
           return;
         }
-        form.reset();
-        setFile(null);
-        setImageUrl("");
-        toast({
-          title: "Member Added Successfully!",
-          description: "Member has been added successfully.",
-        });
-        setSaveLoader(false);
-        route.push("/access");
-      } else {
-        toast({
-          title: "Error",
-          description: "Email already exists",
-          variant: "destructive",
-        });
-        setSaveLoader(false);
-      }
+
+        if (memberData) {
+          toast({
+            title: "Success",
+            description: "Profile updated successfully.",
+          });
+          passwordReset(data.password);
+          setSaveLoader(false);
+        }
+      
     } catch (err) {
       console.log(err);
       toast({
@@ -209,65 +194,63 @@ const AddMember = () => {
     }
   };
 
-  const handleEmailCheck = async (e: any) => {
-    const email = e.target.value;
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email);
-
-    if (error) {
-      console.log(error);
-    }
-    if (data && data.length > 0) {
-      setEmailCheck(true);
-    } else {
-      setEmailCheck(false);
-    }
-  };
-
-  const generatePassword = () => {
-    const password = Math.random().toString(36).slice(-8);
-    setModalPassword(password);
-    form.setValue("password", password);
-    form.setValue("confirmPassword", password);
-  };
-
   useEffect(() => {
-    const getUser = async () => {
-          const user = await getLoggedInUserData();
-    
-          const { data, error } = await supabase
-            .from("users")
-            .select("*")
-            .eq("userId", user?.id)
-            .single();
-    
-          if (error) {
-            console.log(error);
-            return;
-          }
-          console.log(data);
-          setLoggedUserData(data);
-        };
-    
-        getUser();
-  }, []);
+    const redirectToTask = () => {
+      router.push("/home");
+    };
 
-  if (loggedUserData?.role === 'user'){
+    if (window.innerWidth <= 992) {
+      redirectToTask();
+      setLoading(false);
+      return;
+    } else {
+      router.push("/user-profile");
+      setLoading(false);
+    }
+
+    const getUser = async () => {
+      const user = await getLoggedInUserData();
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("userId", user?.id)
+        .single();
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+      console.log(data);
+      form.setValue("name", data.username);
+      form.setValue("email", data.email);
+      form.setValue("mobile", data.mobile);
+      form.setValue("password", data.password);
+      form.setValue("confirmPassword", data.password);
+      setImageUrl(data.profile_image);
+      setLoggedUserData(data);
+    };
+
+//     const loggedUserData = async () => {
+//         const {data, error} = await supabase
+//         .from("users")
+//         .select("*")
+//         .eq("id", loggedUserData?.id)
+//         .single();
+//         if (error) {
+//           console.log(error);
+//     };
+// }
+
+    getUser();
+  }, [router]);
+
+  if (loading) {
     return (
-      <div className="w-full h-screen flex justify-center items-center">
-        <div className="flex flex-col items-center gap-3">
-          <Image
-            src="https://res.cloudinary.com/razeshzone/image/upload/v1588316204/house-key_yrqvxv.svg"
-            alt="denied"
-            width={200}
-            height={200}
-            className="w-[100px] h-[100px]"
-          />
-          <h1 className="text-9xl font-bold">403</h1>
-          <p className="text-2xl font-bold">Access Denied!</p>
-          <h4 className="text-sm text-gray-500 text-center font-inter">You don’t have access to this area of application. Speak <br /> to your administrator to unblock this feature. <br /> You can go back to <Link href="/dashboard" className="text-primaryColor-700 underline font-bold">Dashboard</Link></h4>
+      <div className="loader w-full h-screen flex justify-center items-center">
+        <div className="flex items-center gap-1">
+          <p className="w-5 h-5 bg-black rounded-full animate-bounce"></p>
+          <p className="text-2xl font-bold">Loading...</p>
         </div>
       </div>
     );
@@ -275,26 +258,20 @@ const AddMember = () => {
 
   return (
     <>
-    <WebNavbar
-       loggedUserData={loggedUserData as any}
-       navbarItems={false}
-       searchValue=''
-       setSearchValue=''
-       teamFilterValue=''
-       setTeamFilterValue=''
-       taskStatusFilterValue=''
-       setTaskStatusFilterValue=''
-       filterFn=''
-        />
-      <div
-        className="w-full relative"
-        style={{ minHeight: "calc(100vh - 60px)" }}
-      >
-        {/* <h1 className="text-xl font-bold text-primary_color">
-          Add Member
-        </h1> */}
-        <div className="w-full p-4 pt-14">
-          <div className="bg-white pt-4 pb-10 mt-5 rounded-md">
+      <WebNavbar
+        loggedUserData={loggedUserData as any}
+        navbarItems={false}
+        searchValue=""
+        setSearchValue=""
+        teamFilterValue=""
+        setTeamFilterValue=""
+        taskStatusFilterValue=""
+        setTaskStatusFilterValue=""
+        filterFn=""
+      />
+      <div className="px-3">
+        <div className="w-full pb-4 pt-14">
+          <div className="bg-white pt-4 pb-10 mt-5 rounded-[10px]">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -365,13 +342,12 @@ const AddMember = () => {
                           <FormLabel className="mb-2">Email</FormLabel>
                           <FormControl>
                             <Input
+                            disabled
                               className="border border-gray-300"
                               placeholder="Email"
                               {...field}
                               onChange={(e) => {
                                 field.onChange(e);
-                                handleEmailCheck(e);
-                                // console.log(e.target.value);
                               }}
                             />
                           </FormControl>
@@ -385,24 +361,7 @@ const AddMember = () => {
                     className="flex justify-start gap-5 items-center mb-8"
                     style={{ marginTop: "32px !important" }}
                   >
-                    <FormField
-                      control={form.control}
-                      name="Designation"
-                      render={({ field }) => (
-                        <FormItem className="w-1/2 relative">
-                          <FormLabel>Designation</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              className="border border-gray-300"
-                              placeholder="Enter Company Name here"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage className="absolute -bottom-6 left-0" />
-                        </FormItem>
-                      )}
-                    />
+                    
                     <FormField
                       control={form.control}
                       name="mobile"
@@ -421,54 +380,6 @@ const AddMember = () => {
                         </FormItem>
                       )}
                     />
-                  </div>
-                  <div
-                    className="flex justify-start gap-5 items-center"
-                    style={{ marginTop: "32px !important" }}
-                  >
-                    <FormField
-                      control={form.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem className="w-1/2 relative">
-                          <FormLabel>Role</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              className="border border-gray-300"
-                              placeholder="Enter role name here"
-                              // defaultValue={"User"}
-                              disabled
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage className="absolute -bottom-6 left-0" />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="department"
-                      render={({ field }) => (
-                        <FormItem className="w-1/2 relative">
-                          <FormLabel>Department</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              className="border border-gray-300"
-                              placeholder="Enter department name here"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage className="absolute -bottom-6 left-0" />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div
-                    className="flex justify-start gap-5 items-center mt-8"
-                    // style={{ marginTop: "32px !important" }}
-                  >
                     <FormField
                       control={form.control}
                       name="password"
@@ -512,6 +423,13 @@ const AddMember = () => {
                         </FormItem>
                       )}
                     />
+                  </div>
+                  
+                  <div
+                    className="flex justify-start gap-5 items-center mt-8"
+                    // style={{ marginTop: "32px !important" }}
+                  >
+                    
                     <FormField
                       control={form.control}
                       name="confirmPassword"
@@ -544,7 +462,7 @@ const AddMember = () => {
                     />
                   </div>
                 </div>
-                <div className="bg-white w-[98%] h-[60px] absolute -top-[8px] right-[16px] rounded-md flex justify-between items-center px-3">
+                <div className="bg-white w-[98%] h-[60px] absolute top-[50px] rounded-[10px] flex justify-between items-center px-3">
                   <h2 className="text-[16px] font-inter font-bold text-[#000000]">User profile</h2>
                   <div className="flex items-center gap-5">
                   <Button
@@ -554,7 +472,7 @@ const AddMember = () => {
                       onClick={() => {
                         setCancelLoader(true);
                         setTimeout(() => {
-                          route.push("/members");
+                          router.push("/dashboard");
                           setCancelLoader(false);
                         }, 1000);
                       }}
@@ -612,7 +530,7 @@ const AddMember = () => {
                           ></path>
                         </svg>
                       ) : (
-                        "Create Member"
+                        "Save Changes"
                       )}
                     </Button>
                   </div>
@@ -626,4 +544,4 @@ const AddMember = () => {
   );
 };
 
-export default AddMember;
+export default UserProfile;

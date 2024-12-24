@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { createUser1 } from "./action";
+import { createUser1, updateMetadata } from "./action";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -45,6 +45,8 @@ import {
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 interface Member {
   id: string;
@@ -114,7 +116,8 @@ const Members = () => {
   const fetchMembers = async () => {
     const { data, error } = await supabase
     .from("users")
-    .select("*");
+    .select("*")
+    .eq("is_deleted", false);
     if (error) {
       console.error("Error fetching members:", error.message);
     } else {
@@ -185,23 +188,56 @@ const Members = () => {
   // };
 
   const handleDelete = async (memberId: string) => {
+    console.log("member id ", memberId);
     try {
       // Delete the member from the database
       const { error } = await supabase
         .from("users")
-        .delete()
+        .update({ is_deleted: true })
         .eq("id", memberId);
 
       if (error) {
         throw new Error(`Delete failed: ${error.message}`);
       }
-
+      updateMetadata("Inactive", memberId);
       // Remove the member from the state to update the UI
       setMembers((prevMembers) =>
         prevMembers.filter((member) => member.id !== memberId)
       );
+      toast({
+        title: "Deleted Successfully!",
+        description: "Task deleted successfully!",
+        action: (
+          <ToastAction
+            altText="Undo"
+            onClick={() => handleMemberUndo(memberId)}
+          >
+            Undo
+          </ToastAction>
+        ),
+      });
     } catch (error: any) {
       console.error("Error during deletion:", error.message);
+    }
+  };
+
+  const handleMemberUndo = async (memberId: string) => {
+    try {
+      // Update the member in the database to undo the deletion
+      const { error } = await supabase
+        .from("users")
+        .update({ is_deleted: false })
+        .eq("id", memberId);
+
+      if (error) {
+        throw new Error(`Undo failed: ${error.message}`);
+      }
+
+      // Re-fetch members to update the list
+      await fetchMembers();
+      updateMetadata("Active", memberId);
+    } catch (error: any) {
+      console.error("Error during undo:", error.message);
     }
   };
 

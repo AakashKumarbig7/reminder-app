@@ -721,10 +721,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
               >
                 <span>{tab.space_name}</span>
 
-                {(loggedUserData?.role === "owner" ||
-                  (loggedUserData?.role === "user" &&
-                    loggedUserData?.access?.space === true) ||
-                  loggedUserData?.access?.all === true) && (
+                {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.space !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.space === true))) && (
                   <Sheet
                   // open={spaceEditDialogOpen}
                   // onOpenChange={setSpaceEditDialogOpen}
@@ -875,10 +872,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                 )}
               </div>
             ))}
-            {(loggedUserData?.role === "owner" ||
-              (loggedUserData?.role === "user" &&
-                loggedUserData?.access?.space === true) ||
-              loggedUserData?.access?.all === true) && (
+            {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.space !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.space === true))) && (
               <button
                 onClick={addNewTab}
                 className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10 min-w-fit"
@@ -888,10 +882,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
               </button>
             )}
           </div>
-          {(loggedUserData?.role === "owner" ||
-            (loggedUserData?.role === "user" &&
-              loggedUserData?.access?.team === true) ||
-            loggedUserData?.access?.all === true) && (
+          {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.team !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.team === true))) && (
             <div className="flex gap-2 py-2.5 text-sm text-gray-400 ml-20">
               <Sheet
                 open={memberAddDialogOpen}

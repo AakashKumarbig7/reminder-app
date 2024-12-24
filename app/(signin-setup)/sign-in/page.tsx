@@ -73,8 +73,13 @@ const SignIn = () => {
       if (res?.error) {
         notify(`Sign in failed: ${res.error}`, false);
       } else {
+        const user = await getLoggedInUserData();
+        if(user?.user_metadata.status !== "Active") {
+          notify("Your account is not active", false);
+          return;
+        }
         notify("Sign in successful", true);
-        // const user = await getLoggedInUserData();
+        
         // console.log(user?.id);
         // localStorage.setItem("userId", user?.id!);
         // localStorage.setItem("userEmail", user?.email!);

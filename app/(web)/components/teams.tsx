@@ -729,7 +729,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                               ? team.team_name.slice(0, 20) + "..."
                               : team.team_name}
                           </p>
-                          {(loggedUserData?.role === "owner" || (loggedUserData?.role === "user" && loggedUserData?.access?.team === true || loggedUserData?.access?.all === true)) && (
+                          {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.team !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.team === true))) && (
                             <DropdownMenu
                             // open={updateOptionStates}
                             // onOpenChange={setUpdateOptionStates}
@@ -1019,7 +1019,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                             </DropdownMenu>
                           )}
                         </div>
-                        {(loggedUserData?.role === "owner" || (loggedUserData?.role === "user" && loggedUserData?.access?.task === true || loggedUserData?.access?.all === true)) && (
+                        {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.task !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.task === true))) && (
                           <Button
                             variant={"outline"}
                             className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
@@ -1065,7 +1065,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                       handleDeleteTask(team.id, task.id);
                                     }}
                                   /> */}
-                                      {(loggedUserData?.role === "owner" || (loggedUserData?.role === "user" && loggedUserData?.access?.task === true || loggedUserData?.access?.all === true)) && (
+                                      {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.task !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.task === true))) && (
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
                                             <Ellipsis
@@ -1183,7 +1183,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                           Create
                                         </Button>
                                       ) : (
-                                        (loggedUserData?.role === "user" && task.task_status === "Completed") ? (
+                                        (loggedUserData?.role === "User" && task.task_status === "Completed") ? (
                                           <Button
                                             className="w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none text-[#3FAD51] bg-[#E5F8DA] hover:bg-[#E5F8DA] hover:text-[#3FAD51]"
                                           >

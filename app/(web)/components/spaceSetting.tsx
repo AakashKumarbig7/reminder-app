@@ -129,6 +129,7 @@ export default function SpaceSetting({}) {
 
   // Delete a space
   const deleteSpace = async (id:number) => {
+    console.log("space id ", id);
     let backupData: {
       tasks: any[];
       teams: any[];
@@ -517,14 +518,14 @@ const handleDeleteDialogClose = async () => {
                   </button>
 
                   {/* Delete button */}
-                  <button
+                  <Button
                     className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
-                    onClick={()=> deleteSpace(space.id)}
+                    onClick={() => deleteSpace(space.id)}
                     disabled={isDeleting}
                   >
                     {/* {isDeleting ? "Deleting..." : "Delete"} */}
-                    Delete
-                  </button>
+                    Delete {space.id}
+                  </Button>
                 </DialogFooter>
                 </DialogContent>
                 </Dialog>

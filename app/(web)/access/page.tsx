@@ -25,7 +25,7 @@ interface UserData {
   id: string;
   name: string;
   email: string;
-  role : string
+  role: string;
 }
 
 interface employeeData {
@@ -79,7 +79,14 @@ const AccessPage = () => {
         emp.id === employeeId
           ? {
               ...emp,
-              access: { ...emp.access, [accessKey]: !emp.access[accessKey] },
+              access:
+                accessKey === "all"
+                  ? // Toggle all checkboxes if "all" is clicked
+                    Object.fromEntries(
+                      Object.keys(emp.access).map((key) => [key, !emp.access[accessKey]])
+                    )
+                  : // Toggle individual checkbox if not "all"
+                    { ...emp.access, [accessKey]: !emp.access[accessKey] },
             }
           : emp
       )
@@ -112,7 +119,7 @@ const AccessPage = () => {
     }
   };
 
-  const filteredEmployees : any = employeesData?.filter((employee: any) =>
+  const filteredEmployees: any = employeesData?.filter((employee: any) =>
     employee.username.toLowerCase().includes(searchValue.toLowerCase())
   );
 
@@ -162,7 +169,7 @@ const AccessPage = () => {
     ); // Simple loader UI
   }
 
-  if (loggedUserData?.role === 'user'){
+  if (loggedUserData?.role === "User") {
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <div className="flex flex-col items-center gap-3">
@@ -175,7 +182,17 @@ const AccessPage = () => {
           />
           <h1 className="text-9xl font-bold">403</h1>
           <p className="text-2xl font-bold">Access Denied!</p>
-          <h4 className="text-sm text-gray-500 text-center font-inter">You don’t have access to this area of application. Speak <br /> to your administrator to unblock this feature. <br /> You can go back to <Link href="/dashboard" className="text-primaryColor-700 underline font-bold">Dashboard</Link></h4>
+          <h4 className="text-sm text-gray-500 text-center font-inter">
+            You don’t have access to this area of application. Speak <br /> to
+            your administrator to unblock this feature. <br /> You can go back
+            to{" "}
+            <Link
+              href="/dashboard"
+              className="text-primaryColor-700 underline font-bold"
+            >
+              Dashboard
+            </Link>
+          </h4>
         </div>
       </div>
     );
@@ -346,6 +363,13 @@ const AccessPage = () => {
                         type="checkbox"
                         className="w-4 h-4"
                         checked={employee.access[accessKey]}
+                        disabled={
+                          employee.role === "owner" &&
+                          (accessKey === "all" ||
+                            accessKey === "space" ||
+                            accessKey === "team" ||
+                            accessKey === "task")
+                        }
                         onChange={() =>
                           handleCheckboxChange(employee.id, accessKey)
                         }
@@ -356,7 +380,10 @@ const AccessPage = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500 text-base py-4">
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-gray-500 text-base py-4"
+                >
                   No employees found.
                 </TableCell>
               </TableRow>
