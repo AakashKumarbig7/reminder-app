@@ -415,6 +415,22 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
           return;
         }
 
+        // const user = await getLoggedInUserData();
+
+        // const {data : userData, error : userError} = await supabase
+        // .from("users")
+        // .update({
+        //   team_id: addedMembers,
+        // })
+        // .eq("id", user?.id)
+        // .single();
+
+        // if (userError) {
+        //   console.error("Error updating team name:", userError);
+        //   return;
+        // }
+        // console.log(userData , " userData");
+
         // if (data) {
         console.log("Team name updated successfully:", data);
         fetchTeams();
@@ -463,7 +479,19 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   const handleUserSelect = (user: Tab) => {
     setTeamNameError(false);
-    setAddedMembers((prevMembers) => [...prevMembers, user]);
+    setAddedMembers((prevMembers) => {
+      if (prevMembers.some((member) => member.id === user.id)) {
+        // Show toast notification if user already exists
+        toast({
+          title: "Member already exists",
+          description: "Member is already added to this team",
+        });
+        return prevMembers; // Return the existing array unchanged
+      }
+      // Add the new user if they don't exist
+      return [...prevMembers, user];
+    });
+    console.log("user selected ", user);
 
     setEmailInput("");
     setHighlightedIndex(-1);
@@ -716,7 +744,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
               {teams.map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="max-w-[340px] w-[340px] basis-[28%] max-h-[80vh] h-[78vh] overflow-y-auto relative playlist-scroll"
+                  className="max-w-[340px] w-[340px] basis-[28%] max-h-[80vh] h-[76vh] overflow-y-auto relative playlist-scroll"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="w-full h-full p-0">

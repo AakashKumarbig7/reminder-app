@@ -254,7 +254,7 @@ const AddMember = () => {
         getUser();
   }, []);
 
-  if (loggedUserData?.role === 'user'){
+  if (loggedUserData?.role === 'User'){
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <div className="flex flex-col items-center gap-3">

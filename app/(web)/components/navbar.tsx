@@ -107,7 +107,7 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                   className="absolute top-3.5 left-2.5 text-gray-500"
                 />
                 <Input
-                // type="search"
+                  // type="search"
                   placeholder="Search"
                   value={searchValue}
                   className="w-[384px] h-[42px] pl-8 pr-7 bg-white shadow-none font-medium justify-start gap-3 rounded-[10px] flex items-center"
@@ -120,12 +120,12 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                 />
               </div>
               <FilterComponent
-              teamFilterValue={teamFilterValue}
-              setTeamFilterValue={setTeamFilterValue}
-              taskStatusFilterValue={taskStatusFilterValue}
-              setTaskStatusFilterValue={setTaskStatusFilterValue}
-              filterFn={filterFn}
-               />
+                teamFilterValue={teamFilterValue}
+                setTeamFilterValue={setTeamFilterValue}
+                taskStatusFilterValue={taskStatusFilterValue}
+                setTaskStatusFilterValue={setTaskStatusFilterValue}
+                filterFn={filterFn}
+              />
               <div className="max-w-[300px] w-[273px] h-[42px] bg-white shadow-none pl-2 font-bold justify-start gap-3 rounded-[10px] flex items-center">
                 <div className="w-full border-r border-zinc-300">
                   <p className="text-[8px]">Overall Task</p>
@@ -209,21 +209,25 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                 </div>
               </div>
               <div className="py-3 my-3 text-gray-700 border-t border-b border-gray-200 px-3 cursor-pointer">
-                <p onClick={() => route.push("/user-profile")} className={`text-sm font-normal ${loggedUserData?.role === "owner" ? "pb-3" : "pb-0"}`}>Your Profile</p>
-                {
-                  loggedUserData?.role === "owner" && (
-                    <p
-                  className="text-sm font-normal"
-                  onClick={() => {
-                    route.push("/spaceSetting");
-                    setSelectOpen(false);
-                  }}
+                <p
+                  onClick={() => route.push("/user-profile")}
+                  className={`text-sm font-normal ${
+                    loggedUserData?.role === "owner" ? "pb-3" : "pb-0"
+                  }`}
                 >
-                  Settings
+                  Your Profile
                 </p>
-                  )
-                }
-                
+                {loggedUserData?.role === "owner" && (
+                  <p
+                    className="text-sm font-normal"
+                    onClick={() => {
+                      route.push("/spaceSetting");
+                      setSelectOpen(false);
+                    }}
+                  >
+                    Settings
+                  </p>
+                )}
               </div>
               <form onSubmit={handleLogout} className="flex">
                 <TooltipProvider>
@@ -232,42 +236,37 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                       <div
                         typeof="submit"
                         className="rounded bg-button_orange text-white cursor-pointer hover:bg-button_orange relative"
-                        style={
-                          isLoggingOut
-                            ? { pointerEvents: "none" }
-                            : {}
-                        }
+                        style={isLoggingOut ? { pointerEvents: "none" } : {}}
                       >
                         {isLoggingOut ? (
-                        <div className="ml-20 flex items-center justify-center text-center">
-                          <svg
-                            className="animate-spin h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="#1A56DB"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="#1A56DB"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-[#F05252] px-3 flex items-center gap-2 cursor-pointer">
-                          <LogOut size={20} />
-                          Sign Out
-                        </p>
-                      )}
-                        
+                          <div className="ml-20 flex items-center justify-center text-center">
+                            <svg
+                              className="animate-spin h-5 w-5"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="#1A56DB"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="#1A56DB"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-[#F05252] px-3 flex items-center gap-2 cursor-pointer">
+                            <LogOut size={20} />
+                            Sign Out
+                          </p>
+                        )}
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>

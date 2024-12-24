@@ -29,6 +29,7 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { any } from "zod";
 import WebNavbar from "./navbar";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 
 interface Tab {
   id: number;
@@ -131,7 +132,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         console.error("Error deleting tabs:", spaceError);
         return;
       }
-      // notify("Space updated successfully", true);
+      toast({
+        title: "Space updated successfully",
+        description: "Space has been updated successfully",
+      })
       fetchSpaces();
       fetchTeamData();
       setSpaceEditDialogOpen(false);
@@ -447,7 +451,18 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const handleUserSelect = (user: Tab) => {
     setTeamMemberError(false);
 
-    setAddedMembers((prevMembers) => [...prevMembers, user]);
+    setAddedMembers((prevMembers) => {
+      if (prevMembers.some((member) => member.id === user.id)) {
+        // Show toast notification if user already exists
+        toast({
+          title: "Member already exists",
+          description: "Member is already added to this team",
+        });
+        return prevMembers; // Return the existing array unchanged
+      }
+      // Add the new user if they don't exist
+      return [...prevMembers, user];
+    });
 
     setEmailInput("");
     setHighlightedIndex(-1);
@@ -548,7 +563,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
       if (existingTeam && existingTeam.length > 0) {
         console.log("Team already exists with these members:", existingTeam);
-        // notify("Team already exists with these members", false);
+        toast({
+          title: "Team already exists with these members",
+          description: "Please choose a different team name.",
+        })
         return;
       }
 
@@ -576,6 +594,24 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           console.error("Error saving members:", insertError);
           return;
         }
+
+        const user = await getLoggedInUserData();
+
+        const {data : userData, error : userError} = await supabase
+        .from("users")
+        .insert({
+          id: user?.id,
+          team_id: insertedData
+        })
+        .eq("id", user?.id)
+        .single();
+
+        if (userError) {
+          console.error("Error updating team name:", userError);
+          return;
+        }
+        console.log(userData , " userData");
+
         setTeamName("");
         setAddedMembers([]);
         setTeamNameError(false);
