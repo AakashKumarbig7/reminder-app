@@ -30,6 +30,7 @@ import { ToastAction } from "@/components/ui/toast";
 import { any } from "zod";
 import WebNavbar from "./navbar";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
+import { useGlobalContext } from "@/context/store";
 
 interface Tab {
   id: number;
@@ -58,6 +59,7 @@ interface loggedUserDataProps {
 //   });
 
 const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
+  const { userId } = useGlobalContext();
   const route = useRouter();
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<number | null>(null);

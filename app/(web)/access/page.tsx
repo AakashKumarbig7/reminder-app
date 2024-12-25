@@ -20,13 +20,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./style.css";
 import Image from "next/image";
 import Link from "next/link";
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { useGlobalContext } from "@/context/store";
 
 interface employeeData {
   id: string;
@@ -41,9 +35,9 @@ interface employeeData {
 }
 
 const AccessPage = () => {
+  const {userId} = useGlobalContext();
   const route = useRouter();
   const [loading, setLoading] = useState(true);
-  const [loggedUserData, setLoggedUserData] = useState<UserData | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [employeesData, setEmployeesData] = useState<employeeData[] | null>([]);
   const [saveLoader, setSaveLoader] = useState(false);
@@ -137,25 +131,7 @@ const AccessPage = () => {
       setLoading(false);
     }
 
-    const getUser = async () => {
-      const user = await getLoggedInUserData();
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("userId", user?.id)
-        .single();
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-      // localStorage.setItem("user", data);
-      setLoggedUserData(data);
-    };
-
     getEmployeesData();
-    getUser();
   }, [route]);
 
   if (loading) {
@@ -169,7 +145,7 @@ const AccessPage = () => {
     ); // Simple loader UI
   }
 
-  if (loggedUserData?.role === "User") {
+  if (userId?.role === "User") {
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <div className="flex flex-col items-center gap-3">
@@ -202,7 +178,7 @@ const AccessPage = () => {
     <>
       <Toaster />
       <WebNavbar
-        loggedUserData={loggedUserData as any}
+        loggedUserData={userId as any}
         navbarItems={false}
         searchValue=""
         setSearchValue=""
@@ -212,7 +188,6 @@ const AccessPage = () => {
         setTaskStatusFilterValue=""
         filterFn=""
       />
-
       <div className="px-3">
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex justify-between w-full">

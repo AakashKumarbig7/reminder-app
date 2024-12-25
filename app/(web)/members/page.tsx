@@ -47,6 +47,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import { useGlobalContext } from "@/context/store";
 
 interface Member {
   id: string;
@@ -91,6 +92,7 @@ const formSchema = z.object({
 });
 
 const Members = () => {
+  const {userId} = useGlobalContext();
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
@@ -100,7 +102,6 @@ const Members = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [saveLoader, setSaveLoader] = useState(false);
-  const [loggedUserData, setLoggedUserData] = useState<any>(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -254,25 +255,6 @@ const Members = () => {
       router.push("/members");
       setLoading(false);
     }
-
-    const getUser = async () => {
-      const user = await getLoggedInUserData();
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("userId", user?.id)
-        .single();
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-      console.log(data);
-      setLoggedUserData(data);
-    };
-
-    getUser();
     fetchMembers(); // Load members on component mount
   }, [router]);
 
@@ -300,7 +282,7 @@ const Members = () => {
     ); // Simple loader UI
   }
 
-  if (loggedUserData?.role === 'User'){
+  if (userId?.role === 'User'){
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <div className="flex flex-col items-center gap-3">
@@ -322,7 +304,7 @@ const Members = () => {
   return (
     <>
       <WebNavbar
-       loggedUserData={loggedUserData as any}
+       loggedUserData={userId as any}
        navbarItems={false}
        searchValue=''
        setSearchValue=''

@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const route = useRouter();
   const [loading, setLoading] = useState(true);
-  const [windowSize, setWindowSize] = useState({
-		width: window.innerWidth,
-	});
+  // const [windowSize, setWindowSize] = useState({
+	// 	width: window.innerWidth,
+	// });
 
   useEffect(() => {
     const redirectToTask = () => {

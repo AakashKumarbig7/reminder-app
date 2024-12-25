@@ -19,6 +19,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import FilterComponent from "./filter";
+import { useGlobalContext } from "@/context/store";
 
 interface loggedUserDataProps {
   loggedUserData: any;
@@ -43,13 +44,15 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
   setTaskStatusFilterValue,
   filterFn,
 }) => {
+  const route = useRouter();
+  const {userId} = useGlobalContext();
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
   const [totalTasks, setTotalTasks] = useState<number>(0);
   const [inprogressTasks, setInProgressTasks] = useState<number>(0);
   const [feedbackTasks, setFeedbackTasks] = useState<number>(0);
-  const route = useRouter();
+  const [entityName, setEntityName] = useState<any | null>(null);
 
   const handleLogout = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -61,13 +64,19 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
   const taskData = async () => {
     const { data, error } = await supabase
       .from("tasks")
-      .select("task_status")
+      .select("*")
       .eq("is_deleted", false);
     if (error) {
       console.log(error);
     }
 
     if (data) {
+      console.log(data.map((task) => task.mentions), "data");
+      console.log(
+        data.map((task) => task.mentions.includes(`@${userId?.entity_name}`)),
+        "mentions"
+      );
+      
       setInProgressTasks(
         data
           .map((task) => task.task_status)
@@ -84,6 +93,7 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
 
   useEffect(() => {
     taskData();
+    setEntityName(loggedUserData);
   }, [totalTasks, inprogressTasks, feedbackTasks]);
 
   return (
