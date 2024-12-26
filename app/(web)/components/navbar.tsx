@@ -19,7 +19,6 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import FilterComponent from "./filter";
-import { useGlobalContext } from "@/context/store";
 
 interface loggedUserDataProps {
   loggedUserData: any;
@@ -45,14 +44,14 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
   filterFn,
 }) => {
   const route = useRouter();
-  const {userId} = useGlobalContext();
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
   const [totalTasks, setTotalTasks] = useState<number>(0);
   const [inprogressTasks, setInProgressTasks] = useState<number>(0);
   const [feedbackTasks, setFeedbackTasks] = useState<number>(0);
-  const [entityName, setEntityName] = useState<any | null>(null);
+  const [taskDetails, setTaskDetails] = useState<any[]>([]);
+  const entityName = loggedUserData?.entity_name || "Unknown Entity";
 
   const handleLogout = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -71,12 +70,12 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
     }
 
     if (data) {
-      console.log(data.map((task) => task.mentions), "data");
-      console.log(
-        data.map((task) => task.mentions.includes(`@${userId?.entity_name}`)),
-        "mentions"
+      const includesTrueTasks = data.filter((task) =>
+        task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
       );
-      
+
+      setTaskDetails(includesTrueTasks);
+
       setInProgressTasks(
         data
           .map((task) => task.task_status)
@@ -93,8 +92,8 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
 
   useEffect(() => {
     taskData();
-    setEntityName(loggedUserData);
-  }, [totalTasks, inprogressTasks, feedbackTasks]);
+    console.log("Entity Name:", entityName);
+  }, [totalTasks, inprogressTasks, feedbackTasks, entityName]);
 
   return (
     <>
@@ -144,7 +143,9 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                       {totalTasks}
                     </p>
                   ) : (
-                    <p className="text-sm font-bold text-red-500">0</p>
+                    <p className="text-sm font-bold text-red-500">
+                      {taskDetails.length}
+                    </p>
                   )}
                 </div>
                 <div className="w-full border-r border-zinc-300">
@@ -154,7 +155,13 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                       {inprogressTasks}
                     </p>
                   ) : (
-                    <p className="text-sm font-bold text-orange-500">0</p>
+                    <p className="text-sm font-bold text-orange-500">
+                      {
+                        taskDetails.filter(
+                          (task) => task.task_status === "In progress"
+                        ).length
+                      }
+                    </p>
                   )}
                 </div>
                 <div className="w-full">
@@ -164,7 +171,13 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                       {feedbackTasks}
                     </p>
                   ) : (
-                    <p className="text-sm font-bold text-green-500">0</p>
+                    <p className="text-sm font-bold text-green-500">
+                      {
+                        taskDetails.filter(
+                          (task) => task.task_status === "feedback"
+                        ).length
+                      }
+                    </p>
                   )}
                 </div>
               </div>

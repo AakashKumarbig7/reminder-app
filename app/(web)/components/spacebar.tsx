@@ -86,8 +86,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     string | null
   >("");
   const [filterFn, setFilterFn] = useState(() => {});
-
   const [allTasks, setAllTasks] = useState<any>([]);
+  const [loggedSpaceId, setLoggedSpaceId] = useState<any[]>([]);
 
   useEffect(() => {
     fetchSpaces();
@@ -186,6 +186,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
     if (data) {
       setTabs(data);
+      console.log(loggedSpaceId.map((space: any) => space.id));
+      console.log("Spaces data: ", data.map((space: any) => space.id).includes("11361800-456e-4925-b170-859d12a6b1a1"));
       if (data.length > 0) {
         setActiveTab(data[0].id); // Set the first tab as active initially
       }
@@ -660,6 +662,14 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       return;
     }
     if (data) {
+      const includesTrueTasks = data.filter((task) =>
+        task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
+      );
+      console.log(
+        includesTrueTasks.map((task) => task.space_id),
+        "includesTrueTasks"
+      );
+      setLoggedSpaceId(includesTrueTasks.map((task) => task.team_id));
       setAllTasks(data);
     }
   };
@@ -747,7 +757,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       <div className="px-3">
         <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full h-[62px]">
           <div className="flex gap-2 py-2.5 text-sm text-gray-400 mr-60">
-            {tabs.map((tab) => (
+            {loggedUserData?.role === "owner" ? (
+            tabs.map((tab) => (
               <div
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
@@ -909,7 +920,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                   </Sheet>
                 )}
               </div>
-            ))}
+            ))) : (
+              <p>User space</p>
+            )
+            }
             {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.space !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.space === true))) && (
               <button
                 onClick={addNewTab}

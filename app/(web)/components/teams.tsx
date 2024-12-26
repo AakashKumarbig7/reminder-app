@@ -115,6 +115,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   const [mentionTrigger, setMentionTrigger] = useState(false);
   const [role, setRole] = useState("");
   const [sortedValue, setSortedValue] = useState<string | null>("");
+  const [loggedTeamId, setLoggedTeamId] = useState<number[]>([]);
 
   // Helper function to toggle options for a specific team
   const toggleUpdateOption = (teamId: any) => {
@@ -295,6 +296,14 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     }
 
     if (data) {
+      const includesTrueTasks = data.filter((task) =>
+        task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
+      );
+      console.log(
+        includesTrueTasks.map((task) => task.team_id),
+        "includesTrueTasks"
+      );
+      setLoggedTeamId(includesTrueTasks.map((task) => task.team_id));
       setAllTasks(data);
     }
   };
@@ -615,13 +624,14 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     searchValue: string
   ) => {
     // Validate searchValue and convert to lowercase if it's a string
-    const lowercasedSearchValue = typeof searchValue === 'string' ? searchValue.toLowerCase() : '';
+    const lowercasedSearchValue =
+      typeof searchValue === "string" ? searchValue.toLowerCase() : "";
 
     return items.filter((item) => {
       const itemValue = item[key];
 
       // Ensure item[key] is a string before calling toLowerCase
-      if (typeof itemValue === 'string') {
+      if (typeof itemValue === "string") {
         return itemValue.toLowerCase().includes(lowercasedSearchValue);
       }
 
@@ -681,6 +691,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
           : team
       )
     );
+    fetchTasks();
 
     // Insert the new task into the database
     try {
@@ -757,7 +768,11 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                               ? team.team_name.slice(0, 20) + "..."
                               : team.team_name}
                           </p>
-                          {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.team !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.team === true))) && (
+                          {(loggedUserData?.role === "owner" ||
+                            (loggedUserData?.role === "User" &&
+                              ((loggedUserData?.access?.team !== true &&
+                                loggedUserData?.access?.all === true) ||
+                                loggedUserData?.access?.team === true))) && (
                             <DropdownMenu
                             // open={updateOptionStates}
                             // onOpenChange={setUpdateOptionStates}
@@ -1047,7 +1062,11 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                             </DropdownMenu>
                           )}
                         </div>
-                        {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.task !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.task === true))) && (
+                        {(loggedUserData?.role === "owner" ||
+                          (loggedUserData?.role === "User" &&
+                            ((loggedUserData?.access?.task !== true &&
+                              loggedUserData?.access?.all === true) ||
+                              loggedUserData?.access?.task === true))) && (
                           <Button
                             variant={"outline"}
                             className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
@@ -1061,132 +1080,146 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                           </Button>
                         )}
                       </div>
-                      {allTasks.length > 0 ? (
-                        <div className="w-full px-4 pb-4">
-                          {allTasks.map(
-                            (task: any) =>
-                              task.team_id === team.id && (
-                                <div
-                                  key={task.id}
-                                  className="flex flex-col gap-2.5 mt-3"
-                                >
-                                  {/* {task.team_id === team.id && ( */}
+                      {loggedUserData?.role === "owner" ? (
+                        allTasks.length > 0 ? (
+                          <div className="w-full px-4 pb-4">
+                            {allTasks.map(
+                              (task: any) =>
+                                task.team_id === team.id && (
                                   <div
                                     key={task.id}
-                                    className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist hover:border-blue-600 task_box"
+                                    className="flex flex-col gap-2.5 mt-3"
                                   >
-                                    <div className="flex justify-between items-center">
-                                      {/* <p>{task.id}</p> */}
-                                      <p className="text-xs font-semibold text-[#A6A6A7]">
-                                        {formatDate(new Date())}
-                                      </p>
-                                      {/* <Trash2
-                                    size={18}
-                                    className="text-[#EC4949] cursor-pointer"
-                                    onClick={() => {
-                                      console.log(
-                                        "Deleting Task ID:",
-                                        task.id,
-                                        "for Team ID:",
-                                        team.id
-                                      );
-                                      handleDeleteTask(team.id, task.id);
-                                    }}
-                                  /> */}
-                                      {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.task !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.task === true))) && (
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Ellipsis
-                                              size={18}
-                                              className="cursor-pointer"
-                                            />
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
-                                            <DropdownMenuItem
-                                              className="px-3 pt-2 pb-0"
-                                              onClick={() => {
-                                                handleEditTask(
-                                                  team.id,
-                                                  task.id
-                                                );
-                                              }}
-                                            >
-                                              Edit
-                                            </DropdownMenuItem>
-                                            <p>
-                                              <Dialog
-                                                open={taskDeleteOpen}
-                                                onOpenChange={setTaskDeleteOpen}
+                                    {/* {task.team_id === team.id && ( */}
+                                    <div
+                                      key={task.id}
+                                      className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist hover:border-blue-600 task_box"
+                                    >
+                                      <div className="flex justify-between items-center">
+                                        {/* <p>{task.id}</p> */}
+                                        <p className="text-xs font-semibold text-[#A6A6A7]">
+                                          {formatDate(new Date())}
+                                        </p>
+                                        {/* <Trash2
+                                      size={18}
+                                      className="text-[#EC4949] cursor-pointer"
+                                      onClick={() => {
+                                        console.log(
+                                          "Deleting Task ID:",
+                                          task.id,
+                                          "for Team ID:",
+                                          team.id
+                                        );
+                                        handleDeleteTask(team.id, task.id);
+                                      }}
+                                    /> */}
+                                        {(loggedUserData?.role === "owner" ||
+                                          (loggedUserData?.role === "User" &&
+                                            ((loggedUserData?.access?.task !==
+                                              true &&
+                                              loggedUserData?.access?.all ===
+                                                true) ||
+                                              loggedUserData?.access?.task ===
+                                                true))) && (
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Ellipsis
+                                                size={18}
+                                                className="cursor-pointer"
+                                              />
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
+                                              <DropdownMenuItem
+                                                className="px-3 pt-2 pb-0"
+                                                onClick={() => {
+                                                  handleEditTask(
+                                                    team.id,
+                                                    task.id
+                                                  );
+                                                }}
                                               >
-                                                <DialogTrigger
-                                                  className="p-0 px-3"
-                                                  asChild
+                                                Edit
+                                              </DropdownMenuItem>
+                                              <p>
+                                                <Dialog
+                                                  open={taskDeleteOpen}
+                                                  onOpenChange={
+                                                    setTaskDeleteOpen
+                                                  }
                                                 >
-                                                  <Button
-                                                    className="border-none w-full"
-                                                    variant="outline"
+                                                  <DialogTrigger
+                                                    className="p-0 px-3"
+                                                    asChild
                                                   >
-                                                    Delete
-                                                  </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="sm:max-w-[425px]">
-                                                  <DialogHeader>
-                                                    <DialogTitle>
-                                                      Delete Task
-                                                    </DialogTitle>
-                                                    <DialogDescription>
-                                                      Do you want to delete this
-                                                      task ?
-                                                    </DialogDescription>
-                                                  </DialogHeader>
-
-                                                  <div className="flex justify-center items-center w-full gap-4">
                                                     <Button
+                                                      className="border-none w-full"
                                                       variant="outline"
-                                                      className="w-1/3"
-                                                      type="submit"
-                                                      onClick={() =>
-                                                        setTaskDeleteOpen(false)
-                                                      }
-                                                    >
-                                                      Cancel
-                                                    </Button>
-                                                    <Button
-                                                      className="bg-red-600 hover:bg-red-500 w-1/3"
-                                                      type="button"
-                                                      onClick={() =>
-                                                        handleDeleteTask(
-                                                          team.id,
-                                                          task.id
-                                                        )
-                                                      }
                                                     >
                                                       Delete
                                                     </Button>
-                                                  </div>
-                                                </DialogContent>
-                                              </Dialog>
-                                            </p>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      )}
-                                    </div>
-                                    <WebMentionInput
-                                      text={text}
-                                      setText={setText}
-                                      taskErrorMessage={taskErrorMessage}
-                                      setTaskErrorMessage={setTaskErrorMessage}
-                                      allTasks={allTasks}
-                                      teamId={team.id}
-                                      taskId={task.id}
-                                      taskStatus={task.task_created}
-                                      mentionTrigger={mentionTrigger}
-                                      setMentionTrigger={setMentionTrigger}
-                                    />
-                                    <div
-                                      className={`flex justify-between items-center`}
-                                    >
-                                      {/* {loggedUserData?.role === "owner" && ( */}
+                                                  </DialogTrigger>
+                                                  <DialogContent className="sm:max-w-[425px]">
+                                                    <DialogHeader>
+                                                      <DialogTitle>
+                                                        Delete Task
+                                                      </DialogTitle>
+                                                      <DialogDescription>
+                                                        Do you want to delete
+                                                        this task ?
+                                                      </DialogDescription>
+                                                    </DialogHeader>
+
+                                                    <div className="flex justify-center items-center w-full gap-4">
+                                                      <Button
+                                                        variant="outline"
+                                                        className="w-1/3"
+                                                        type="submit"
+                                                        onClick={() =>
+                                                          setTaskDeleteOpen(
+                                                            false
+                                                          )
+                                                        }
+                                                      >
+                                                        Cancel
+                                                      </Button>
+                                                      <Button
+                                                        className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                        type="button"
+                                                        onClick={() =>
+                                                          handleDeleteTask(
+                                                            team.id,
+                                                            task.id
+                                                          )
+                                                        }
+                                                      >
+                                                        Delete
+                                                      </Button>
+                                                    </div>
+                                                  </DialogContent>
+                                                </Dialog>
+                                              </p>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        )}
+                                      </div>
+                                      <WebMentionInput
+                                        text={text}
+                                        setText={setText}
+                                        taskErrorMessage={taskErrorMessage}
+                                        setTaskErrorMessage={
+                                          setTaskErrorMessage
+                                        }
+                                        allTasks={allTasks}
+                                        teamId={team.id}
+                                        taskId={task.id}
+                                        taskStatus={task.task_created}
+                                        mentionTrigger={mentionTrigger}
+                                        setMentionTrigger={setMentionTrigger}
+                                      />
+                                      <div
+                                        className={`flex justify-between items-center`}
+                                      >
+                                        {/* {loggedUserData?.role === "owner" && ( */}
                                         <div
                                           className={`task.${task.id} === true cursor-not-allowed`}
                                         >
@@ -1197,98 +1230,306 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                             taskStatus={task.task_created}
                                           />
                                         </div>
-                                      {/* )} */}
+                                        {/* )} */}
 
-                                      {task.task_created !== true ? (
-                                        <Button
-                                          variant={"outline"}
-                                          className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
-                                          onClick={() => {
-                                            handleUpdateTask(team.id, task.id),
-                                              setText("");
-                                          }}
-                                        >
-                                          Create
-                                        </Button>
-                                      ) : (
-                                        (loggedUserData?.role === "User" && task.task_status === "Completed") ? (
+                                        {task.task_created !== true ? (
                                           <Button
-                                            className="w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none text-[#3FAD51] bg-[#E5F8DA] hover:bg-[#E5F8DA] hover:text-[#3FAD51]"
+                                            variant={"outline"}
+                                            className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
+                                            onClick={() => {
+                                              handleUpdateTask(
+                                                team.id,
+                                                task.id
+                                              ),
+                                                setText("");
+                                            }}
                                           >
+                                            Create
+                                          </Button>
+                                        ) : loggedUserData?.role === "User" &&
+                                          task.task_status === "Completed" ? (
+                                          <Button className="w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none text-[#3FAD51] bg-[#E5F8DA] hover:bg-[#E5F8DA] hover:text-[#3FAD51]">
                                             Completed
                                           </Button>
                                         ) : (
-                                          
                                           <Select
-                                          defaultValue={task.task_status}
-                                          onValueChange={async (value) => {
-                                            const { data, error } =
-                                              await supabase
-                                                .from("tasks")
-                                                .update({ task_status: value })
-                                                .eq("id", task.id)
-                                                .eq("team_id", team.id)
-                                                .single();
-                                            if (error) {
-                                              console.error(
-                                                "Error updating task status:",
-                                                error
-                                              );
-                                            }
-                                            setTaskStatus(value);
-                                            // notify(
-                                            //   `Task status updated to "${value}"`,
-                                            //   true
-                                            // );
-                                            fetchTasks();
-                                          }}
-                                        >
-                                          <SelectTrigger
-                                            className={`w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none ${
-                                              task.task_status === "todo"
-                                                ? "text-reddish bg-[#F8DADA]"
-                                                : task.task_status ===
-                                                  "In progress"
-                                                ? "text-[#EEA15A] bg-[#F8F0DA]"
-                                                : task.task_status ===
-                                                  "feedback"
-                                                ? "text-[#142D57] bg-[#DEE9FC]"
-                                                : "text-[#3FAD51] bg-[#E5F8DA]"
-                                            }`}
+                                            defaultValue={task.task_status}
+                                            onValueChange={async (value) => {
+                                              const { data, error } =
+                                                await supabase
+                                                  .from("tasks")
+                                                  .update({
+                                                    task_status: value,
+                                                  })
+                                                  .eq("id", task.id)
+                                                  .eq("team_id", team.id)
+                                                  .single();
+                                              if (error) {
+                                                console.error(
+                                                  "Error updating task status:",
+                                                  error
+                                                );
+                                              }
+                                              setTaskStatus(value);
+                                              // notify(
+                                              //   `Task status updated to "${value}"`,
+                                              //   true
+                                              // );
+                                              fetchTasks();
+                                            }}
                                           >
-                                            <SelectValue placeholder="status" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="todo">
-                                              To Do
-                                            </SelectItem>
-                                            <SelectItem value="In progress">
-                                              In Progress
-                                            </SelectItem>
-                                            <SelectItem value="feedback">
-                                              Feedback
-                                            </SelectItem>
-                                            {loggedUserData?.role ===
-                                              "owner" && (
-                                              <SelectItem value="Completed">
-                                                Completed
+                                            <SelectTrigger
+                                              className={`w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none ${
+                                                task.task_status === "todo"
+                                                  ? "text-reddish bg-[#F8DADA]"
+                                                  : task.task_status ===
+                                                    "In progress"
+                                                  ? "text-[#EEA15A] bg-[#F8F0DA]"
+                                                  : task.task_status ===
+                                                    "feedback"
+                                                  ? "text-[#142D57] bg-[#DEE9FC]"
+                                                  : "text-[#3FAD51] bg-[#E5F8DA]"
+                                              }`}
+                                            >
+                                              <SelectValue placeholder="status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="todo">
+                                                To Do
                                               </SelectItem>
-                                            )}
-                                          </SelectContent>
-                                        </Select>
-                                        )
-                                        
-                                      )}
+                                              <SelectItem value="In progress">
+                                                In Progress
+                                              </SelectItem>
+                                              <SelectItem value="feedback">
+                                                Feedback
+                                              </SelectItem>
+                                              {loggedUserData?.role ===
+                                                "owner" && (
+                                                <SelectItem value="Completed">
+                                                  Completed
+                                                </SelectItem>
+                                              )}
+                                            </SelectContent>
+                                          </Select>
+                                        )}
+                                      </div>
                                     </div>
+                                    {/* )} */}
                                   </div>
-                                  {/* )} */}
+                                )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="w-full h-full flex justify-center items-center font-inter font-medium text-md text-[#9A9A9A] pt-3 pb-5">
+                            No tasks found
+                          </div>
+                        )
+                      ) : allTasks.filter(
+                          (task: any) =>
+                            task.team_id === team.id &&
+                            task?.mentions?.includes(
+                              `@${loggedUserData?.entity_name}`
+                            ) || task.mentions === null
+                        ).length > 0 ? (
+                        <div className="w-full px-4 pb-4">
+                          {allTasks
+                            .filter(
+                              (task: any) =>
+                                task.team_id === team.id &&
+                                (task?.mentions?.includes(
+                                  `@${loggedUserData?.entity_name}`
+                                ) ||
+                                  task?.mentions === null)
+                            )
+                            .map((task: any) => (
+                              <div
+                                key={task.id}
+                                className="flex flex-col gap-2.5 mt-3"
+                              >
+                                <div className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist hover:border-blue-600 task_box">
+                                  <div className="flex justify-between items-center">
+                                    <p className="text-xs font-semibold text-[#A6A6A7]">
+                                      {formatDate(new Date())}
+                                    </p>
+                                    {(loggedUserData?.role === "owner" ||
+                                      (loggedUserData?.role === "User" &&
+                                        ((loggedUserData?.access?.task !==
+                                          true &&
+                                          loggedUserData?.access?.all ===
+                                            true) ||
+                                          loggedUserData?.access?.task ===
+                                            true))) && (
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Ellipsis
+                                            size={18}
+                                            className="cursor-pointer"
+                                          />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
+                                          <DropdownMenuItem
+                                            className="px-3 pt-2 pb-0"
+                                            onClick={() =>
+                                              handleEditTask(team.id, task.id)
+                                            }
+                                          >
+                                            Edit
+                                          </DropdownMenuItem>
+                                          <p>
+                                            <Dialog
+                                              open={taskDeleteOpen}
+                                              onOpenChange={setTaskDeleteOpen}
+                                            >
+                                              <DialogTrigger
+                                                className="p-0 px-3"
+                                                asChild
+                                              >
+                                                <Button
+                                                  className="border-none w-full"
+                                                  variant="outline"
+                                                >
+                                                  Delete
+                                                </Button>
+                                              </DialogTrigger>
+                                              <DialogContent className="sm:max-w-[425px]">
+                                                <DialogHeader>
+                                                  <DialogTitle>
+                                                    Delete Task
+                                                  </DialogTitle>
+                                                  <DialogDescription>
+                                                    Do you want to delete this
+                                                    task?
+                                                  </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="flex justify-center items-center w-full gap-4">
+                                                  <Button
+                                                    variant="outline"
+                                                    className="w-1/3"
+                                                    type="submit"
+                                                    onClick={() =>
+                                                      setTaskDeleteOpen(false)
+                                                    }
+                                                  >
+                                                    Cancel
+                                                  </Button>
+                                                  <Button
+                                                    className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                    type="button"
+                                                    onClick={() =>
+                                                      handleDeleteTask(
+                                                        team.id,
+                                                        task.id
+                                                      )
+                                                    }
+                                                  >
+                                                    Delete
+                                                  </Button>
+                                                </div>
+                                              </DialogContent>
+                                            </Dialog>
+                                          </p>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    )}
+                                  </div>
+                                  <WebMentionInput
+                                    text={text}
+                                    setText={setText}
+                                    taskErrorMessage={taskErrorMessage}
+                                    setTaskErrorMessage={setTaskErrorMessage}
+                                    allTasks={allTasks}
+                                    teamId={team.id}
+                                    taskId={task.id}
+                                    taskStatus={task.task_created}
+                                    mentionTrigger={mentionTrigger}
+                                    setMentionTrigger={setMentionTrigger}
+                                  />
+                                  <div className="flex justify-between items-center">
+                                    <div className="task.${task.id} === true cursor-not-allowed">
+                                      <TaskDateUpdater
+                                        team={team}
+                                        task={task}
+                                        fetchTasks={fetchTasks}
+                                        taskStatus={task.task_created}
+                                      />
+                                    </div>
+
+                                    {task.task_created !== true ? (
+                                      <Button
+                                        variant="outline"
+                                        className="bg-primaryColor-700 text-white rounded-full py-2 h-7 px-3 text-sm font-inter font-medium hover:bg-blue-600 hover:text-white"
+                                        onClick={() => {
+                                          handleUpdateTask(team.id, task.id);
+                                          setText("");
+                                        }}
+                                      >
+                                        Create
+                                      </Button>
+                                    ) : loggedUserData?.role === "User" &&
+                                      task.task_status === "Completed" ? (
+                                      <Button className="w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none text-[#3FAD51] bg-[#E5F8DA] hover:bg-[#E5F8DA] hover:text-[#3FAD51]">
+                                        Completed
+                                      </Button>
+                                    ) : (
+                                      <Select
+                                        defaultValue={task.task_status}
+                                        onValueChange={async (value) => {
+                                          const { data, error } = await supabase
+                                            .from("tasks")
+                                            .update({ task_status: value })
+                                            .eq("id", task.id)
+                                            .eq("team_id", team.id)
+                                            .single();
+                                          if (error) {
+                                            console.error(
+                                              "Error updating task status:",
+                                              error
+                                            );
+                                          }
+                                          setTaskStatus(value);
+                                          fetchTasks();
+                                        }}
+                                      >
+                                        <SelectTrigger
+                                          className={`w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none ${
+                                            task.task_status === "todo"
+                                              ? "text-reddish bg-[#F8DADA]"
+                                              : task.task_status ===
+                                                "In progress"
+                                              ? "text-[#EEA15A] bg-[#F8F0DA]"
+                                              : task.task_status === "feedback"
+                                              ? "text-[#142D57] bg-[#DEE9FC]"
+                                              : "text-[#3FAD51] bg-[#E5F8DA]"
+                                          }`}
+                                        >
+                                          <SelectValue placeholder="status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="todo">
+                                            To Do
+                                          </SelectItem>
+                                          <SelectItem value="In progress">
+                                            In Progress
+                                          </SelectItem>
+                                          <SelectItem value="feedback">
+                                            Feedback
+                                          </SelectItem>
+                                          {loggedUserData?.role === "owner" && (
+                                            <SelectItem value="Completed">
+                                              Completed
+                                            </SelectItem>
+                                          )}
+                                        </SelectContent>
+                                      </Select>
+                                    )}
+                                  </div>
                                 </div>
-                              )
-                          )}
+                              </div>
+                            ))}
                         </div>
                       ) : (
                         <div className="w-full h-full flex justify-center items-center font-inter font-medium text-md text-[#9A9A9A] pt-3 pb-5">
-                          <p>No tasks found</p>
+                          No tasks found
                         </div>
                       )}
                     </CardContent>
