@@ -23,6 +23,7 @@ import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import WebNavbar from "../components/navbar";
 import { access } from "fs";
 import Link from "next/link";
+import { useGlobalContext } from "@/context/store";
 
 // Define the validation schema using Zod
 const formSchema = z
@@ -98,6 +99,7 @@ const AddMember = () => {
     },
   });
 
+  const {userId} = useGlobalContext();
   const route = useRouter();
   const [saveLoader, setSaveLoader] = useState(false);
   const [confirmShowPassword, setConfirmShowPassword] = useState(false);
@@ -106,8 +108,8 @@ const AddMember = () => {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [emailCheck, setEmailCheck] = useState(false);
-  const [loggedUserData, setLoggedUserData] = useState<any>(null);
   const [cancelLoader, setCancelLoader] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleImageChange = (files: FileList) => {
     if (files && files.length > 0) {
@@ -234,27 +236,21 @@ const AddMember = () => {
   };
 
   useEffect(() => {
-    const getUser = async () => {
-          const user = await getLoggedInUserData();
-    
-          const { data, error } = await supabase
-            .from("users")
-            .select("*")
-            .eq("userId", user?.id)
-            .single();
-    
-          if (error) {
-            console.log(error);
-            return;
-          }
-          console.log(data);
-          setLoggedUserData(data);
-        };
-    
-        getUser();
-  }, []);
+    const redirectToTask = () => {
+      route.push("/home");
+    };
 
-  if (loggedUserData?.role === 'user'){
+    if (window.innerWidth <= 992) {
+      redirectToTask();
+      setLoading(false);
+      return;
+    } else {
+      route.push("/add-member");
+      setLoading(false);
+    }
+  }, [route]);
+
+  if (userId?.role === 'User'){
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <div className="flex flex-col items-center gap-3">
@@ -276,7 +272,7 @@ const AddMember = () => {
   return (
     <>
     <WebNavbar
-       loggedUserData={loggedUserData as any}
+       loggedUserData={userId as any}
        navbarItems={false}
        searchValue=''
        setSearchValue=''

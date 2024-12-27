@@ -159,7 +159,6 @@ const UserProfile = () => {
           mobile: data.mobile || loggedUserData?.mobile,
           password: data.password || loggedUserData?.password,
           profile_image: imageUrl || loggedUserData?.profile_image,
-          entity_name: entityName || loggedUserData?.entityName
         })
         .eq("id", loggedUserData?.id)
         .select("*")

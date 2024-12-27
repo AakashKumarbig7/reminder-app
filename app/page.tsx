@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const route = useRouter();
   const [loading, setLoading] = useState(true);
-  const [windowSize, setWindowSize] = useState({
-		width: window.innerWidth,
-	});
+  // const [windowSize, setWindowSize] = useState({
+	// 	width: window.innerWidth,
+	// });
 
   useEffect(() => {
     const redirectToTask = () => {
@@ -27,7 +27,14 @@ export default function Home() {
   }, []);
   
   if (loading) {
-    return <div className="loader">Loading...</div>; // Simple loader UI
+    return (
+      <div className="loader w-full h-screen flex justify-center items-center">
+        <div className="flex items-center gap-1">
+          <p className="w-5 h-5 bg-black rounded-full animate-bounce"></p>
+          <p className="text-2xl font-bold">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   // return <HomePage />

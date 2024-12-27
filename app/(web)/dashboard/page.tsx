@@ -5,11 +5,12 @@ import "./style.css";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
+import { useGlobalContext } from "@/context/store";
 
 const WebDashboard = () => {
+  const {userId} = useGlobalContext();
   const route = useRouter();
   const [loading, setLoading] = useState(true);
-  const [loggedUserData, setLoggedUserData] = useState<any>(null);
 
   useEffect(() => {
     const redirectToTask = () => {
@@ -24,26 +25,6 @@ const WebDashboard = () => {
       route.push("/dashboard");
       setLoading(false);
     }
-
-    const getUser = async () => {
-      const user = await getLoggedInUserData();
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("userId", user?.id)
-        .single();
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-      console.log(data);
-      // localStorage.setItem("user", data);
-      setLoggedUserData(data);
-    };
-
-    getUser();
 
   }, [route]);
 
@@ -61,7 +42,7 @@ const WebDashboard = () => {
   return (
     <>
       <SpaceBar
-       loggedUserData={loggedUserData as any}
+       loggedUserData={userId as any}
         />
     </>
   );

@@ -29,6 +29,8 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { any } from "zod";
 import WebNavbar from "./navbar";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
+import { useGlobalContext } from "@/context/store";
 
 interface Tab {
   id: number;
@@ -57,6 +59,7 @@ interface loggedUserDataProps {
 //   });
 
 const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
+  const { userId } = useGlobalContext();
   const route = useRouter();
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<number | null>(null);
@@ -83,8 +86,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     string | null
   >("");
   const [filterFn, setFilterFn] = useState(() => {});
-
   const [allTasks, setAllTasks] = useState<any>([]);
+  const [loggedSpaceId, setLoggedSpaceId] = useState<any[]>([]);
 
   useEffect(() => {
     fetchSpaces();
@@ -131,7 +134,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         console.error("Error deleting tabs:", spaceError);
         return;
       }
-      // notify("Space updated successfully", true);
+      toast({
+        title: "Space updated successfully",
+        description: "Space has been updated successfully",
+      })
       fetchSpaces();
       fetchTeamData();
       setSpaceEditDialogOpen(false);
@@ -180,6 +186,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
     if (data) {
       setTabs(data);
+      console.log(loggedSpaceId.map((space: any) => space.id));
+      console.log("Spaces data: ", data.map((space: any) => space.id).includes("11361800-456e-4925-b170-859d12a6b1a1"));
       if (data.length > 0) {
         setActiveTab(data[0].id); // Set the first tab as active initially
       }
@@ -447,7 +455,18 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const handleUserSelect = (user: Tab) => {
     setTeamMemberError(false);
 
-    setAddedMembers((prevMembers) => [...prevMembers, user]);
+    setAddedMembers((prevMembers) => {
+      if (prevMembers.some((member) => member.id === user.id)) {
+        // Show toast notification if user already exists
+        toast({
+          title: "Member already exists",
+          description: "Member is already added to this team",
+        });
+        return prevMembers; // Return the existing array unchanged
+      }
+      // Add the new user if they don't exist
+      return [...prevMembers, user];
+    });
 
     setEmailInput("");
     setHighlightedIndex(-1);
@@ -548,7 +567,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
       if (existingTeam && existingTeam.length > 0) {
         console.log("Team already exists with these members:", existingTeam);
-        // notify("Team already exists with these members", false);
+        toast({
+          title: "Team already exists with these members",
+          description: "Please choose a different team name.",
+        })
         return;
       }
 
@@ -576,6 +598,24 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           console.error("Error saving members:", insertError);
           return;
         }
+
+        const user = await getLoggedInUserData();
+
+        const {data : userData, error : userError} = await supabase
+        .from("users")
+        .insert({
+          id: user?.id,
+          team_id: insertedData
+        })
+        .eq("id", user?.id)
+        .single();
+
+        if (userError) {
+          console.error("Error updating team name:", userError);
+          return;
+        }
+        console.log(userData , " userData");
+
         setTeamName("");
         setAddedMembers([]);
         setTeamNameError(false);
@@ -622,6 +662,14 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       return;
     }
     if (data) {
+      const includesTrueTasks = data.filter((task) =>
+        task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
+      );
+      console.log(
+        includesTrueTasks.map((task) => task.space_id),
+        "includesTrueTasks"
+      );
+      setLoggedSpaceId(includesTrueTasks.map((task) => task.team_id));
       setAllTasks(data);
     }
   };
@@ -709,7 +757,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       <div className="px-3">
         <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full h-[62px]">
           <div className="flex gap-2 py-2.5 text-sm text-gray-400 mr-60">
-            {tabs.map((tab) => (
+            {loggedUserData?.role === "owner" ? (
+            tabs.map((tab) => (
               <div
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
@@ -871,7 +920,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                   </Sheet>
                 )}
               </div>
-            ))}
+            ))) : (
+              <p>User space</p>
+            )
+            }
             {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.space !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.space === true))) && (
               <button
                 onClick={addNewTab}

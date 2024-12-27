@@ -22,6 +22,7 @@ import { passwordReset } from "./action";
 import WebNavbar from "../../components/navbar";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import Link from "next/link";
+import { useGlobalContext } from "@/context/store";
 
 interface Props {
   params: {
@@ -89,6 +90,7 @@ const formSchema = z
 const EditMember = (props: Props) => {
   const { id } = props.params;
   const route = useRouter();
+  const {userId} = useGlobalContext();
 
   const [file, setFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
@@ -99,7 +101,6 @@ const EditMember = (props: Props) => {
   const [saveLoader, setSaveLoader] = useState(false);
   const [existingUserData, setExistingUserData] = useState<any>({});
   const [cancelLoader, setCancelLoader] = useState(false);
-  const [loggedUserData, setLoggedUserData] = useState<any>(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -211,28 +212,10 @@ const EditMember = (props: Props) => {
   };
 
   useEffect(() => {
-    const getUser = async () => {
-      const user = await getLoggedInUserData();
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("userId", user?.id)
-        .single();
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-      console.log(data);
-      setLoggedUserData(data);
-    };
-
-    getUser();
     getUserData();
   }, []);
 
-  if (loggedUserData?.role === 'user'){
+  if (userId?.role === 'User'){
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <div className="flex flex-col items-center gap-3">
@@ -254,7 +237,7 @@ const EditMember = (props: Props) => {
   return (
     <>
       <WebNavbar
-       loggedUserData={loggedUserData as any} 
+       loggedUserData={userId as any} 
        navbarItems={false}
        searchValue=''
        setSearchValue=''
