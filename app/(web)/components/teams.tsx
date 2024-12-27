@@ -299,10 +299,10 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       const includesTrueTasks = data.filter((task) =>
         task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
       );
-      console.log(
-        includesTrueTasks.map((task) => task.team_id),
-        "includesTrueTasks"
-      );
+      // console.log(
+      //   includesTrueTasks.map((task) => task.team_id),
+      //   "includesTrueTasks"
+      // );
       setLoggedTeamId(includesTrueTasks.map((task) => task.team_id));
       setAllTasks(data);
     }
@@ -599,7 +599,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   useEffect(() => {
     const getUser = async () => {
       const user = await getLoggedInUserData();
-      console.log(user, " user");
+      // console.log(user, " user");
 
       const { data, error } = await supabase
         .from("users")
@@ -611,7 +611,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         console.log(error);
         return;
       }
-      console.log(data.role);
       setRole(data.role);
     };
 

@@ -92,7 +92,6 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
 
   useEffect(() => {
     taskData();
-    console.log("Entity Name:", entityName);
   }, [totalTasks, inprogressTasks, feedbackTasks, entityName]);
 
   return (

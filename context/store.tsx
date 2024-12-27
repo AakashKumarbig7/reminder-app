@@ -50,7 +50,6 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         setUserId(data);
-        console.log("User data:", data);
       } catch (error) {
         console.error("Unexpected error fetching user:", error);
       }
