@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 
 import { Trash2, CirclePlus, Plus } from "lucide-react";
+import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
@@ -52,7 +53,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
       .from("teams")
       .select("*")
       .eq("space_id", spaceId)
-      .eq("is_deleted",false);
+      .eq("is_deleted", false);
 
     if (error) {
       console.log(error);
@@ -325,6 +326,14 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
                     className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
                   >
                     <div className="flex items-center gap-1">
+                      <Image
+                        src={member.profile_image}
+                        alt="user image"
+                        width={36}
+                        height={36}
+                        className="w-[32px] h-[32px] rounded-full"
+                      />
+
                       <span>{member.username}</span>
                     </div>
                     <span

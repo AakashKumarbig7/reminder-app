@@ -390,9 +390,9 @@ const Members = () => {
             </Button>
           </div>
         </div>
-        <div className="pt-[18px] rounded-lg">
-          <Table className="border-b border-gray-200 bg-white rounded-[12px]">
-            <TableHeader className="bg-gray-50 rounded-[12px]">
+        <div className="pt-[18px] pb-[18px]">
+          <Table className="border-b  max-h-[500px] overflow-y-auto playlist-scroll border-gray-200 bg-white rounded-[10px]">
+            <TableHeader className="sticky top-0 rounded-[12px]">
               <TableRow>
                 <TableHead className="px-4 py-4 text-sm">NAME</TableHead>
                 <TableHead className="px-4 py-4 text-sm">DESIGNATION</TableHead>

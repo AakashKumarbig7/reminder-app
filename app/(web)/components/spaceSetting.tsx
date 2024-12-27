@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
-
 import {
   Table,
   TableBody,
@@ -33,11 +32,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
-
-
-
+import Image from "next/image";
+import { DividerVerticalIcon } from "@radix-ui/react-icons";
 interface Space {
-  id: number;
+  id: string;
   name: string;
   teams?: string[]; // Teams property added
 }
@@ -48,6 +46,10 @@ export default function SpaceSetting({}) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [spaceToDelete, setSpaceToDelete] = useState<string | null>(null);
+  const [members, setMembers] = useState<any[]>([]);
+  const [teamData, setTeamData] = useState<any[]>([]);
+
   const router = useRouter();
 
   // Fetch spaces from Supabase
@@ -56,7 +58,7 @@ export default function SpaceSetting({}) {
       const { data, error } = await supabase
         .from("spaces")
         .select("id, space_name")
-        .eq("is_deleted",false);
+        .eq("is_deleted", false);
 
       if (error) {
         alert("Failed to fetch spaces. Please try again.");
@@ -65,7 +67,7 @@ export default function SpaceSetting({}) {
       }
 
       setSpaces(
-        data.map((space : any) => ({ id: space.id, name: space.space_name }))
+        data.map((space: any) => ({ id: space.id, name: space.space_name }))
       );
     } catch (err) {
       alert("Unexpected error occurred.");
@@ -79,10 +81,8 @@ export default function SpaceSetting({}) {
       try {
         const { data, error } = await supabase
           .from("spaces")
-          .insert([{ space_name: newSpaceName ,is_deleted:false}])
+          .insert([{ space_name: newSpaceName, is_deleted: false }])
           .select();
-
-          
 
         if (error) {
           alert("Failed to create space. Please try again.");
@@ -91,133 +91,106 @@ export default function SpaceSetting({}) {
         }
         setIsDialogOpen(false);
         fetchSpaces();
-       
       } catch (err) {
         alert("Unexpected error occurred.");
         console.error("Unexpected error:", err);
       }
     }
   };
-  const SpaceCreateDialogClose = async () =>{
+  const SpaceCreateDialogClose = async () => {
     setNewSpaceName(""); // Clear the input
     setIsDialogOpen(false); // Close the dialog
     fetchSpaces(); // Refresh the spaces after insertion
-  }
-  // const fetchTeams = async (id:any) => {
-  //   const { data, error } = await supabase
-  //     .from("teams")
-  //     .select("*")
-  //     .eq("is_deleted",false)
-  //     .eq("space_id",id );
-     
-  
-  //   if (error) {
-  //     console.error("Error fetching teams:", error);
-  //     return;
-  //   }
-  
-  //   // if (data) {
-  //   //   setTeams(
-  //   //     data.map((team:any) => ({
-  //   //       ...team,
-  //   //       members: team.members || [], // Ensure members array is not null
-  //   //     }))
-  //   //   );
-  //   // }
-  // };
-  
-
+  };
   // Delete a space
-  const deleteSpace = async (id:number) => {
+  const deleteSpace = async (id: string) => {
     console.log("space id ", id);
     let backupData: {
       tasks: any[];
       teams: any[];
       space: any;
     } = { tasks: [], teams: [], space: null };
-    console.log("hi")
-  
+    console.log("hi");
+
     // Fetch tasks
     const { data: tasks, error: tasksError } = await supabase
       .from("tasks")
       .select("*")
       .eq("is_deleted", false)
       .eq("space_id", id);
-  
+
     if (tasksError) {
       console.error("Error fetching tasks:", tasksError);
       return;
     }
     backupData.tasks = tasks || [];
     // console.log(tasksError)
-  
+
     // Fetch teams
     const { data: teams, error: teamsError } = await supabase
       .from("teams")
       .select("*")
       .eq("is_deleted", false)
       .eq("space_id", id);
-  
+
     if (teamsError) {
       console.error("Error fetching teams:", teamsError);
       return;
     }
     backupData.teams = teams || [];
-  
+
     // Fetch space
     const { data: space, error: spaceError } = await supabase
       .from("spaces")
       .select("*")
       .eq("id", id)
       .single();
-  
+
     if (spaceError) {
       console.error("Error fetching space:", spaceError);
       return;
     }
     backupData.space = space;
-    console.log("hello")
-  
+    console.log("hello");
+
     // Mark tasks as deleted
     const { error: tasksDeleteError } = await supabase
       .from("tasks")
       .update({ is_deleted: true })
       .eq("space_id", id);
-  
+
     if (tasksDeleteError) {
       console.error("Error deleting tasks:", tasksDeleteError);
       return;
     }
-  
+
     // Mark teams as deleted
     const { error: teamsDeleteError } = await supabase
       .from("teams")
       .update({ is_deleted: true })
       .eq("space_id", id);
-  
+
     if (teamsDeleteError) {
       console.error("Error deleting teams:", teamsDeleteError);
       return;
     }
-  
+
     // Mark space as deleted
     const { error: spaceDeleteError } = await supabase
       .from("spaces")
       .update({ is_deleted: true })
       .eq("id", id);
-  
+
     if (spaceDeleteError) {
       console.error("Error deleting space:", spaceDeleteError);
       return;
     }
-  
+
     // Update UI
     fetchSpaces();
-   fetchSpacesWithTeams();
+    fetchSpacesWithTeams();
     setIsOpen(false);
-  
-    
-  
+
     toast({
       title: "Deleted Successfully!",
       description: "Space deleted successfully!",
@@ -233,7 +206,7 @@ export default function SpaceSetting({}) {
       ),
     });
   };
-  
+
   // Undo functionality
   const handleSpaceUndo = async (backupData: {
     tasks: any[];
@@ -249,13 +222,13 @@ export default function SpaceSetting({}) {
           "id",
           backupData.tasks.map((task) => task.id)
         );
-  
+
       if (tasksRestoreError) {
         console.error("Error restoring tasks:", tasksRestoreError);
         return;
       }
     }
-  
+
     // Restore teams
     if (backupData.teams.length > 0) {
       const { error: teamsRestoreError } = await supabase
@@ -265,50 +238,48 @@ export default function SpaceSetting({}) {
           "id",
           backupData.teams.map((team) => team.id)
         );
-  
+
       if (teamsRestoreError) {
         console.error("Error restoring teams:", teamsRestoreError);
         return;
       }
     }
-  
+
     // Restore space
     if (backupData.space) {
       const { error: spaceRestoreError } = await supabase
         .from("spaces")
         .update({ is_deleted: false })
         .eq("id", backupData.space.id);
-  
+
       if (spaceRestoreError) {
         console.error("Error restoring space:", spaceRestoreError);
         return;
       }
     }
-  
+
     // Refresh UI
     fetchSpaces();
     fetchSpacesWithTeams();
     router.refresh();
-    
+
     toast({
       title: "Undo Successful!",
       description: "Space, tasks, and teams have been restored.",
     });
   };
-  
 
-  
-const handleDeleteDialogClose = async () => {
-  setIsOpen(false);
-  fetchSpaces();
-}
-  const  fetchSpacesWithTeams = async () => {
+  const handleDeleteDialogClose = async () => {
+    setIsOpen(false);
+    fetchSpaces();
+  };
+  const fetchSpacesWithTeams = async () => {
     try {
       // Step 1: Fetch spaces from Supabase
       const { data: spacesData, error: spacesError } = await supabase
         .from("spaces")
         .select("id, space_name") // Fetch space ID and name
-        .eq("is_deleted",false);
+        .eq("is_deleted", false);
 
       if (spacesError) {
         alert("Failed to fetch spaces. Please try again.");
@@ -322,19 +293,20 @@ const handleDeleteDialogClose = async () => {
       }
 
       // Step 2: Map spaces to their basic structure
-      const spaces = spacesData.map((space : any) => ({
+      const spaces = spacesData.map((space: any) => ({
         id: space.id,
         name: space.space_name,
       }));
 
       // Step 3: Fetch teams associated with these spaces
-      const spaceIds = spaces.map((space : any) => space.id); // Extract space IDs
+      const spaceIds = spaces.map((space: any) => space.id); // Extract space IDs
 
       const { data: teamsData, error: teamsError } = await supabase
         .from("teams") // Assuming "teams" table exists
-        .select("id, team_name, space_id") // Fields to fetch
+        .select("id, team_name, space_id,members") // Fields to fetch
+        .eq("is_deleted", false)
         .in("space_id", spaceIds); // Filter teams by space IDs
-
+      console.log("teamdata", teamsData);
       if (teamsError) {
         alert("Failed to fetch teams. Please try again.");
         console.error("Error fetching teams:", teamsError.message);
@@ -344,7 +316,9 @@ const handleDeleteDialogClose = async () => {
       // Step 4: Map teams by their associated space ID
       const teamsBySpaceId: Record<string, string[]> = {}; // Initialize mapping
       if (teamsData) {
-        teamsData.forEach((team : any) => {
+        console.log(teamsData);
+        setTeamData(teamsData);
+        teamsData.forEach((team: any) => {
           if (!teamsBySpaceId[team.space_id]) {
             teamsBySpaceId[team.space_id] = [];
           }
@@ -353,7 +327,7 @@ const handleDeleteDialogClose = async () => {
       }
 
       // Step 5: Combine spaces with their teams
-      const enrichedSpaces = spaces.map((space : any) => ({
+      const enrichedSpaces = spaces.map((space: any) => ({
         ...space,
         teams: teamsBySpaceId[space.id] || [], // Default to empty array if no teams
       }));
@@ -363,13 +337,49 @@ const handleDeleteDialogClose = async () => {
     } catch (err) {
       console.error("Unexpected error:", err);
     }
-  };
-
-  // Fetch spaces on component mount
+  }; // Fetch spaces on component mount
   useEffect(() => {
     fetchSpaces();
     fetchSpacesWithTeams();
   }, []);
+  // const fetchMembers = async (team_id: string[]) => {
+  // console.log("teamid=",team_id)
+  //   try {
+  //     // Query users from Supabase based on team IDs
+  //     const { data, error } = await supabase
+  //       .from('users')
+  //       .select('id, username, profile_image')
+  //       .in('team_id', team_id); // Filter by team IDs
+
+  //     if (error) {
+  //       throw error;
+  //     }
+
+  //     return data; // Returns the list of members
+  //   } catch (error) {
+  //     console.error("Error fetching members:", error);
+  //     return [];
+  //   }
+  // };
+
+  // // Fetch members for all spaces and their teams
+  // useEffect(() => {
+  //   const getMembers = async () => {
+  //     const allMembers: any[] = [];
+
+  //     for (const space of spaces) {
+  //       if (space.teams) {
+  //         // Fetch members for each team in the space
+  //         const spaceMembers = await fetchMembers(space.teams);
+  //         allMembers.push(...spaceMembers);
+  //       }
+  //     }
+
+  //     setMembers(allMembers); // Store all members in state
+  //   };
+
+  //   getMembers(); // Fetch members when component mounts or spaces change
+  // }, [spaces]);
 
   return (
     <>
@@ -381,10 +391,16 @@ const handleDeleteDialogClose = async () => {
             <button className="rounded-lg text-sm text-white border w-[134px] h-[41px] bg-primaryColor-700">
               Space Settings
             </button>
-            <button  onClick={() => router.push(`/members`)} className="rounded-lg text-sm border w-[104px] h-[41px] text-gray-400">
+            <button
+              onClick={() => router.push(`/members`)}
+              className="rounded-lg text-sm border w-[104px] h-[41px] text-gray-400"
+            >
               Members
             </button>
-            <button onClick={() => router.push(`/access`)} className="rounded-lg text-sm border w-[89px] h-[41px] text-gray-400">
+            <button
+              onClick={() => router.push(`/access`)}
+              className="rounded-lg text-sm border w-[89px] h-[41px] text-gray-400"
+            >
               Access
             </button>
           </div>
@@ -419,11 +435,10 @@ const handleDeleteDialogClose = async () => {
                 />
               </div>
 
-              <DialogFooter className="flex justify-between " >
-                
-              <Button
+              <DialogFooter className="flex justify-between ">
+                <Button
                   type="button"
-                onClick={SpaceCreateDialogClose}
+                  onClick={SpaceCreateDialogClose}
                   className=" text-gray-700  bg-gray-100 h-[36px] w-[117.61px] hover:bg-gray-200"
                 >
                   Cancel
@@ -435,22 +450,31 @@ const handleDeleteDialogClose = async () => {
                 >
                   Create Space
                 </Button>
-                
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
         {/* Table displaying spaces */}
-        <div className="pt-[18px]">
-          <Table className="border-b border-gray-200 bg-white rounded-[10px]">
-            <TableHeader className="bg-gray-50 rounded-[8px]" >
+        <div className="pt-[18px] pb-[18px]">
+          <Table className="border-b   overflow-y-auto playlist-scroll border-gray-200 bg-white rounded-[10px]">
+            <TableHeader className=" sticky top-0">
               <TableRow>
-                <TableHead className="px-4 py-4 text-sm">SPACE NAME</TableHead>
-                <TableHead className="px-4 py-4 text-sm">CREATED BY</TableHead>
-                <TableHead className="px-4 py-4 text-sm">TEAMS</TableHead>
-                <TableHead className="px-4 py-4 text-sm">MEMBERS</TableHead>
-                <TableHead className="px-4 py-4 text-sm">ACTION</TableHead>
+                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                  SPACE NAME
+                </TableHead>
+                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                  CREATED BY
+                </TableHead>
+                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                  TEAMS
+                </TableHead>
+                <TableHead className="px-4 py-4  font-semibold text-gray-500 text-sm">
+                  MEMBERS
+                </TableHead>
+                <TableHead className="px-4 py-4 text-right font-semibold text-gray-500 text-sm">
+                  ACTION
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -484,51 +508,151 @@ const handleDeleteDialogClose = async () => {
                         "No teams"
                       )}
                     </TableCell>
-                    <TableCell className="px-4 py-4 text-sm text-gray-500"></TableCell>
+                    {/* <TableCell>
+                      {spaces.length > 0 ? (
+                        spaces.map((team: any, index: number) => (
+                          <div key={index} className="flex">
+                            {Array.isArray(team?.members) &&
+                            team.members.length > 0 ? (
+                              <>
+                                {team.members
+                                  .slice(0, 6)
+                                  .map((member: any, idx: number) => (
+                                    <Image
+                                      key={idx}
+                                      src={member.profile_image}
+                                      alt={member.name}
+                                      width={30}
+                                      height={30}
+                                      className={`w-[32px] h-[32px] rounded-full ${
+                                        team.members.length === 1
+                                          ? "mr-2.5"
+                                          : team.members.length > 0
+                                          ? "-mr-2.5"
+                                          : ""
+                                      } border-2 border-white`}
+                                    />
+                                  ))}
+                                {team.members.length > 6 && (
+                                  <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
+                                    +{team.members.length - 6}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-gray-900 font-inter text-sm">
+                                No Members Found
+                              </p>
+                            )}
+                          </div>
+                        ))
+                      ) }
+                    </TableCell> */}
+                    <TableCell className="px-4 py-4 text-sm text-gray-500">
+                      <div className="flex">
+                        {teamData && teamData.length > 0 ? (
+                          <>
+                            {teamData
+                              .filter((team: any) => team.space_id === space.id) // Get teams for this space
+                              .flatMap((team: any) => team?.members || []) // Flatten all members
+                              .slice(0, 6) // Limit to first 6 members
+                              .map((member: any, index: number) => (
+                                <Image
+                                  key={index}
+                                  src={member.profile_image}
+                                  alt={member.name}
+                                  width={30}
+                                  height={30}
+                                  className={`w-[32px] h-[32px] rounded-full ${
+                                    teamData.length === 1
+                                      ? "mr-2.5"
+                                      : teamData.length > 0
+                                      ? "-mr-2.5"
+                                      : ""
+                                  } border-2 border-white`}
+                                />
+                              ))}
+                            {teamData
+                              .filter((team: any) => team.space_id === space.id)
+                              .flatMap((team: any) => team?.members || [])
+                              .length > 6 && (
+                              <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
+                                +
+                                {teamData
+                                  .filter(
+                                    (team: any) => team.space_id === space.id
+                                  )
+                                  .flatMap((team: any) => team?.members || [])
+                                  .length - 6}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-gray-900 font-inter text-sm">
+                            No Members Found
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+
+                   
                     <TableCell className="px-4 py-4 items-center">
+                      <div className="flex justify-end">
                       <button
                         onClick={() => router.push(`/editspace/${space.id}`)}
                       >
-                        <Pencil className="h-5 w-5" />
+                        <Pencil className="h-5 w-5 " />
                       </button>
                       <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger>
-                      <button
-                         onClick={() => setIsOpen(true)}
-                        className="py-4 px-4"
-                      >
-                        <Trash2 className="h-5 w-5 items-center" />
-                      </button>
-                      </DialogTrigger>
-                     <DialogContent>
-                <div className="text-center">
-                  <h2 className="text-lg font-semibold">Are you sure?</h2>
-                  <p className="mt-2 text-sm text-gray-600">
-                    Do you really want to delete this space
-                  </p>
-                </div>
-                <DialogFooter className="flex justify-end mt-4">
-                  {/* Cancel button */}
-                  <button
-                    className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                    onClick={handleDeleteDialogClose}
-                    disabled={isDeleting}
-                  >
-                    Cancel
-                  </button>
+                          <div
+                            onClick={() => {
+                              console.log(space.id);
+                              setSpaceToDelete(space.id);
+                              setIsOpen(true);
+                            }}
+                            className="py-4 px-4"
+                          >
+                            <Trash2 className="h-5 w-5 items-center" />
+                          </div>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <div className="">
+                            <h2 className="text-lg font-semibold">
+                              Are you sure?
+                            </h2>
+                            <p className="mt-2 text-sm text-gray-600">
+                              Do you really want to delete this{" "}
+                              <span className="font-bold">{space.name}</span>
+                            </p>
+                          </div>
+                          <DialogFooter className="flex justify-end mt-4">
+                            {/* Cancel button */}
+                            <button
+                              className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                              onClick={handleDeleteDialogClose}
+                              disabled={isDeleting}
+                            >
+                              Cancel
+                            </button>
 
-                  {/* Delete button */}
-                  <Button
-                    className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
-                    onClick={() => deleteSpace(space.id)}
-                    disabled={isDeleting}
-                  >
-                    {/* {isDeleting ? "Deleting..." : "Delete"} */}
-                    Delete {space.id}
-                  </Button>
-                </DialogFooter>
-                </DialogContent>
-                </Dialog>
+                            {/* Delete button */}
+                            <Button
+                              className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
+                              onClick={() => {
+                                if (spaceToDelete) {
+                                  deleteSpace(spaceToDelete);
+                                }
+                              }}
+                              disabled={isDeleting}
+                            >
+                              {/* {isDeleting ? "Deleting..." : "Delete"} */}
+                              Delete
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

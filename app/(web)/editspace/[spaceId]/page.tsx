@@ -299,6 +299,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
       setTeams(
         data.map((team:any) => ({
           ...team,
+          tasks:[],
           members: team.members || [], // Ensure members array is not null
         }))
       );

@@ -83,8 +83,9 @@ const TeamCard: React.FC<{
     if (data) {
       const teamData = data.map((team: any) => ({
         ...team,
+        tasks: [],
       }));
-      setTeams(teamData as Team[]);
+      setTeams(data || []);
     }
   };
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,7 +175,7 @@ const TeamCard: React.FC<{
     //   )
     // );
 
-    sendDataToParent(user, teamId, "add");
+    // sendDataToParent(user, teamId, "add");
 
     setEmailInput("");
     setHighlightedIndex(-1);
@@ -209,6 +210,7 @@ const TeamCard: React.FC<{
       const { error: teamError } = await supabase
         .from("teams")
         .update({ is_deleted: true })
+
         .eq("id", id);
 
       if (teamError) {
@@ -217,10 +219,11 @@ const TeamCard: React.FC<{
       }
 
       console.log("Team deleted successfully.");
-
+      
       // Additional cleanup actions
       setIsOpen(false);
       fetchTeams();
+      
       toast({
         title: "Deleted Successfully!",
         description: "Team deleted successfully!",
@@ -410,13 +413,13 @@ const TeamCard: React.FC<{
                     </button>
 
                     {/* Delete button */}
-                    <button
-                      className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
-                      onClick={() => handleDeleteTeam(team.id)}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </button>
+                      <button
+                        className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
+                        onClick={() => handleDeleteTeam(team.id)}
+                        disabled={isDeleting}
+                      >
+                        Delete
+                      </button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
