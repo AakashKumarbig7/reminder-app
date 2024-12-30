@@ -757,7 +757,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       <div className="px-3">
         <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full h-[62px]">
           <div className="flex gap-2 py-2.5 text-sm text-gray-400 mr-60">
-            {loggedUserData?.role === "owner" ? (
+            {loggedUserData?.role === "User" ? (
             tabs.map((tab) => (
               <div
                 key={tab.id}

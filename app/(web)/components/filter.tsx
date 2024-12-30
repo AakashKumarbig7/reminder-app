@@ -7,8 +7,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input"
 import { Filter } from "lucide-react";
 import Select from "react-select";
 import { supabase } from "@/utils/supabase/supabaseClient";
@@ -134,6 +142,10 @@ const FilterComponent : React.FC<FilterProps> = ({
                   placeholder="Select a team"
                 />
               </div>
+            </div>
+            <div>
+              <Label className="text-sm text-gray-900 block pb-1">Due Date</Label>
+              <Input className="w-full mt-1 "  />
             </div>
             <SheetFooter className="w-full flex gap-2 pb-4">
               <Button className="w-1/2" variant="outline">

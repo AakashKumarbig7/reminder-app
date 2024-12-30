@@ -120,7 +120,7 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                   placeholder="Search"
                   value={searchValue}
                   className="w-[384px] h-[42px] pl-8 pr-7 bg-white shadow-none font-medium justify-start gap-3 rounded-[10px] flex items-center"
-                  onChange={(e) => setSearchValue(e.target.value)}
+                  onChange={(e)  => setSearchValue(e.target.value)}
                 />
                 <X
                   size={14}

@@ -116,6 +116,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   const [role, setRole] = useState("");
   const [sortedValue, setSortedValue] = useState<string | null>("");
   const [loggedTeamId, setLoggedTeamId] = useState<number[]>([]);
+const [searchInput, setSearchInput] = useState(""); // Search input state
 
   // Helper function to toggle options for a specific team
   const toggleUpdateOption = (teamId: any) => {
