@@ -31,6 +31,7 @@ import { any } from "zod";
 import WebNavbar from "./navbar";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { useGlobalContext } from "@/context/store";
+import { all } from "axios";
 
 interface Tab {
   id: number;
@@ -137,7 +138,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       toast({
         title: "Space updated successfully",
         description: "Space has been updated successfully",
-      })
+      });
       fetchSpaces();
       fetchTeamData();
       setSpaceEditDialogOpen(false);
@@ -178,7 +179,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       .from("spaces")
       .select("*")
       .eq("is_deleted", false)
-      .order("space_name", { ascending: true });
+      .order("created_at", { ascending: true });
     if (error) {
       console.error("Error fetching spaces:", error);
       return;
@@ -186,8 +187,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
     if (data) {
       setTabs(data);
-      console.log(loggedSpaceId.map((space: any) => space.id));
-      console.log("Spaces data: ", data.map((space: any) => space.id).includes("11361800-456e-4925-b170-859d12a6b1a1"));
       if (data.length > 0) {
         setActiveTab(data[0].id); // Set the first tab as active initially
       }
@@ -224,7 +223,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
       if (spaceId) {
         setSpaceDetails(spaceId);
-        console.log("Space data: ", spaceId);
       }
     }
     setActiveTab(id);
@@ -245,6 +243,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     if (data && data[0]) {
       const newTab = data[0];
       setTabs((prevTabs) => [...prevTabs, newTab]);
+      // setLoggedSpaceId((prevId) => [...prevId, newTab]);
       setActiveTab(newTab.id);
     }
   };
@@ -570,7 +569,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         toast({
           title: "Team already exists with these members",
           description: "Please choose a different team name.",
-        })
+        });
         return;
       }
 
@@ -601,20 +600,20 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
         const user = await getLoggedInUserData();
 
-        const {data : userData, error : userError} = await supabase
-        .from("users")
-        .insert({
-          id: user?.id,
-          team_id: insertedData
-        })
-        .eq("id", user?.id)
-        .single();
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .insert({
+            id: user?.id,
+            team_id: insertedData,
+          })
+          .eq("id", user?.id)
+          .single();
 
         if (userError) {
           console.error("Error updating team name:", userError);
           return;
         }
-        console.log(userData , " userData");
+        console.log(userData, " userData");
 
         setTeamName("");
         setAddedMembers([]);
@@ -650,29 +649,101 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     }
   };
 
-  const fetchTasks = async () => {
+  const newFetchTeam = async () => {
     const { data, error } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("is_deleted", false);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    return data;
+  };
+
+  const newFetchSpace = async () => {
+    const { data, error } = await supabase
+      .from("spaces")
+      .select("*")
+      .eq("is_deleted", false);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+    return data;
+  };
+
+  const fetchTasks = async () => {
+    const { data: tasksData, error: tasksError } = await supabase
       .from("tasks")
       .select("*")
       .eq("is_deleted", false)
       .order("created_at", { ascending: true });
 
-    if (error) {
-      console.error("Error fetching tasks:", error);
+    if (tasksError) {
+      console.error("Error fetching tasks:", tasksError);
       return;
     }
-    if (data) {
-      const includesTrueTasks = data.filter((task) =>
+
+    if (tasksData) {
+      const includesTrueTasks = tasksData.filter((task) =>
         task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
       );
-      console.log(
-        includesTrueTasks.map((task) => task.space_id),
-        "includesTrueTasks"
-      );
-      setLoggedSpaceId(includesTrueTasks.map((task) => task.team_id));
-      setAllTasks(data);
+
+      const { data: spaceData, error: spaceError } = await supabase
+        .from("spaces")
+        .select("*")
+        .eq("is_deleted", false)
+        .in(
+          "id",
+          includesTrueTasks.map((task) => task.space_id)
+        );
+
+      if (spaceError) {
+        console.error("Error fetching spaces:", spaceError);
+        return;
+      }
+
+      const allSpaces = await newFetchSpace();
+      const teamsData = await newFetchTeam();
+
+      if (allSpaces && teamsData) {
+        // Extract space IDs from the teamsData
+        const includedSpaces = teamsData.map((team) => team.space_id);
+
+        // Filter spaces that are not included in the teams table
+        const notIncludedSpaces = allSpaces.filter(
+          (space) => !includedSpaces.includes(space.id)
+        );
+
+        if (spaceData) {
+          // Combine spaceData with spaces not included in teams
+          const combinedData = [
+            ...spaceData,
+            ...notIncludedSpaces.filter(
+              (space) => !spaceData.some((s) => s.id === space.id)
+            ),
+          ];
+
+          // if (combinedData.length > 0) {
+          //   setActiveTab(combinedData[0].id); // Set the first tab as active initially
+          // }
+
+          // Store all combined space IDs
+          setLoggedSpaceId(combinedData.map((space) => space.id));
+        }
+      }
+
+      setAllTasks(tasksData);
     }
   };
+
+  const filteredTabs = tabs.filter((tab) =>
+    loggedSpaceId.some((space) => space.id === tab.id)
+  );
 
   const handleFilterTasksAndTeams = async () => {
     try {
@@ -738,8 +809,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     defaultSpaceData();
     setTeamData(fetchTeamData());
     fetchTeams();
-    fetchTasks();
   }, [activeTab]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [loggedUserData, activeTab]);
 
   return (
     <>
@@ -757,174 +831,526 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       <div className="px-3">
         <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full h-[62px]">
           <div className="flex gap-2 py-2.5 text-sm text-gray-400 mr-60">
-            {loggedUserData?.role === "User" ? (
-            tabs.map((tab) => (
-              <div
-                key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
-                className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
-                  activeTab === tab.id
-                    ? "bg-[#1A56DB] text-white border-none"
-                    : "bg-white border-gray-300"
-                }`}
-              >
-                <span>{tab.space_name}</span>
-
-                {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.space !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.space === true))) && (
-                  <Sheet
-                  // open={spaceEditDialogOpen}
-                  // onOpenChange={setSpaceEditDialogOpen}
+            {loggedUserData?.role === "owner"
+              ? tabs.map((tab) => (
+                  <div
+                    key={tab.id}
+                    onClick={() => handleTabClick(tab.id)}
+                    className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
+                      activeTab === tab.id
+                        ? "bg-[#1A56DB] text-white border-none"
+                        : "bg-white border-gray-300"
+                    }`}
                   >
-                    <SheetTrigger asChild>
-                      <EllipsisVertical
-                        className={`absolute right-2 focus:outline-none space_delete_button ${
-                          activeTab === tab.id
-                            ? "text-white border-none"
-                            : "bg-white border-gray-300 text-gray-400"
-                        }`}
-                        size={16}
-                      />
-                    </SheetTrigger>
-                    <SheetContent
-                      className="pt-2.5 p-3 font-inter flex flex-col justify-between"
-                      style={{ maxWidth: "415px" }}
-                    >
-                      <div>
-                        <SheetHeader>
-                          <SheetTitle className="text-gray-500 uppercase text-base">
-                            space setting
-                          </SheetTitle>
-                        </SheetHeader>
-                        <div className="mt-3">
-                          <Label
-                            htmlFor="name"
-                            className="text-sm text-gray-900"
-                          >
-                            Space Name
-                          </Label>
-                          <Input
-                            id="name"
-                            defaultValue={tab.space_name}
-                            className="w-full mt-1"
-                            onChange={(e) =>
-                              setUpdatedSpaceName(e.target.value)
-                            }
-                            autoFocus
+                    <span>{tab.space_name}</span>
+
+                    {(loggedUserData?.role === "owner" ||
+                      (loggedUserData?.role === "User" &&
+                        ((loggedUserData?.access?.space !== true &&
+                          loggedUserData?.access?.all === true) ||
+                          loggedUserData?.access?.space === true))) && (
+                      <Sheet
+                      // open={spaceEditDialogOpen}
+                      // onOpenChange={setSpaceEditDialogOpen}
+                      >
+                        <SheetTrigger asChild>
+                          <EllipsisVertical
+                            className={`absolute right-2 focus:outline-none space_delete_button ${
+                              activeTab === tab.id
+                                ? "text-white border-none"
+                                : "bg-white border-gray-300 text-gray-400"
+                            }`}
+                            size={16}
                           />
-                        </div>
-                        <div className="pt-2">
-                          <Label
-                            htmlFor="name"
-                            className="text-sm text-gray-900"
-                          >
-                            Teams
-                          </Label>
-                          <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[70vh] max-h-[70vh] overflow-auto playlist-scroll">
-                            {spaceDetails.length > 0 ? (
-                              spaceDetails.map((team: any, index: number) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center justify-between mb-2"
-                                >
-                                  <p className="text-gray-900 font-inter text-sm">
-                                    {team.team_name.length > 16
-                                      ? team.team_name.slice(0, 16) + "..."
-                                      : team.team_name}
+                        </SheetTrigger>
+                        <SheetContent
+                          className="pt-2.5 p-3 font-inter flex flex-col justify-between"
+                          style={{ maxWidth: "415px" }}
+                        >
+                          <div>
+                            <SheetHeader>
+                              <SheetTitle className="text-gray-500 uppercase text-base">
+                                space setting
+                              </SheetTitle>
+                            </SheetHeader>
+                            <div className="mt-3">
+                              <Label
+                                htmlFor="name"
+                                className="text-sm text-gray-900"
+                              >
+                                Space Name
+                              </Label>
+                              <Input
+                                id="name"
+                                defaultValue={tab.space_name}
+                                className="w-full mt-1"
+                                onChange={(e) =>
+                                  setUpdatedSpaceName(e.target.value)
+                                }
+                                autoFocus
+                              />
+                            </div>
+                            <div className="pt-2">
+                              <Label
+                                htmlFor="name"
+                                className="text-sm text-gray-900"
+                              >
+                                Teams
+                              </Label>
+                              <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[70vh] max-h-[70vh] overflow-auto playlist-scroll">
+                                {spaceDetails.length > 0 ? (
+                                  spaceDetails.map(
+                                    (team: any, index: number) => (
+                                      <div
+                                        key={index}
+                                        className="flex items-center justify-between mb-2"
+                                      >
+                                        <p className="text-gray-900 font-inter text-sm">
+                                          {team.team_name.length > 16
+                                            ? team.team_name.slice(0, 16) +
+                                              "..."
+                                            : team.team_name}
+                                        </p>
+                                        <div className="flex">
+                                          {team.members.length > 0 ? (
+                                            <>
+                                              {team.members
+                                                .slice(0, 6)
+                                                .map(
+                                                  (
+                                                    member: any,
+                                                    index: number
+                                                  ) => (
+                                                    <Image
+                                                      key={index}
+                                                      src={member.profile_image}
+                                                      alt={member.name}
+                                                      width={30}
+                                                      height={30}
+                                                      className={`w-[32px] h-[32px] rounded-full ${
+                                                        team.members.length ===
+                                                        1
+                                                          ? "mr-2.5"
+                                                          : team.members
+                                                              .length > 0
+                                                          ? "-mr-2.5"
+                                                          : ""
+                                                      } border-2 border-white`}
+                                                    />
+                                                  )
+                                                )}
+                                              {team.members.length > 6 && (
+                                                <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
+                                                  +{team.members.length - 6}
+                                                </div>
+                                              )}
+                                            </>
+                                          ) : (
+                                            <p className="text-gray-900 font-inter text-sm">
+                                              No Members Found
+                                            </p>
+                                          )}
+                                        </div>
+
+                                        <Trash2
+                                          size={16}
+                                          className="cursor-pointer"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteTeam(team, index);
+                                          }}
+                                        />
+                                      </div>
+                                    )
+                                  )
+                                ) : (
+                                  <p className="text-gray-500 text-base font-inter">
+                                    No Team Found
                                   </p>
-                                  <div className="flex">
-                                    {team.members.length > 0 ? (
-                                      <>
-                                        {team.members
-                                          .slice(0, 6)
-                                          .map((member: any, index: number) => (
-                                            <Image
-                                              key={index}
-                                              src={member.profile_image}
-                                              alt={member.name}
-                                              width={30}
-                                              height={30}
-                                              className={`w-[32px] h-[32px] rounded-full ${
-                                                team.members.length === 1
-                                                  ? "mr-2.5"
-                                                  : team.members.length > 0
-                                                  ? "-mr-2.5"
-                                                  : ""
-                                              } border-2 border-white`}
-                                            />
-                                          ))}
-                                        {team.members.length > 6 && (
-                                          <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
-                                            +{team.members.length - 6}
-                                          </div>
-                                        )}
-                                      </>
-                                    ) : (
-                                      <p className="text-gray-900 font-inter text-sm">
-                                        No Members Found
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  <Trash2
-                                    size={16}
-                                    className="cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deleteTeam(team, index);
-                                    }}
-                                  />
-                                </div>
-                              ))
-                            ) : (
-                              <p className="text-gray-500 text-base font-inter">
-                                No Team Found
-                              </p>
-                            )}
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
 
-                      <SheetFooter className="">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-1/3 border border-red-500 text-red-500 text-sm hover:text-red-500"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteTab(tab.id);
-                          }}
-                        >
-                          Delete Space
-                        </Button>
-                        <SheetClose asChild>
-                          <Button
-                            type="submit"
-                            variant="outline"
-                            className="w-1/3 text-sm"
+                          <SheetFooter className="">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-1/3 border border-red-500 text-red-500 text-sm hover:text-red-500"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteTab(tab.id);
+                              }}
+                            >
+                              Delete Space
+                            </Button>
+                            <SheetClose asChild>
+                              <Button
+                                type="submit"
+                                variant="outline"
+                                className="w-1/3 text-sm"
+                              >
+                                Cancel
+                              </Button>
+                            </SheetClose>
+                            <Button
+                              type="submit"
+                              className="bg-primaryColor-700 text-white hover:bg-primaryColor-700 text-sm w-1/3"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateSpaceTab(tab.id);
+                              }}
+                            >
+                              Update
+                            </Button>
+                          </SheetFooter>
+                        </SheetContent>
+                      </Sheet>
+                    )}
+                  </div>
+                ))
+              : // loggedSpaceId.map((tab) => (
+                //   <div
+                //     key={tab.id}
+                //     onClick={() => handleTabClick(tab.id)}
+                //     className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
+                //       activeTab === tab.id
+                //         ? "bg-[#1A56DB] text-white border-none"
+                //         : "bg-white border-gray-300"
+                //     }`}
+                //   >
+                //     <span>{tab.space_name}</span>
+
+                //     {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.space !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.space === true))) && (
+                //       <Sheet
+                //       // open={spaceEditDialogOpen}
+                //       // onOpenChange={setSpaceEditDialogOpen}
+                //       >
+                //         <SheetTrigger asChild>
+                //           <EllipsisVertical
+                //             className={`absolute right-2 focus:outline-none space_delete_button ${
+                //               activeTab === tab.id
+                //                 ? "text-white border-none"
+                //                 : "bg-white border-gray-300 text-gray-400"
+                //             }`}
+                //             size={16}
+                //           />
+                //         </SheetTrigger>
+                //         <SheetContent
+                //           className="pt-2.5 p-3 font-inter flex flex-col justify-between"
+                //           style={{ maxWidth: "415px" }}
+                //         >
+                //           <div>
+                //             <SheetHeader>
+                //               <SheetTitle className="text-gray-500 uppercase text-base">
+                //                 space setting
+                //               </SheetTitle>
+                //             </SheetHeader>
+                //             <div className="mt-3">
+                //               <Label
+                //                 htmlFor="name"
+                //                 className="text-sm text-gray-900"
+                //               >
+                //                 Space Name
+                //               </Label>
+                //               <Input
+                //                 id="name"
+                //                 defaultValue={tab.space_name}
+                //                 className="w-full mt-1"
+                //                 onChange={(e) =>
+                //                   setUpdatedSpaceName(e.target.value)
+                //                 }
+                //                 autoFocus
+                //               />
+                //             </div>
+                //             <div className="pt-2">
+                //               <Label
+                //                 htmlFor="name"
+                //                 className="text-sm text-gray-900"
+                //               >
+                //                 Teams
+                //               </Label>
+                //               <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[70vh] max-h-[70vh] overflow-auto playlist-scroll">
+                //                 {spaceDetails.length > 0 ? (
+                //                   spaceDetails.map((team: any, index: number) => (
+                //                     <div
+                //                       key={index}
+                //                       className="flex items-center justify-between mb-2"
+                //                     >
+                //                       <p className="text-gray-900 font-inter text-sm">
+                //                         {team.team_name.length > 16
+                //                           ? team.team_name.slice(0, 16) + "..."
+                //                           : team.team_name}
+                //                       </p>
+                //                       <div className="flex">
+                //                         {team.members.length > 0 ? (
+                //                           <>
+                //                             {team.members
+                //                               .slice(0, 6)
+                //                               .map((member: any, index: number) => (
+                //                                 <Image
+                //                                   key={index}
+                //                                   src={member.profile_image}
+                //                                   alt={member.name}
+                //                                   width={30}
+                //                                   height={30}
+                //                                   className={`w-[32px] h-[32px] rounded-full ${
+                //                                     team.members.length === 1
+                //                                       ? "mr-2.5"
+                //                                       : team.members.length > 0
+                //                                       ? "-mr-2.5"
+                //                                       : ""
+                //                                   } border-2 border-white`}
+                //                                 />
+                //                               ))}
+                //                             {team.members.length > 6 && (
+                //                               <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
+                //                                 +{team.members.length - 6}
+                //                               </div>
+                //                             )}
+                //                           </>
+                //                         ) : (
+                //                           <p className="text-gray-900 font-inter text-sm">
+                //                             No Members Found
+                //                           </p>
+                //                         )}
+                //                       </div>
+
+                //                       <Trash2
+                //                         size={16}
+                //                         className="cursor-pointer"
+                //                         onClick={(e) => {
+                //                           e.stopPropagation();
+                //                           deleteTeam(team, index);
+                //                         }}
+                //                       />
+                //                     </div>
+                //                   ))
+                //                 ) : (
+                //                   <p className="text-gray-500 text-base font-inter">
+                //                     No Team Found
+                //                   </p>
+                //                 )}
+                //               </div>
+                //             </div>
+                //           </div>
+
+                //           <SheetFooter className="">
+                //             <Button
+                //               type="button"
+                //               variant="outline"
+                //               className="w-1/3 border border-red-500 text-red-500 text-sm hover:text-red-500"
+                //               onClick={(e) => {
+                //                 e.stopPropagation();
+                //                 deleteTab(tab.id);
+                //               }}
+                //             >
+                //               Delete Space
+                //             </Button>
+                //             <SheetClose asChild>
+                //               <Button
+                //                 type="submit"
+                //                 variant="outline"
+                //                 className="w-1/3 text-sm"
+                //               >
+                //                 Cancel
+                //               </Button>
+                //             </SheetClose>
+                //             <Button
+                //               type="submit"
+                //               className="bg-primaryColor-700 text-white hover:bg-primaryColor-700 text-sm w-1/3"
+                //               onClick={(e) => {
+                //                 e.stopPropagation();
+                //                 updateSpaceTab(tab.id);
+                //               }}
+                //             >
+                //               Update
+                //             </Button>
+                //           </SheetFooter>
+                //         </SheetContent>
+                //       </Sheet>
+                //     )}
+                //   </div>
+                // ))
+                // Filter and map tabs based on loggedSpaceId
+                tabs
+                  .filter((tab) => loggedSpaceId.includes(tab.id))
+                  .map((tab) => (
+                    <div
+                      key={tab.id}
+                      onClick={() => handleTabClick(tab.id)}
+                      className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
+                        activeTab === tab.id
+                          ? "bg-[#1A56DB] text-white border-none"
+                          : "bg-white border-gray-300"
+                      }`}
+                    >
+                      <span>{tab.space_name}</span>
+
+                      {(loggedUserData?.role === "owner" ||
+                        (loggedUserData?.role === "User" &&
+                          ((loggedUserData?.access?.space !== true &&
+                            loggedUserData?.access?.all === true) ||
+                            loggedUserData?.access?.space === true))) && (
+                        <Sheet>
+                          <SheetTrigger asChild>
+                            <EllipsisVertical
+                              className={`absolute right-2 focus:outline-none space_delete_button ${
+                                activeTab === tab.id
+                                  ? "text-white border-none"
+                                  : "bg-white border-gray-300 text-gray-400"
+                              }`}
+                              size={16}
+                            />
+                          </SheetTrigger>
+                          <SheetContent
+                            className="pt-2.5 p-3 font-inter flex flex-col justify-between"
+                            style={{ maxWidth: "415px" }}
                           >
-                            Cancel
-                          </Button>
-                        </SheetClose>
-                        <Button
-                          type="submit"
-                          className="bg-primaryColor-700 text-white hover:bg-primaryColor-700 text-sm w-1/3"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateSpaceTab(tab.id);
-                          }}
-                        >
-                          Update
-                        </Button>
-                      </SheetFooter>
-                    </SheetContent>
-                  </Sheet>
-                )}
-              </div>
-            ))) : (
-              <p>User space</p>
-            )
-            }
-            {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.space !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.space === true))) && (
+                            <div>
+                              <SheetHeader>
+                                <SheetTitle className="text-gray-500 uppercase text-base">
+                                  Space Settings
+                                </SheetTitle>
+                              </SheetHeader>
+                              <div className="mt-3">
+                                <Label
+                                  htmlFor="name"
+                                  className="text-sm text-gray-900"
+                                >
+                                  Space Name
+                                </Label>
+                                <Input
+                                  id="name"
+                                  defaultValue={tab.space_name}
+                                  className="w-full mt-1"
+                                  onChange={(e) =>
+                                    setUpdatedSpaceName(e.target.value)
+                                  }
+                                  autoFocus
+                                />
+                              </div>
+                              <div className="pt-2">
+                                <Label
+                                  htmlFor="name"
+                                  className="text-sm text-gray-900"
+                                >
+                                  Teams
+                                </Label>
+                                <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[70vh] max-h-[70vh] overflow-auto playlist-scroll">
+                                  {spaceDetails.length > 0 ? (
+                                    spaceDetails.map((team, index) => (
+                                      <div
+                                        key={index}
+                                        className="flex items-center justify-between mb-2"
+                                      >
+                                        <p className="text-gray-900 font-inter text-sm">
+                                          {team.team_name.length > 16
+                                            ? team.team_name.slice(0, 16) +
+                                              "..."
+                                            : team.team_name}
+                                        </p>
+                                        <div className="flex">
+                                          {team.members.length > 0 ? (
+                                            <>
+                                              {team.members
+                                                .slice(0, 6)
+                                                .map(
+                                                  (
+                                                    member: any,
+                                                    index: number
+                                                  ) => (
+                                                    <Image
+                                                      key={index}
+                                                      src={member.profile_image}
+                                                      alt={member.name}
+                                                      width={30}
+                                                      height={30}
+                                                      className={`w-[32px] h-[32px] rounded-full ${
+                                                        team.members.length ===
+                                                        1
+                                                          ? "mr-2.5"
+                                                          : team.members
+                                                              .length > 0
+                                                          ? "-mr-2.5"
+                                                          : ""
+                                                      } border-2 border-white`}
+                                                    />
+                                                  )
+                                                )}
+                                              {team.members.length > 6 && (
+                                                <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
+                                                  +{team.members.length - 6}
+                                                </div>
+                                              )}
+                                            </>
+                                          ) : (
+                                            <p className="text-gray-900 font-inter text-sm">
+                                              No Members Found
+                                            </p>
+                                          )}
+                                        </div>
+                                        <Trash2
+                                          size={16}
+                                          className="cursor-pointer"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteTeam(team, index);
+                                          }}
+                                        />
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <p className="text-gray-500 text-base font-inter">
+                                      No Team Found
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <SheetFooter>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-1/3 border border-red-500 text-red-500 text-sm hover:text-red-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteTab(tab.id);
+                                }}
+                              >
+                                Delete Space
+                              </Button>
+                              <SheetClose asChild>
+                                <Button
+                                  type="submit"
+                                  variant="outline"
+                                  className="w-1/3 text-sm"
+                                >
+                                  Cancel
+                                </Button>
+                              </SheetClose>
+                              <Button
+                                type="submit"
+                                className="bg-primaryColor-700 text-white hover:bg-primaryColor-700 text-sm w-1/3"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateSpaceTab(tab.id);
+                                }}
+                              >
+                                Update
+                              </Button>
+                            </SheetFooter>
+                          </SheetContent>
+                        </Sheet>
+                      )}
+                    </div>
+                  ))}
+            {(loggedUserData?.role === "owner" ||
+              (loggedUserData?.role === "User" &&
+                ((loggedUserData?.access?.space !== true &&
+                  loggedUserData?.access?.all === true) ||
+                  loggedUserData?.access?.space === true))) && (
               <button
                 onClick={addNewTab}
                 className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10 min-w-fit"
@@ -934,7 +1360,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
               </button>
             )}
           </div>
-          {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.team !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.team === true))) && (
+          {(loggedUserData?.role === "owner" ||
+            (loggedUserData?.role === "User" &&
+              ((loggedUserData?.access?.team !== true &&
+                loggedUserData?.access?.all === true) ||
+                loggedUserData?.access?.team === true))) && (
             <div className="flex gap-2 py-2.5 text-sm text-gray-400 ml-20">
               <Sheet
                 open={memberAddDialogOpen}

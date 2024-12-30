@@ -300,10 +300,10 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
       const includesTrueTasks = data.filter((task) =>
         task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
       );
-      console.log(
-        includesTrueTasks.map((task) => task.team_id),
-        "includesTrueTasks"
-      );
+      // console.log(
+      //   includesTrueTasks.map((task) => task.team_id),
+      //   "includesTrueTasks"
+      // );
       setLoggedTeamId(includesTrueTasks.map((task) => task.team_id));
       setAllTasks(data);
     }
@@ -600,7 +600,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
   useEffect(() => {
     const getUser = async () => {
       const user = await getLoggedInUserData();
-      console.log(user, " user");
+      // console.log(user, " user");
 
       const { data, error } = await supabase
         .from("users")
@@ -612,7 +612,6 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
         console.log(error);
         return;
       }
-      console.log(data.role);
       setRole(data.role);
     };
 

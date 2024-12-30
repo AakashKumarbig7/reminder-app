@@ -26,7 +26,7 @@ export default function DashboardLayout({
         console.log(error);
         return;
       }
-      console.log(data);
+      // console.log(data);
       setLoggedUserData(data);
     };
 
