@@ -27,11 +27,10 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import { any } from "zod";
 import WebNavbar from "./navbar";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { useGlobalContext } from "@/context/store";
-import { all } from "axios";
+import { HiMiniDocumentPlus } from "react-icons/hi2";
+import { set } from "date-fns";
 
 interface Tab {
   id: number;
@@ -89,6 +88,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [filterFn, setFilterFn] = useState(() => {});
   const [allTasks, setAllTasks] = useState<any>([]);
   const [loggedSpaceId, setLoggedSpaceId] = useState<any[]>([]);
+  const [spaceLength, setSpaceLength] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchSpaces();
@@ -598,23 +599,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           return;
         }
 
-        const user = await getLoggedInUserData();
-
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .insert({
-            id: user?.id,
-            team_id: insertedData,
-          })
-          .eq("id", user?.id)
-          .single();
-
-        if (userError) {
-          console.error("Error updating team name:", userError);
-          return;
-        }
-        console.log(userData, " userData");
-
         setTeamName("");
         setAddedMembers([]);
         setTeamNameError(false);
@@ -664,6 +648,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   };
 
   const newFetchSpace = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
@@ -671,8 +656,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
     if (error) {
       console.log(error);
+      setLoading(false);
       return;
     }
+    setLoading(false);
     return data;
   };
 
@@ -734,6 +721,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
           // Store all combined space IDs
           setLoggedSpaceId(combinedData.map((space) => space.id));
+          setSpaceLength(combinedData.length);
         }
       }
 
@@ -828,21 +816,38 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         setTaskStatusFilterValue={setTaskStatusFilterValue as any}
         filterFn={filterFn as any}
       />
-      <div className="px-3">
-        <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full h-[62px]">
-          <div className="flex gap-2 py-2.5 text-sm text-gray-400 mr-60">
+      <div className="px-3 flex justify-start items-center gap-3 h-[calc(100vh-70px)]">
+        <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[180px] max-w-[200px] h-full pt-0 pb-0 playlist-scroll">
+              <div className="text-sm text-gray-400 flex flex-col gap-2.5">
+          {(loggedUserData?.role === "owner" ||
+              (loggedUserData?.role === "User" &&
+                ((loggedUserData?.access?.space !== true &&
+                  loggedUserData?.access?.all === true) ||
+                  loggedUserData?.access?.space === true))) && (
+                    <div className="pt-5 sticky top-0 z-50 bg-white">
+              <button
+                onClick={addNewTab}
+                className=" rounded-lg border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10 min-w-fit text-gray-800 justify-center w-full"
+                // style={{ width: "max-content" }}
+              >
+                <HiMiniDocumentPlus className="w-5 h-5" />
+                Add Space
+              </button>
+              </div>
+            )}
             {loggedUserData?.role === "owner"
-              ? tabs.map((tab) => (
+              ? 
+              tabs.map((tab) => (
                   <div
                     key={tab.id}
                     onClick={() => handleTabClick(tab.id)}
-                    className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
+                    className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded-[10px] border pl-3 py-1 pr-8 cursor-pointer h-10 ${
                       activeTab === tab.id
                         ? "bg-[#1A56DB] text-white border-none"
                         : "bg-white border-gray-300"
                     }`}
                   >
-                    <span>{tab.space_name}</span>
+                    <span>{tab.space_name.length > 10 ? `${tab.space_name.slice(0, 10)}...` : tab.space_name}</span>
 
                     {(loggedUserData?.role === "owner" ||
                       (loggedUserData?.role === "User" &&
@@ -1009,169 +1014,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                     )}
                   </div>
                 ))
-              : // loggedSpaceId.map((tab) => (
-                //   <div
-                //     key={tab.id}
-                //     onClick={() => handleTabClick(tab.id)}
-                //     className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
-                //       activeTab === tab.id
-                //         ? "bg-[#1A56DB] text-white border-none"
-                //         : "bg-white border-gray-300"
-                //     }`}
-                //   >
-                //     <span>{tab.space_name}</span>
-
-                //     {(loggedUserData?.role === "owner" || (loggedUserData?.role === "User" && (loggedUserData?.access?.space !== true && loggedUserData?.access?.all === true || loggedUserData?.access?.space === true))) && (
-                //       <Sheet
-                //       // open={spaceEditDialogOpen}
-                //       // onOpenChange={setSpaceEditDialogOpen}
-                //       >
-                //         <SheetTrigger asChild>
-                //           <EllipsisVertical
-                //             className={`absolute right-2 focus:outline-none space_delete_button ${
-                //               activeTab === tab.id
-                //                 ? "text-white border-none"
-                //                 : "bg-white border-gray-300 text-gray-400"
-                //             }`}
-                //             size={16}
-                //           />
-                //         </SheetTrigger>
-                //         <SheetContent
-                //           className="pt-2.5 p-3 font-inter flex flex-col justify-between"
-                //           style={{ maxWidth: "415px" }}
-                //         >
-                //           <div>
-                //             <SheetHeader>
-                //               <SheetTitle className="text-gray-500 uppercase text-base">
-                //                 space setting
-                //               </SheetTitle>
-                //             </SheetHeader>
-                //             <div className="mt-3">
-                //               <Label
-                //                 htmlFor="name"
-                //                 className="text-sm text-gray-900"
-                //               >
-                //                 Space Name
-                //               </Label>
-                //               <Input
-                //                 id="name"
-                //                 defaultValue={tab.space_name}
-                //                 className="w-full mt-1"
-                //                 onChange={(e) =>
-                //                   setUpdatedSpaceName(e.target.value)
-                //                 }
-                //                 autoFocus
-                //               />
-                //             </div>
-                //             <div className="pt-2">
-                //               <Label
-                //                 htmlFor="name"
-                //                 className="text-sm text-gray-900"
-                //               >
-                //                 Teams
-                //               </Label>
-                //               <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[70vh] max-h-[70vh] overflow-auto playlist-scroll">
-                //                 {spaceDetails.length > 0 ? (
-                //                   spaceDetails.map((team: any, index: number) => (
-                //                     <div
-                //                       key={index}
-                //                       className="flex items-center justify-between mb-2"
-                //                     >
-                //                       <p className="text-gray-900 font-inter text-sm">
-                //                         {team.team_name.length > 16
-                //                           ? team.team_name.slice(0, 16) + "..."
-                //                           : team.team_name}
-                //                       </p>
-                //                       <div className="flex">
-                //                         {team.members.length > 0 ? (
-                //                           <>
-                //                             {team.members
-                //                               .slice(0, 6)
-                //                               .map((member: any, index: number) => (
-                //                                 <Image
-                //                                   key={index}
-                //                                   src={member.profile_image}
-                //                                   alt={member.name}
-                //                                   width={30}
-                //                                   height={30}
-                //                                   className={`w-[32px] h-[32px] rounded-full ${
-                //                                     team.members.length === 1
-                //                                       ? "mr-2.5"
-                //                                       : team.members.length > 0
-                //                                       ? "-mr-2.5"
-                //                                       : ""
-                //                                   } border-2 border-white`}
-                //                                 />
-                //                               ))}
-                //                             {team.members.length > 6 && (
-                //                               <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
-                //                                 +{team.members.length - 6}
-                //                               </div>
-                //                             )}
-                //                           </>
-                //                         ) : (
-                //                           <p className="text-gray-900 font-inter text-sm">
-                //                             No Members Found
-                //                           </p>
-                //                         )}
-                //                       </div>
-
-                //                       <Trash2
-                //                         size={16}
-                //                         className="cursor-pointer"
-                //                         onClick={(e) => {
-                //                           e.stopPropagation();
-                //                           deleteTeam(team, index);
-                //                         }}
-                //                       />
-                //                     </div>
-                //                   ))
-                //                 ) : (
-                //                   <p className="text-gray-500 text-base font-inter">
-                //                     No Team Found
-                //                   </p>
-                //                 )}
-                //               </div>
-                //             </div>
-                //           </div>
-
-                //           <SheetFooter className="">
-                //             <Button
-                //               type="button"
-                //               variant="outline"
-                //               className="w-1/3 border border-red-500 text-red-500 text-sm hover:text-red-500"
-                //               onClick={(e) => {
-                //                 e.stopPropagation();
-                //                 deleteTab(tab.id);
-                //               }}
-                //             >
-                //               Delete Space
-                //             </Button>
-                //             <SheetClose asChild>
-                //               <Button
-                //                 type="submit"
-                //                 variant="outline"
-                //                 className="w-1/3 text-sm"
-                //               >
-                //                 Cancel
-                //               </Button>
-                //             </SheetClose>
-                //             <Button
-                //               type="submit"
-                //               className="bg-primaryColor-700 text-white hover:bg-primaryColor-700 text-sm w-1/3"
-                //               onClick={(e) => {
-                //                 e.stopPropagation();
-                //                 updateSpaceTab(tab.id);
-                //               }}
-                //             >
-                //               Update
-                //             </Button>
-                //           </SheetFooter>
-                //         </SheetContent>
-                //       </Sheet>
-                //     )}
-                //   </div>
-                // ))
+              :
                 // Filter and map tabs based on loggedSpaceId
                 tabs
                   .filter((tab) => loggedSpaceId.includes(tab.id))
@@ -1179,13 +1022,13 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                     <div
                       key={tab.id}
                       onClick={() => handleTabClick(tab.id)}
-                      className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded border pl-3 py-1 pr-8 cursor-pointer h-10 ${
+                      className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded-[8px] border pl-3 py-1 pr-8 cursor-pointer h-10 ${
                         activeTab === tab.id
                           ? "bg-[#1A56DB] text-white border-none"
                           : "bg-white border-gray-300"
                       }`}
                     >
-                      <span>{tab.space_name}</span>
+                      <span>{tab.space_name.length > 10 ? `${tab.space_name.slice(0, 10)}...` : tab.space_name}</span>
 
                       {(loggedUserData?.role === "owner" ||
                         (loggedUserData?.role === "User" &&
@@ -1346,34 +1189,26 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                       )}
                     </div>
                   ))}
-            {(loggedUserData?.role === "owner" ||
-              (loggedUserData?.role === "User" &&
-                ((loggedUserData?.access?.space !== true &&
-                  loggedUserData?.access?.all === true) ||
-                  loggedUserData?.access?.space === true))) && (
-              <button
-                onClick={addNewTab}
-                className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10 min-w-fit"
-                style={{ width: "max-content" }}
-              >
-                Add New Space <CirclePlus size={16} />
-              </button>
-            )}
+            
           </div>
+          
+          
+        </div>
+        <div className="w-full flex gap-3 h-[calc(100vh-70px)]">
+          <div className="w-[183px] h-full flex flex-col justify-center items-center border border-dashed border-gray-400 rounded-[10px] px-4">
           {(loggedUserData?.role === "owner" ||
             (loggedUserData?.role === "User" &&
               ((loggedUserData?.access?.team !== true &&
                 loggedUserData?.access?.all === true) ||
-                loggedUserData?.access?.team === true))) && (
-            <div className="flex gap-2 py-2.5 text-sm text-gray-400 ml-20">
+                loggedUserData?.access?.team === true) && (spaceLength > 0 || spaceLength === 1))) && (
+            <div className="flex gap-2 text-sm text-gray-400 w-full">
               <Sheet
                 open={memberAddDialogOpen}
                 onOpenChange={setMemberAddDialogOpen}
               >
                 <SheetTrigger asChild>
                   <button
-                    className="bg-white rounded border-dashed border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10"
-                    style={{ width: "max-content" }}
+                    className="rounded-[10px] border-dashed border border-gray-400 px-2 py-0.5 flex items-center justify-center gap-2 h-10 w-full"
                   >
                     <span className="text-gray-600">
                       <CirclePlus size={16} />
@@ -1534,7 +1369,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
               </Sheet>
             </div>
           )}
-        </div>
+          </div>
         <SpaceTeam
           spaceId={spaceId as number}
           teamData={teamData}
@@ -1550,6 +1385,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           // allTasks={allTasks as any}
           // setAllTasks={setAllTasks as any}
         />
+        </div>
       </div>
     </>
   );
