@@ -1847,7 +1847,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                           (loggedUserData?.role === "User" &&
                             ((loggedUserData?.access?.task !== true &&
                               loggedUserData?.access?.all === true) ||
-                              loggedUserData?.access?.task === true))) && (
+                              loggedUserData?.access?.task === true))) && (searchValue=="")&& (
                           <Button
                             variant={"outline"}
                             className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
@@ -1862,9 +1862,9 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                         )}
                       </div>
                       {loggedUserData?.role === "owner" ? (
-                        allTasks.length > 0 ? (
+                        (searchValue === "" ? allTasks : filteredTasks).length > 0 ? (
                           <div className="w-full px-4 pb-4">
-                            {allTasks.map(
+                            {(searchValue === "" ? allTasks : filteredTasks).map(
                               (task: any) =>
                                 task.team_id === team.id && (
                                   <div
@@ -2105,7 +2105,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                             No tasks found
                           </div>
                         )
-                      ) : allTasks.filter(
+                      ) : (searchValue === "" ? allTasks : filteredTasks).filter(
                           (task: any) =>
                             task.team_id === team.id &&
                             task?.mentions?.includes(
@@ -2113,7 +2113,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                             ) || task.mentions === null
                         ).length > 0 ? (
                         <div className="w-full px-4 pb-4">
-                          {allTasks
+                          {(searchValue === "" ? allTasks : filteredTasks)
                             .filter(
                               (task: any) =>
                                 task.team_id === team.id &&
