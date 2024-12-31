@@ -744,7 +744,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
               teams.map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="max-w-[340px] w-[340px] h-[calc(100vh-70px)] basis-[28%] overflow-y-auto relative playlist-scroll"
+                  className="max-w-[340px] h-[calc(100vh-70px)] basis-[30%] overflow-y-auto relative playlist-scroll"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="w-full h-full p-0">
@@ -1536,7 +1536,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
               )).map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="max-w-[340px] w-[340px] basis-[28%] h-[calc(100vh-70px)] overflow-y-auto relative playlist-scroll"
+                  className="max-w-[340px] basis-[30%] h-[calc(100vh-70px)] overflow-y-auto relative playlist-scroll"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="w-full h-full p-0">
