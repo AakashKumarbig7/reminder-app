@@ -86,13 +86,10 @@ const FilterComponent: React.FC<FilterProps> = ({
     }
   };
 
-  const allTeamData = teamData.map((team: any) => {
-    console.log("team", team); // Logging the team
-    return {
-      value: team.team_name,
-      label: team.team_name,
-    };
-  });
+  const allTeamData = teamData.map((team: any) => ({
+    value: team.team_name,
+    label: team.team_name,
+  }));
   
 
   const handleSelectChange = (selectedOption: any) => {
