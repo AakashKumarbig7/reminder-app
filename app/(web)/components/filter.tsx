@@ -11,58 +11,59 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 import { Filter } from "lucide-react";
 import Select from "react-select";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
-
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 interface FilterProps {
-    teamFilterValue: string;
-    setTeamFilterValue: (value: string) => void;
-    taskStatusFilterValue: string;
-    setTaskStatusFilterValue: (value: string) => void;
-    filterFn : () => void
+  teamFilterValue: string;
+  setTeamFilterValue: (value: string) => void;
+  taskStatusFilterValue: string;
+  setTaskStatusFilterValue: (value: string) => void;
+  filterFn: () => void;
 }
 
 const taskStatusOptions = [
-    {
-      value: "All",
-      label: "All",
-    },
-    {
-      value: "Todo",
-      label: "Todo",
-    },
-    {
-      value: "Inprogress",
-      label: "Inprogress",
-    },
-    {
-      value: "Feedback",
-      label: "Feedback",
-    },
-    {
-      value: "Completed",
-      label: "Completed",
-    },
-  ];
+  {
+    value: "All",
+    label: "All",
+  },
+  {
+    value: "Todo",
+    label: "Todo",
+  },
+  {
+    value: "Inprogress",
+    label: "Inprogress",
+  },
+  {
+    value: "Feedback",
+    label: "Feedback",
+  },
+  {
+    value: "Completed",
+    label: "Completed",
+  },
+];
 
-const FilterComponent : React.FC<FilterProps> = ({
-    teamFilterValue, 
-    setTeamFilterValue, 
-    taskStatusFilterValue, 
-    setTaskStatusFilterValue,
-    filterFn
+const FilterComponent: React.FC<FilterProps> = ({
+  teamFilterValue,
+  setTeamFilterValue,
+  taskStatusFilterValue,
+  setTaskStatusFilterValue,
+  filterFn,
 }) => {
   const [teamData, setTeamData] = useState<any>([]);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const [selectedTaskStatus, setSelectedTaskStatus] = useState<any>(null);
+  const [date, setDate] = useState<any>(null);
 
   const getTeamData = async () => {
     try {
@@ -70,13 +71,14 @@ const FilterComponent : React.FC<FilterProps> = ({
         .from("teams")
         .select("*")
         .eq("is_deleted", false);
-
+        console.log("Team data:", data);
       if (error) {
         console.error("Error fetching team data:", error);
         return;
       }
 
       if (data) {
+        console.log("Team data:", data);
         setTeamData(data);
       }
     } catch (error) {
@@ -84,10 +86,14 @@ const FilterComponent : React.FC<FilterProps> = ({
     }
   };
 
-  const allTeamData = teamData.map((team: any) => ({
-    value: team.team_name,
-    label: team.team_name,
-  }));
+  const allTeamData = teamData.map((team: any) => {
+    console.log("team", team); // Logging the team
+    return {
+      value: team.team_name,
+      label: team.team_name,
+    };
+  });
+  
 
   const handleSelectChange = (selectedOption: any) => {
     setSelectedTeam(selectedOption);
@@ -104,6 +110,11 @@ const FilterComponent : React.FC<FilterProps> = ({
   useEffect(() => {
     getTeamData();
   }, []);
+  // handleCloseCancel = () => {
+  //   setSelectedTeam(null);
+  //   setSelectedTaskStatus(null);
+  //   setDate(null);
+  // }
   return (
     <>
       <Sheet>
@@ -132,7 +143,9 @@ const FilterComponent : React.FC<FilterProps> = ({
                 />
               </div>
               <div className="pb-3">
-                <Label className="text-sm text-gray-900 block pb-1">Task status</Label>
+                <Label className="text-sm text-gray-900 block pb-1">
+                  Task status
+                </Label>
                 <Select
                   className="w-full mt-1"
                   options={taskStatusOptions}
@@ -142,13 +155,40 @@ const FilterComponent : React.FC<FilterProps> = ({
                   placeholder="Select a team"
                 />
               </div>
+              <div>
+                <Label className="text-sm text-gray-900 block pb-1">
+                  Due Date
+                </Label>
+                <div className="relative">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="flex items-center justify-between w-full px-3 py-2 border rounded-lg text-left focus:outline-none"
+                        type="button"
+                      >
+                        {date ? (
+                          <span>{format(date, "dd/MMM/yyyy")}</span>
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-2" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
             </div>
-            <div>
-              <Label className="text-sm text-gray-900 block pb-1">Due Date</Label>
-              <Input className="w-full mt-1 "  />
-            </div>
+
             <SheetFooter className="w-full flex gap-2 pb-4">
-              <Button className="w-1/2" variant="outline">
+              <Button className="w-1/2" variant="outline" >
                 Cancel
               </Button>
               <Button

@@ -81,7 +81,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [spaceDetails, setSpaceDetails] = useState<any[]>([]);
   const [spaceName, setSpaceName] = useState<string>("");
   const [deletedSpace, setDeletedSpace] = useState<any[]>([]);
-  const [searchValue, setSearchValue] = useState<string | null>("");
+  const [searchValue, setSearchValue] = useState<string >("");
   const [teamFilterValue, setTeamFilterValue] = useState<string | null>("");
   const [taskStatusFilterValue, setTaskStatusFilterValue] = useState<
     string | null
@@ -745,58 +745,58 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     loggedSpaceId.some((space) => space.id === tab.id)
   );
 
-  const handleFilterTasksAndTeams = async () => {
-    try {
-      if (teamFilterValue === "" || taskStatusFilterValue === "") {
-        fetchTeams();
-        fetchTasks();
-      } else {
-        let query = supabase.from("tasks").select("*").eq("is_deleted", false);
+  // const handleFilterTasksAndTeams = async () => {
+  //   try {
+  //     if (teamFilterValue === "" || taskStatusFilterValue === "") {
+  //       fetchTeams();
+  //       fetchTasks();
+  //     } else {
+  //       let query = supabase.from("tasks").select("*").eq("is_deleted", false);
 
-        if (teamFilterValue !== "") {
-          const { data, error } = await supabase
-            .from("teams")
-            .select("id")
-            .eq("is_deleted", 0)
-            // .eq("userId", signedInUserId)
-            .eq("team_name", teamFilterValue)
-            .single(); // Use single() to directly fetch a single object
+  //       if (teamFilterValue !== "") {
+  //         const { data, error } = await supabase
+  //           .from("teams")
+  //           .select("id")
+  //           .eq("is_deleted", 0)
+  //           // .eq("userId", signedInUserId)
+  //           .eq("team_name", teamFilterValue)
+  //           .single(); // Use single() to directly fetch a single object
 
-          if (error) {
-            throw error;
-          }
-          query = query.eq("orientation", data.id).eq("is_deleted", false);
-        }
+  //         if (error) {
+  //           throw error;
+  //         }
+  //         query = query.eq("orientation", data.id).eq("is_deleted", false);
+  //       }
 
-        if (taskStatusFilterValue !== "") {
-          query = query
-            .eq("task_status", taskStatusFilterValue)
-            .eq("is_deleted", false);
-        }
+  //       if (taskStatusFilterValue !== "") {
+  //         query = query
+  //           .eq("task_status", taskStatusFilterValue)
+  //           .eq("is_deleted", false);
+  //       }
 
-        const { data: filteredTasks, error: filterError } = await query.order(
-          "id",
-          { ascending: false }
-        );
+  //       const { data: filteredTasks, error: filterError } = await query.order(
+  //         "id",
+  //         { ascending: false }
+  //       );
 
-        if (filterError) {
-          throw filterError;
-        }
+  //       if (filterError) {
+  //         throw filterError;
+  //       }
 
-        if (filteredTasks && filteredTasks.length > 0) {
-          setAllTasks(filteredTasks);
-        } else {
-          toast({
-            title: "No data found",
-            description: "No data found for the selected filters.",
-          });
-          setAllTasks([]);
-        }
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  //       if (filteredTasks && filteredTasks.length > 0) {
+  //         setAllTasks(filteredTasks);
+  //       } else {
+  //         toast({
+  //           title: "No data found",
+  //           description: "No data found for the selected filters.",
+  //         });
+  //         setAllTasks([]);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -827,6 +827,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         taskStatusFilterValue={taskStatusFilterValue as string}
         setTaskStatusFilterValue={setTaskStatusFilterValue as any}
         filterFn={filterFn as any}
+        // spaceId={spaceId}
+        // teamData={teamData}
       />
       <div className="px-3">
         <div className="mb-4 flex justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-full max-w-full h-[62px]">

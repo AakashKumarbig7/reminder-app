@@ -19,6 +19,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import FilterComponent from "./filter";
+// import FilterTeamSearch from "./filterTeamSearch";
 
 interface loggedUserDataProps {
   loggedUserData: any;
@@ -118,9 +119,12 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                   // type="search"
                   placeholder="Search"
                   value={searchValue}
-                  className="w-[384px] h-[42px] pl-8 pr-7 bg-white shadow-none font-medium justify-start gap-3 rounded-[10px] flex items-center"
-                  onChange={(e)  => setSearchValue(e.target.value)}
+                  className="w-[384px] h-[42px] pl-8 pr-7 bg-white shadow-none font-medium justify-start gap-3 rounded-[10px] flex items-center "
+                  onChange={(e)  =>{console.log(e.target.value), setSearchValue(e.target.value)}}
+                  // onFocus={() => setIsFocused(true)} // Set focus state to true
+                  // onBlur={() => setIsFocused(false)} // Optional: Handle blur to close the page
                 />
+               
                 <X
                   size={14}
                   className="absolute top-3.5 right-2.5 cursor-pointer"
