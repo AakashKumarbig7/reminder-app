@@ -1847,7 +1847,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                           (loggedUserData?.role === "User" &&
                             ((loggedUserData?.access?.task !== true &&
                               loggedUserData?.access?.all === true) ||
-                              loggedUserData?.access?.task === true))) && (searchValue=="")&& (
+                              loggedUserData?.access?.task === true))) && (searchValue=="") && (
                           <Button
                             variant={"outline"}
                             className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
