@@ -424,13 +424,13 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
 
                 {/* Dialog content */}
                 <DialogContent>
-                  <div className="text-center">
-                    <h2 className="text-lg font-semibold">Are you sure?</h2>
+                  <div className="text-start">
+                    <h2 className="text-lg font-bold">Delete Space</h2>
                     <p className="mt-2 text-sm text-gray-600">
                       Do you really want to delete this space
                     </p>
                   </div>
-                  <DialogFooter className="flex justify-end mt-4">
+                  <DialogFooter className="flex items-start mt-4">
                     {/* Cancel button */}
                     <button
                       className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
@@ -446,7 +446,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
                       onClick={() =>handleDelete(spaceId)}
                       disabled={isDeleting}
                     >
-                      {isDeleting ? "Deleting..." : "Delete"}
+                      Delete
                     </button>
                   </DialogFooter>
                 </DialogContent>

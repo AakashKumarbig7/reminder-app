@@ -456,23 +456,23 @@ export default function SpaceSetting({}) {
         </div>
 
         {/* Table displaying spaces */}
-        <div className="pt-[18px] pb-[18px]">
-          <Table className="border-b   overflow-y-auto playlist-scroll border-gray-200 bg-white rounded-[10px]">
-            <TableHeader className=" sticky top-0">
+        <div className="pt-[18px] pb-[18px] ">
+          <Table className=" block w-[98vw] h-max-[500px]  overflow-y-auto playlist-scroll  bg-white rounded-[10px] font-inter">
+            <TableHeader className=" sticky top-0 bg-white">
               <TableRow>
-                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4 w-[18%] font-semibold text-gray-500 text-sm">
                   SPACE NAME
                 </TableHead>
-                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%] font-semibold text-gray-500 text-sm">
                   CREATED BY
                 </TableHead>
-                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%] font-semibold text-gray-500 text-sm">
                   TEAMS
                 </TableHead>
-                <TableHead className="px-4 py-4  font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%]  font-semibold text-gray-500 text-sm">
                   MEMBERS
                 </TableHead>
-                <TableHead className="px-4 py-4 text-right font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%] text-right font-semibold text-gray-500 text-sm">
                   ACTION
                 </TableHead>
               </TableRow>
@@ -508,46 +508,6 @@ export default function SpaceSetting({}) {
                         "No teams"
                       )}
                     </TableCell>
-                    {/* <TableCell>
-                      {spaces.length > 0 ? (
-                        spaces.map((team: any, index: number) => (
-                          <div key={index} className="flex">
-                            {Array.isArray(team?.members) &&
-                            team.members.length > 0 ? (
-                              <>
-                                {team.members
-                                  .slice(0, 6)
-                                  .map((member: any, idx: number) => (
-                                    <Image
-                                      key={idx}
-                                      src={member.profile_image}
-                                      alt={member.name}
-                                      width={30}
-                                      height={30}
-                                      className={`w-[32px] h-[32px] rounded-full ${
-                                        team.members.length === 1
-                                          ? "mr-2.5"
-                                          : team.members.length > 0
-                                          ? "-mr-2.5"
-                                          : ""
-                                      } border-2 border-white`}
-                                    />
-                                  ))}
-                                {team.members.length > 6 && (
-                                  <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
-                                    +{team.members.length - 6}
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-gray-900 font-inter text-sm">
-                                No Members Found
-                              </p>
-                            )}
-                          </div>
-                        ))
-                      ) }
-                    </TableCell> */}
                     <TableCell className="px-4 py-4 text-sm text-gray-500">
                       <div className="flex">
                         {teamData && teamData.length > 0 ? (
@@ -619,7 +579,7 @@ export default function SpaceSetting({}) {
                         <DialogContent>
                           <div className="">
                             <h2 className="text-lg font-semibold">
-                              Are you sure?
+                              Delete Space
                             </h2>
                             <p className="mt-2 text-sm text-gray-600">
                               Do you really want to delete this{" "}

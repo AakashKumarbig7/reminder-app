@@ -84,7 +84,7 @@ const FilterComponent: React.FC<FilterProps> = ({
         console.log("Team data:", data);
         setTeamData(data);
       }
-    } catch (error) {
+    } catch (error) { 
       console.error("Error fetching team data:", error);
     }
   };
@@ -93,27 +93,27 @@ const FilterComponent: React.FC<FilterProps> = ({
     value: team.team_name,
     label: team.team_name,
   }));
-   useEffect(() => {
-      const getUser = async () => {
-        const user = await getLoggedInUserData();
-        console.log(user, " user");
+  //  useEffect(() => {
+  //     const getUser = async () => {
+  //       const user = await getLoggedInUserData();
+  //       console.log(user, " user");
   
-        const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("userId", user?.id) // Ensure the key matches the actual column name in your table
-        .single();
+  //       const { data, error } = await supabase
+  //       .from("users")
+  //       .select("*")
+  //       .eq("userId", user?.id) // Ensure the key matches the actual column name in your table
+  //       .single();
   
-        if (error) {
-          console.log(error);
-          return;
-        }
-        console.log(data, "data");
-        setTeamData(data );
-      };
+  //       if (error) {
+  //         console.log(error);
+  //         return;
+  //       }
+  //       console.log(data, "data");
+  //       setTeamData(data );
+  //     };
   
-      getUser();
-    }, []);
+  //     getUser();
+  //   }, []);
 
   const handleSelectChange = (selectedOption: any) => {
     setSelectedTeam(selectedOption);
@@ -162,9 +162,7 @@ const FilterComponent: React.FC<FilterProps> = ({
                   placeholder="Select a team"
                 />
               </div>
-              {/* {
-                loggedUserdata
-              } */}
+              
               
               <div className="pb-3">
                 <Label className="text-sm text-gray-900 block pb-1">

@@ -378,7 +378,7 @@ const TeamCard: React.FC<{
   }, [spaceId]);
 
   return (
-    <CarouselItem key={team.id} className="w-[339px] h-auto   basis-[28%]">
+    <CarouselItem key={team.id} className="w-[339vw] h-auto max-w-[500px]  basis-[28%]">
       <>
         <Card>
           <CardContent className="p-[18px] w-full h-full">
@@ -395,14 +395,14 @@ const TeamCard: React.FC<{
                   />
                 </DialogTrigger>
                 <DialogContent>
-                  <div className="text-center">
-                    <h2 className="text-lg font-semibold">Are you sure?</h2>
+                  <div className="text-start">
+                    <h2 className="text-lg font-inter font-semibold">Delete Team</h2>
                     <p className="mt-2 text-sm text-gray-600">
                       Do you really want to delete this{" "}
-                      <span>{team.team_name}</span>
+                      <span className="font-bold">{team.team_name}</span>
                     </p>
                   </div>
-                  <DialogFooter className="flex justify-end mt-4">
+                  <DialogFooter className=" justify-start items-start mt-4">
                     {/* Cancel button */}
                     <button
                       className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
@@ -496,7 +496,7 @@ const TeamCard: React.FC<{
                 </p>
               )}
               {addedMembers.length > 0 && (
-                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md max-h-64 overflow-y-auto">
+                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md max-h-64 overflow-y-auto playlist-scroll">
                   {addedMembers
                     .filter(
                       (member, index, self) =>

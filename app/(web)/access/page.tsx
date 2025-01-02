@@ -200,7 +200,7 @@ const AccessPage = () => {
               </button>
               <button
                 onClick={() => route.push(`/members`)}
-                className="rounded-lg text-sm text-gray-400 border w-[134px] hover:bg-slate-50 h-[41px]"
+                className="rounded-lg text-sm text-gray-400 border w-[104px]  hover:bg-slate-50 h-[41px]"
               >
                 Members
               </button>
