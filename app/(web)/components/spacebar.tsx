@@ -90,6 +90,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [loggedSpaceId, setLoggedSpaceId] = useState<any[]>([]);
   const [spaceLength, setSpaceLength] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [activeTabName, setActiveTabName] = useState();
 
   useEffect(() => {
     fetchSpaces();
@@ -190,6 +191,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       setTabs(data);
       if (data.length > 0) {
         setActiveTab(data[0].id); // Set the first tab as active initially
+        setActiveTabName(data[0].space_name);
       }
     }
   };
@@ -227,6 +229,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       }
     }
     setActiveTab(id);
+    setActiveTabName(data?.space_name);
   };
 
   // Add a new tab in database and UI
@@ -1196,25 +1199,24 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           
           
         </div>
-        <div className="w-full flex gap-3 h-[calc(100vh-70px)]">
-          <div className="w-[183px] h-full flex flex-col justify-center items-center border border-dashed border-gray-400 rounded-[10px] px-4">
+        <div className="w-full flex flex-col gap-3 h-[calc(100vh-70px)]">
+          <div className="w-full h-[60px] flex justify-between items-center bg-white rounded-[10px] p-4">
+            <p className="text-xl font-semibold font-inter">{activeTabName || spaceName}</p>
           {(loggedUserData?.role === "owner" ||
             (loggedUserData?.role === "User" &&
               ((loggedUserData?.access?.team !== true &&
                 loggedUserData?.access?.all === true) ||
                 loggedUserData?.access?.team === true) && (spaceLength > 0 || spaceLength === 1))) && (
-            <div className="flex gap-2 text-sm text-gray-400 w-full">
+            <div className="flex gap-2 text-sm text-gray-400">
               <Sheet
                 open={memberAddDialogOpen}
                 onOpenChange={setMemberAddDialogOpen}
               >
                 <SheetTrigger asChild>
                   <button
-                    className="rounded-[10px] border-dashed border border-gray-400 px-2 py-0.5 flex items-center justify-center gap-2 h-10 w-full"
+                    className="rounded-[10px] border border-gray-400 text-gray-800 px-2 py-0.5 flex items-center justify-center gap-2 h-10"
                   >
-                    <span className="text-gray-600">
-                      <CirclePlus size={16} />
-                    </span>{" "}
+                    <HiMiniDocumentPlus className="w-5 h-5" />
                     Add Team
                   </button>
                 </SheetTrigger>

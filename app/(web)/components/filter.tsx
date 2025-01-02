@@ -71,14 +71,14 @@ const FilterComponent: React.FC<FilterProps> = ({
         .from("teams")
         .select("*")
         .eq("is_deleted", false);
-        console.log("Team data:", data);
+        // console.log("Team data:", data);
       if (error) {
         console.error("Error fetching team data:", error);
         return;
       }
 
       if (data) {
-        console.log("Team data:", data);
+        // console.log("Team data:", data);
         setTeamData(data);
       }
     } catch (error) {
@@ -87,7 +87,7 @@ const FilterComponent: React.FC<FilterProps> = ({
   };
 
   const allTeamData = teamData.map((team: any) => {
-    console.log("team", team); // Logging the team
+    // console.log("team", team); // Logging the team
     return {
       value: team.team_name,
       label: team.team_name,
@@ -98,13 +98,13 @@ const FilterComponent: React.FC<FilterProps> = ({
   const handleSelectChange = (selectedOption: any) => {
     setSelectedTeam(selectedOption);
     setTeamFilterValue(selectedOption?.value || "");
-    console.log("Selected Team:", selectedOption);
+    // console.log("Selected Team:", selectedOption);
   };
 
   const handleSelectStatus = (selectedOption: any) => {
     setSelectedTaskStatus(selectedOption);
     setTaskStatusFilterValue(selectedOption?.value || "");
-    console.log("Selected Task Status:", selectedOption);
+    // console.log("Selected Task Status:", selectedOption);
   };
 
   useEffect(() => {
@@ -119,8 +119,8 @@ const FilterComponent: React.FC<FilterProps> = ({
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" className="px-3 rounded-[10px]">
-            <Filter size={20} />
+          <Button variant="outline" className="px-2.5 rounded-[10px] h-[42px]">
+            <Filter className="w-5 h-5" />
           </Button>
         </SheetTrigger>
         <SheetContent className="font-inter">

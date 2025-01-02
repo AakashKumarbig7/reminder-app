@@ -585,7 +585,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
   useEffect(() => {
     const getUser = async () => {
       const user = await getLoggedInUserData();
-      console.log(user, " user");
+      // console.log(user, " user");
 
       const { data, error } = await supabase
         .from("users")
@@ -664,6 +664,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
   );
 
   const handleAddTask = async (teamId: any, spaceId: number) => {
+    console.log(loggedUserData?.username, " loggedUserData id");
     setTeams((prevTeams) =>
       prevTeams.map((team) =>
         team.id === teamId
@@ -696,6 +697,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
           space_id: spaceId,
           due_date: formatDate(addDays(new Date(), 1)),
           is_deleted: false,
+          notify_read: false,
+          created_by: loggedUserData?.username,
         })
         .select()
         .order("id", { ascending: false });
@@ -733,7 +736,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
   };
 
   return (
-    <div className="w-full h-[calc(100vh-70px)]">
+    <div className="w-full h-[calc(100vh-142px)]">
       {teams.length > 0 ? (
         <div className="w-full h-full pb-4 px-0">
           <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">
@@ -744,7 +747,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
               teams.map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="max-w-[340px] h-[calc(100vh-70px)] basis-[30%] overflow-y-auto relative playlist-scroll"
+                  className="max-w-[340px] h-[calc(100vh-142px)] basis-[30%] overflow-y-auto relative playlist-scroll"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="w-full h-full p-0">
@@ -1536,7 +1539,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
               )).map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="max-w-[340px] basis-[30%] h-[calc(100vh-70px)] overflow-y-auto relative playlist-scroll"
+                  className="max-w-[340px] basis-[30%] h-[calc(100vh-142px)] overflow-y-auto relative playlist-scroll"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="w-full h-full p-0">

@@ -19,6 +19,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import FilterComponent from "./filter";
+import Notification from "./notificationComp";
 // import FilterTeamSearch from "./filterTeamSearch";
 
 interface loggedUserDataProps {
@@ -184,6 +185,7 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                   )}
                 </div>
               </div>
+              <Notification />
             </>
           )}
 
