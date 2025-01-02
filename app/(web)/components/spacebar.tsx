@@ -819,7 +819,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         // teamData={teamData}
       />
       <div className="px-3 flex justify-start items-center gap-3 h-[calc(100vh-70px)]">
-        <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[180px] max-w-[200px] h-full pt-0 pb-0 playlist-scroll">
+        <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[170px] max-w-[200px] h-full pt-0 pb-0 playlist-scroll">
               <div className="text-sm text-gray-400 flex flex-col gap-2.5">
           {(loggedUserData?.role === "owner" ||
               (loggedUserData?.role === "User" &&
@@ -1293,6 +1293,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                       </label>
                       <Input
                         id="members"
+                        autoComplete="off"
                         placeholder="Add guest email"
                         className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                         onChange={getUserData}
