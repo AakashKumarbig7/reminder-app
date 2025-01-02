@@ -137,6 +137,8 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                 taskStatusFilterValue={taskStatusFilterValue}
                 setTaskStatusFilterValue={setTaskStatusFilterValue}
                 filterFn={filterFn}
+                loggedUserData={loggedUserData}
+               
               />
               <div className="max-w-[300px] w-[273px] h-[42px] bg-white shadow-none pl-2 font-bold justify-start gap-3 rounded-[10px] flex items-center">
                 <div className="w-full border-r border-zinc-300">

@@ -21,9 +21,11 @@ import Select from "react-select";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
 import { CalendarIcon } from "lucide-react";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { format } from "date-fns";
 interface FilterProps {
   teamFilterValue: string;
+  loggedUserData: any;
   setTeamFilterValue: (value: string) => void;
   taskStatusFilterValue: string;
   setTaskStatusFilterValue: (value: string) => void;
@@ -55,6 +57,7 @@ const taskStatusOptions = [
 
 const FilterComponent: React.FC<FilterProps> = ({
   teamFilterValue,
+  loggedUserData,
   setTeamFilterValue,
   taskStatusFilterValue,
   setTaskStatusFilterValue,
@@ -90,7 +93,27 @@ const FilterComponent: React.FC<FilterProps> = ({
     value: team.team_name,
     label: team.team_name,
   }));
+   useEffect(() => {
+      const getUser = async () => {
+        const user = await getLoggedInUserData();
+        console.log(user, " user");
   
+        const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("userId", user?.id) // Ensure the key matches the actual column name in your table
+        .single();
+  
+        if (error) {
+          console.log(error);
+          return;
+        }
+        console.log(data, "data");
+        setTeamData(data );
+      };
+  
+      getUser();
+    }, []);
 
   const handleSelectChange = (selectedOption: any) => {
     setSelectedTeam(selectedOption);
@@ -139,6 +162,10 @@ const FilterComponent: React.FC<FilterProps> = ({
                   placeholder="Select a team"
                 />
               </div>
+              {/* {
+                loggedUserdata
+              } */}
+              
               <div className="pb-3">
                 <Label className="text-sm text-gray-900 block pb-1">
                   Task status
@@ -151,6 +178,7 @@ const FilterComponent: React.FC<FilterProps> = ({
                   isClearable
                   placeholder="Select a team"
                 />
+                
               </div>
               <div>
                 <Label className="text-sm text-gray-900 block pb-1">
