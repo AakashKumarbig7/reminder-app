@@ -1199,7 +1199,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           
           
         </div>
-        <div className="w-full flex flex-col gap-3 h-[calc(100vh-70px)]">
+        <div className="w-[calc(100%-170px)] flex flex-col gap-3 h-[calc(100vh-70px)]">
           <div className="w-full h-[60px] flex justify-between items-center bg-white rounded-[10px] p-4">
             <p className="text-xl font-semibold font-inter">{activeTabName || spaceName}</p>
           {(loggedUserData?.role === "owner" ||

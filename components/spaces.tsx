@@ -1,6 +1,5 @@
 "use client";
 
-import { CirclePlus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import {
@@ -17,7 +16,7 @@ export default function Spaces() {
   useEffect(() => {
     const fetchSpace = async () => {
       try {
-        let { data: spaces, error } = await supabase
+        const { data : spaces, error } = await supabase
           .from("spaces")
           .select("space_name");
 
@@ -41,6 +40,9 @@ export default function Spaces() {
 
   return (
     <>
+    <div className="hidden">
+      <span>{error}</span>
+    </div>
       <div className="flex justify-between items-center">
         <h4 className="text-lg font-semibold font-geist text-black">Spaces</h4>
         <p className="text-teal-500  font-geist font-medium  text-sm cursor-pointer">View all</p>

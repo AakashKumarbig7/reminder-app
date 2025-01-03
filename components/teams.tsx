@@ -15,7 +15,7 @@ export default function Teams() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        let { data: teams, error } = await supabase
+        const { data: teams, error } = await supabase
           .from("teams")
           .select("team_name");
 
@@ -40,6 +40,9 @@ export default function Teams() {
 
   return (
     <>
+    <div className="hidden">
+      <span>{error}</span>
+    </div>
       <div className="flex justify-between items-center">
         <h4 className="text-lg font-semibold font-geist text-black">Teams</h4>
         <p className="text-teal-500  font-geist font-medium  text-sm cursor-pointer">View all</p>

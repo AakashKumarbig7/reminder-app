@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import WebNavbar from "@/app/(web)/components/navbar";
 import {
   Tooltip,
@@ -18,31 +18,15 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogDescription,
-  DialogTitle,
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { Trash2, Pencil, ClipboardPlus } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { createUser1, updateMetadata } from "./action";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { updateMetadata } from "./action";
 import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "@/hooks/use-toast";
@@ -60,58 +44,45 @@ interface Member {
   password: string;
 }
 
-const formSchema = z.object({
-  picture: z
-    .any()
-    .refine(
-      (file) => file?.length === 1,
-      "*Supported image formats include JPEG, PNG"
-    )
-    .refine(
-      (file) => file[0]?.type === "image/png" || file[0]?.type === "image/jpeg",
-      "Must be a png or jpeg"
-    )
-    .refine((file) => file[0]?.size <= 5000000, "Max file size is 5MB."),
-  companyName: z.string().min(2, {
-    message: "Company name is not recognised. Please try again.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address",
-  }),
-  mobile: z
-    .string()
-    .min(9, {
-      message: "Please enter a valid mobile number with at least 9 digits",
-    })
-    .max(11, {
-      message: "Please enter a valid mobile number with no more than 11 digits",
-    })
-    .regex(/^[0-9]+$/, {
-      message: "Please enter a valid mobile number with no special characters",
-    }),
-});
+// const formSchema = z.object({
+//   picture: z
+//     .any()
+//     .refine(
+//       (file) => file?.length === 1,
+//       "*Supported image formats include JPEG, PNG"
+//     )
+//     .refine(
+//       (file) => file[0]?.type === "image/png" || file[0]?.type === "image/jpeg",
+//       "Must be a png or jpeg"
+//     )
+//     .refine((file) => file[0]?.size <= 5000000, "Max file size is 5MB."),
+//   companyName: z.string().min(2, {
+//     message: "Company name is not recognised. Please try again.",
+//   }),
+//   email: z.string().email({
+//     message: "Please enter a valid email address",
+//   }),
+//   mobile: z
+//     .string()
+//     .min(9, {
+//       message: "Please enter a valid mobile number with at least 9 digits",
+//     })
+//     .max(11, {
+//       message: "Please enter a valid mobile number with no more than 11 digits",
+//     })
+//     .regex(/^[0-9]+$/, {
+//       message: "Please enter a valid mobile number with no special characters",
+//     }),
+// });
 
 const Members = () => {
   const {userId} = useGlobalContext();
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
-  const [error, setError] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [saveLoader, setSaveLoader] = useState(false);
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      picture: "",
-      companyName: "",
-      email: "",
-      mobile: "",
-    },
-  });
 
   // Fetch members from Supabase
   const fetchMembers = async () => {
@@ -125,8 +96,6 @@ const Members = () => {
       setMembers(data || []);
     }
   };
-
-  // Add or update a member
   // const handleAddSubmit = async (e: React.FormEvent) => {
   //   e.preventDefault();
   //   try {
@@ -257,19 +226,6 @@ const Members = () => {
     }
     fetchMembers(); // Load members on component mount
   }, [router]);
-
-  const validateMobileNumber = (mobile: string) => {
-    if (mobile.length < 9) {
-      return "Please enter a valid mobile number with at least 9 digits";
-    }
-    if (mobile.length > 11) {
-      return "Please enter a valid mobile number with no more than 11 digits";
-    }
-    if (!/^[0-9]+$/.test(mobile)) {
-      return "Please enter a valid mobile number with no special characters";
-    }
-    return "";
-  };
 
   if (loading) {
     return (
@@ -489,28 +445,6 @@ const Members = () => {
           </Table>
         </div>
       </div>
-      {/* <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Are you sure you want to delete this member?</DialogTitle>
-            </DialogHeader>
-           
-            <div className="flex space-x-3">
-              <Button
-                className="text-white bg-red-500 hover:bg-red-600"
-                onClick={() => handleDelete(members.id)}
-              >
-                Delete
-              </Button>
-              <Button
-                className="text-white bg-gray-400 hover:bg-gray-500"
-                onClick={() => setIsDeleteDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog> */}
     </>
   );
 };

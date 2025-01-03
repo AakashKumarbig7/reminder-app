@@ -2,10 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { } from "@/components/ui/toast";
-import { toast } from '@/hooks/use-toast';
 import { cookies } from 'next/headers';
 
-const cookieStore = cookies();
+// const cookieStore = cookies();
 
 type Session = {
   access_token: string;
@@ -29,7 +28,7 @@ export function setAuthCookies(data: Data) {
 
 export async function login({ email, password }: { email: string; password: string }) {
   const supabase = createClient()
-  let { data, error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: email,
     password: password
   })
@@ -42,13 +41,12 @@ export async function login({ email, password }: { email: string; password: stri
 
   revalidatePath('/', 'layout')
   redirect('/admin')
-
 }
 
 
 export async function signup({ email, username, password }: { email: string; username: string; password: string }) {
   const supabase = createClient()
-  let { data, error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: email,
     password: password,
     options: {
@@ -73,7 +71,7 @@ export async function signup({ email, username, password }: { email: string; use
 export async function fetchTasks() {
   const supabase = createClient()
   try {
-    let { data: tasks, error } = await supabase
+    const { data: tasks, error } = await supabase
       .from('tasks')
       .select('*')
     if (error) throw error
@@ -86,7 +84,7 @@ export async function fetchTasks() {
 export async function createTasks(data: any) {
   const supabase = createClient()
   try {
-    let { data: tasks, error } = await supabase.from('tasks').insert(data)
+    const { data: tasks, error } = await supabase.from('tasks').insert(data)
     if (error) throw error
     return tasks;
   } catch (error) {

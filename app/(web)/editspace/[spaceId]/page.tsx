@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import WebNavbar from "@/app/(web)/components/navbar";
-import { Trash2, CirclePlus, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,9 +25,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import TeamCard from "../../components/teamCard";
 
 // const notify = (message: string, success: boolean) =>
@@ -41,19 +38,19 @@ import TeamCard from "../../components/teamCard";
 //     position: "top-right",
 //     duration: 3000,
 //   });
-interface Team {
-  id: number;
-  team_name: string;
-}
-interface Tab {
-  id: number;
-  space_name: string;
-  email: string;
-  username: string;
-  designation: string;
-  role: string;
-  department: string;
-}
+// interface Team {
+//   id: number;
+//   team_name: string;
+// }
+// interface Tab {
+//   id: number;
+//   space_name: string;
+//   email: string;
+//   username: string;
+//   designation: string;
+//   role: string;
+//   department: string;
+// }
 
 const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   // States
@@ -61,38 +58,24 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const [selectedSpace, setSelectedSpace] = useState<string | undefined>(
     undefined
   );
-
-  // const [selectedTeam, setSelectedTeam] = useState<any>(null); // Store the selected team data
-  // const [isSaving, setIsSaving] = useState(false); // For handling the save state (loading)
-  // Team-related states
   const [teams, setTeams] = useState<any[]>([]);
-  // const [memberAddDialogOpen, setMemberAddDialogOpen] = useState(false);
-
-  // const [teamName, setTeamName] = useState("");
-  const [teamNameError, setTeamNameError] = useState(false);
-  // const [emailInput, setEmailInput] = useState("");
-  const [matchingUsers, setMatchingUsers] = useState<any[]>([]);
-  // const [noUserFound, setNoUserFound] = useState(false);
-  // const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  // const [addedMembers, setAddedMembers] = useState<any[]>([]);
-  // const [teamMemberError, setTeamMemberError] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [datafromChild, setdatafromchild] = useState("");
-  const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
+  // const [datafromChild, setdatafromchild] = useState("");
+  // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
 
   const router = useRouter();
   const { spaceId } = params;
 
-  const handleDataFromChild = (data: any) => {
-    setdatafromchild(data);
-  };
+  // const handleDataFromChild = (data: any) => {
+  //   setdatafromchild(data);
+  // };
 
   const handleUpdateTeam = async () => {
     try {
       for (const team of teams) {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("teams")
           .update({ members: team.members }) // Update members in the database
           .eq("id", team.id)
@@ -100,22 +83,18 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   
         if (error) {
           console.error("Error updating team:", error);
-          // notify("Error saving changes. Please try again.", false);
           return;
         }
       }
-  
-      // notify(" Teams updated successfully!", true);
-      fetchTeams(); // Refresh teams to sync with the database
+      fetchTeams();
     } catch (error) {
       console.error("Error saving changes:", error);
-      // notify("An error occurred. Please try again.", false);
     }
   };
   
 
   const handleDelete = async (spaceId:any) => {
-    let backupData: {
+    const backupData: {
       tasks: any[];
       teams: any[];
       space: any;

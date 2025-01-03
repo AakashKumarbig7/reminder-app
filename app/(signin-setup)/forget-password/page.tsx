@@ -14,9 +14,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { forgetPassword } from "./action";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import toast, { Toaster } from "react-hot-toast";
 

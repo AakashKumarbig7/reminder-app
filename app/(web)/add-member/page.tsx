@@ -19,9 +19,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { createUser1 } from "../members/action";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import WebNavbar from "../components/navbar";
-import { access } from "fs";
 import Link from "next/link";
 import { useGlobalContext } from "@/context/store";
 
@@ -130,7 +128,7 @@ const AddMember = () => {
         setSaveLoader(true);
         let imageUrl = data.profile_image;
         if (file) {
-          const { data: uploadData, error: uploadError } =
+          const { error: uploadError } =
             await supabase.storage
               .from("profiles")
               .upload(`profiles/${file.name}`, file, {
@@ -152,7 +150,7 @@ const AddMember = () => {
           console.error("Sign up error:", signUpResponse);
         }
 
-        const { data: memberData, error: memberError } = await supabase
+        const { error: memberError } = await supabase
           .from("users")
           .insert({
             username: data.name,
@@ -286,9 +284,10 @@ const AddMember = () => {
         className="w-full relative"
         style={{ minHeight: "calc(100vh - 60px)" }}
       >
-        {/* <h1 className="text-xl font-bold text-primary_color">
-          Add Member
-        </h1> */}
+        <div className="hidden">
+          <span>{modalPassword}</span>
+          <span>{loading}</span>
+        </div>
         <div className="w-full p-4 pt-14">
           <div className="bg-white pt-4 pb-10 mt-5 rounded-md">
             <Form {...form}>

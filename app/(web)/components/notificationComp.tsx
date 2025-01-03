@@ -104,7 +104,10 @@ const Notification = () => {
         const { error } = await supabase
           .from("tasks")
           .update({ notify_read: true })
-          .in("id", unNotifiedTask.map((task) => task.id));
+          .in(
+            "id",
+            unNotifiedTask.map((task) => task.id)
+          );
 
         if (error) {
           console.error("Error updating notify_read:", error);
@@ -132,7 +135,9 @@ const Notification = () => {
         >
           <BellDot className="w-6 h-6" />{" "}
           <span className="absolute -top-1 -right-0.5 bg-red-500 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[10px] text-white">
-            {(userId?.role === "owner" ? adminTaskNotify.length : unNotifiedTask.length)}
+            {userId?.role === "owner"
+              ? adminTaskNotify.length
+              : unNotifiedTask.length}
           </span>
         </Button>
       </SheetTrigger>
@@ -144,49 +149,54 @@ const Notification = () => {
         </SheetHeader>
         <div className="w-full h-full pt-3">
           <div className="w-full max-h-[88vh] flex flex-col justify-between items-center overflow-y-scroll playlist-scroll">
-            {(userId?.role === "owner" ? adminTaskNotify : unNotifiedTask).length > 0 ? (
-              (userId?.role === "owner" ? adminTaskNotify : unNotifiedTask).map((item: any) => (
-                <div
-                  key={item.id}
-                  className={`w-full flex justify-between items-center mb-2 border-b border-gray-200 pb-2 transition-all duration-300 ${
-                    isRemoving[item.id] ? "opacity-0 -translate-x-10" : ""
-                  }`}
-                >
-                  <div className="w-[80%]">
-                    <p className="pt-2 text-sm">
-                    <span className="text-base font-semibold">{item.created_by}</span> assigned task to
-                      <span className="font-bold text-sm">
-                        {item.mentions
-                          .map((mention: string) =>
-                            mention.split("@").join(" ")
-                          )
-                          .join(", ")}
-                      </span>{" "}
-                      
-                    </p>
-                    <p className="text-sm text-[#A6A6A7] font-inter">
-                      {format(
-                        new Date(item.created_at),
-                        "EEEE, MMMM dd, yyyy 'at' hh:mm a"
-                      )}
-                    </p>
+            {(userId?.role === "owner" ? adminTaskNotify : unNotifiedTask)
+              .length > 0 ? (
+              (userId?.role === "owner" ? adminTaskNotify : unNotifiedTask).map(
+                (item: any) => (
+                  <div
+                    key={item.id}
+                    className={`w-full flex justify-between items-center mb-2 border-b border-gray-200 pb-2 transition-all duration-300 ${
+                      isRemoving[item.id] ? "opacity-0 -translate-x-10" : ""
+                    }`}
+                  >
+                    <div className="w-[80%]">
+                      <p className="pt-2 text-sm">
+                        <span className="text-base font-semibold">
+                          {item.created_by}
+                        </span>{" "}
+                        assigned task to
+                        <span className="font-bold text-sm">
+                          {item.mentions
+                            .map((mention: string) =>
+                              mention.split("@").join(" ")
+                            )
+                            .join(", ")}
+                        </span>{" "}
+                      </p>
+                      <p className="text-sm text-[#A6A6A7] font-inter">
+                        {format(
+                          new Date(item.created_at),
+                          "EEEE, MMMM dd, yyyy 'at' hh:mm a"
+                        )}
+                      </p>
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <X
+                            size={16}
+                            className="cursor-pointer"
+                            onClick={() => handleCheckNotification(item.id)}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Mark as read</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <X
-                          size={16}
-                          className="cursor-pointer"
-                          onClick={() => handleCheckNotification(item.id)}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Mark as read</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              ))
+                )
+              )
             ) : (
               <p className="py-2 text-base text-gray-500 h-[90vh] flex justify-center items-center">
                 No notifications found.
@@ -195,12 +205,21 @@ const Notification = () => {
           </div>
           {unNotifiedTask.length > 0 && (
             <SheetFooter className="w-full flex gap-2 pb-4">
-              <p
-                className="text-sm text-[#1A56DB] cursor-pointer underline sticky bottom-0"
-                onClick={handleClearNotification}
-              >
-                Clear all
-              </p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p
+                      className="text-sm text-[#1A56DB] cursor-pointer underline sticky bottom-0"
+                      onClick={handleClearNotification}
+                    >
+                      Clear all
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Mark as read</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </SheetFooter>
           )}
         </div>

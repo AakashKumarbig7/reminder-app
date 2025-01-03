@@ -1,11 +1,11 @@
 "use client";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Command, CommandList } from "@/components/ui/command";
 import { FaCheck } from "react-icons/fa6";
 import { Trash2 } from "lucide-react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export default function OverDue() {
   const searchParams = useSearchParams();
@@ -62,6 +62,10 @@ export default function OverDue() {
 
   return (
     <div className=" w-full space-y-4">
+      <div className="hidden">
+        <span>{error}</span>
+        <span>{activeTaskId}</span>
+      </div>
       {tasks.map((task: any) => (
         <div
           key={task.id}

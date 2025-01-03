@@ -6,7 +6,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import WebNavbar from "@/app/(web)/components/navbar";
 import { ClipboardPlus, Trash2, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
@@ -33,7 +32,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import Image from "next/image";
-import { DividerVerticalIcon } from "@radix-ui/react-icons";
 interface Space {
   id: string;
   name: string;
@@ -45,12 +43,12 @@ export default function SpaceSetting({}) {
   const [newSpaceName, setNewSpaceName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // const [isDeleting, setIsDeleting] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState<string | null>(null);
-  const [members, setMembers] = useState<any[]>([]);
   const [teamData, setTeamData] = useState<any[]>([]);
 
   const router = useRouter();
+  const isDeleting = false;
 
   // Fetch spaces from Supabase
   const fetchSpaces = async () => {
@@ -79,7 +77,7 @@ export default function SpaceSetting({}) {
   const addSpace = async () => {
     if (newSpaceName.trim() !== "") {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("spaces")
           .insert([{ space_name: newSpaceName, is_deleted: false }])
           .select();
@@ -105,7 +103,7 @@ export default function SpaceSetting({}) {
   // Delete a space
   const deleteSpace = async (id: string) => {
     console.log("space id ", id);
-    let backupData: {
+    const backupData: {
       tasks: any[];
       teams: any[];
       space: any;
@@ -595,63 +593,60 @@ export default function SpaceSetting({}) {
                       </div>
                     </TableCell>
 
-                   
                     <TableCell className="px-4 py-4 items-center">
                       <div className="flex justify-end">
-                      <button
-                        onClick={() => router.push(`/editspace/${space.id}`)}
-                      >
-                        <Pencil className="h-5 w-5 " />
-                      </button>
-                      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                        <DialogTrigger>
-                          <div
-                            onClick={() => {
-                              console.log(space.id);
-                              setSpaceToDelete(space.id);
-                              setIsOpen(true);
-                            }}
-                            className="py-4 px-4"
-                          >
-                            <Trash2 className="h-5 w-5 items-center" />
-                          </div>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <div className="">
-                            <h2 className="text-lg font-semibold">
-                              Are you sure?
-                            </h2>
-                            <p className="mt-2 text-sm text-gray-600">
-                              Do you really want to delete this{" "}
-                              <span className="font-bold">{space.name}</span>
-                            </p>
-                          </div>
-                          <DialogFooter className="flex justify-end mt-4">
-                            {/* Cancel button */}
-                            <button
-                              className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                              onClick={handleDeleteDialogClose}
-                              disabled={isDeleting}
-                            >
-                              Cancel
-                            </button>
-
-                            {/* Delete button */}
-                            <Button
-                              className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
+                        <button
+                          onClick={() => router.push(`/editspace/${space.id}`)}
+                        >
+                          <Pencil className="h-5 w-5 " />
+                        </button>
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                          <DialogTrigger>
+                            <div
                               onClick={() => {
-                                if (spaceToDelete) {
-                                  deleteSpace(spaceToDelete);
-                                }
+                                console.log(space.id);
+                                setSpaceToDelete(space.id);
+                                setIsOpen(true);
                               }}
-                              disabled={isDeleting}
+                              className="py-4 px-4"
                             >
-                              {/* {isDeleting ? "Deleting..." : "Delete"} */}
-                              Delete
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                              <Trash2 className="h-5 w-5 items-center" />
+                            </div>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <div className="">
+                              <h2 className="text-lg font-semibold">
+                                Are you sure?
+                              </h2>
+                              <p className="mt-2 text-sm text-gray-600">
+                                Do you really want to delete this
+                                <span className="font-bold pl-2">
+                                  {space.name}
+                                </span>
+                              </p>
+                            </div>
+                            <DialogFooter className="flex justify-end mt-4">
+                              <button
+                                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                                onClick={handleDeleteDialogClose}
+                                disabled={isDeleting}
+                              >
+                                Cancel
+                              </button>
+                              <Button
+                                className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
+                                onClick={() => {
+                                  if (spaceToDelete) {
+                                    deleteSpace(spaceToDelete);
+                                  }
+                                }}
+                                disabled={isDeleting}
+                              >
+                                Delete
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </TableCell>
                   </TableRow>

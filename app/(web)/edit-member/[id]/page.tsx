@@ -20,7 +20,6 @@ import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { passwordReset } from "./action";
 import WebNavbar from "../../components/navbar";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import Link from "next/link";
 import { useGlobalContext } from "@/context/store";
 
@@ -94,7 +93,6 @@ const EditMember = (props: Props) => {
 
   const [file, setFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
-  const [emailCheck, setEmailCheck] = useState(false);
   const [modalShowPassword, setModalShowPassword] = useState(false);
   const [modalPassword, setModalPassword] = useState("");
   const [confirmShowPassword, setConfirmShowPassword] = useState(false);
@@ -159,7 +157,7 @@ const EditMember = (props: Props) => {
     setSaveLoader(true);
     let imageUrl = userData.profile_image;
     if (file) {
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("profiles")
         .upload(`profiles/${file.name}`, file, {
           cacheControl: "3600",
@@ -175,7 +173,7 @@ const EditMember = (props: Props) => {
       imageUrl = publicUrlData?.publicUrl || "";
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("users")
       .update({
         username: userData.name || existingUserData.username,
@@ -247,6 +245,9 @@ const EditMember = (props: Props) => {
        setTaskStatusFilterValue=''
        filterFn=''
         />
+        <div className="hidden">
+          <span>{modalPassword}</span>
+        </div>
       <div
         className="w-full relative pb-5"
         style={{ minHeight: "calc(100vh - 60px)" }}

@@ -8,11 +8,6 @@ import Teams from "@/components/teams";
 import Emoji from "@/components/emoji";
 // import { fetchTasks } from "@/lib/data";
 
-interface Mention {
-  id: number;
-  name: string;
-}
-
 export default async function HomePage() {
   // const tasks = await fetchTasks();
 

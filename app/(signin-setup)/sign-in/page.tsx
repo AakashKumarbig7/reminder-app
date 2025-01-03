@@ -19,11 +19,23 @@ import { useRouter } from "next/navigation";
 import { getLoggedInUserData, signIn } from "./action";
 import toast, { Toaster } from "react-hot-toast";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import Lottie from "lottie-react";
 import LottielabLogin1 from "../../../public/images/login_animation.json";
 import "./style.css";
+
+interface SupabaseError {
+  message: string;
+}
 
 const formSchema = z.object({
   email: z.string().email({
@@ -74,12 +86,12 @@ const SignIn = () => {
         notify(`Sign in failed: ${res.error}`, false);
       } else {
         const user = await getLoggedInUserData();
-        if(user?.user_metadata.status !== "Active") {
+        if (user?.user_metadata.status !== "Active") {
           notify("Your account is not active", false);
           return;
         }
         notify("Sign in successful", true);
-        
+
         // console.log(user?.id);
         // localStorage.setItem("userId", user?.id!);
         // localStorage.setItem("userEmail", user?.email!);
@@ -110,7 +122,7 @@ const SignIn = () => {
     }
 
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(
+      const { error } = await supabase.auth.resetPasswordForEmail(
         folderNameInput,
         {
           redirectTo: `${window.location.origin}/forget-password`,
@@ -125,8 +137,9 @@ const SignIn = () => {
 
       setCreateFolderOpen(false);
       setFolderNameInput("");
-    } catch (error: any) {
-      notify(`Error: ${error.message}`, false); // Display catch block error as notification
+    } catch (error) {
+      const typedError = error as SupabaseError;
+      notify(`Error: ${typedError.message}`, false);
     } finally {
       setEmailLoading(false);
     }
@@ -237,7 +250,10 @@ const SignIn = () => {
                           if (folderError) setFolderError(false);
                         }}
                       />
-                      <p className="text-xs mt-1.5 text-gray-500">Please enter the email address associated with your account *</p>
+                      <p className="text-xs mt-1.5 text-gray-500">
+                        Please enter the email address associated with your
+                        account *
+                      </p>
                     </div>
                   </div>
                   <DialogFooter className="mb-2">
@@ -315,14 +331,14 @@ const SignIn = () => {
         </div>
       </div>
       <div className="w-1/2 lottie_img sm:none md:block flex justify-center items-center h-screen">
-      <div className="w-full h-full relative flex justify-center items-center">
-        <Lottie
-          animationData={LottielabLogin1}
-          loop={true}
-          style={{ width: "100%", height: "80%" }}
-          className="lottie_img"
-        />
-        <div className="w-[200px] h-[100px] bg-white absolute md:bottom-[0px] lg:bottom-[25px] right-20 lottie_hide"></div>
+        <div className="w-full h-full relative flex justify-center items-center">
+          <Lottie
+            animationData={LottielabLogin1}
+            loop={true}
+            style={{ width: "100%", height: "80%" }}
+            className="lottie_img"
+          />
+          <div className="w-[200px] h-[100px] bg-white absolute md:bottom-[0px] lg:bottom-[25px] right-20 lottie_hide"></div>
         </div>
       </div>
     </div>
