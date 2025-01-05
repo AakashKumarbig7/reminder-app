@@ -657,7 +657,7 @@ export default function SpaceSetting({}) {
                     colSpan={5}
                     className="text-center text-gray-500 py-4"
                   >
-                    No spaces available. Click "New Space" to add one.
+                    No spaces available. Click New Space to add one.
                   </TableCell>
                 </TableRow>
               )}

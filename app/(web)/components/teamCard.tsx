@@ -7,21 +7,15 @@ import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 // import toast from "react-hot-toast";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import Userimage from "@/public/images/Ellipse 7.png";
-import EditPage from "@/app/(web)/editspace/[spaceId]/page";
 // const notify = (message: string, success: boolean) =>
 //   toast[success ? "success" : "error"](message, {
 //     style: {
@@ -52,8 +46,8 @@ const TeamCard: React.FC<{
   spaceId: any;
   sendDataToParent: any;
 }> = ({ team, spaceId, sendDataToParent }) => {
-  const [teamName, setTeamName] = useState(team.team_name);
-  const [teamNameError, setTeamNameError] = useState(false);
+  // const [teamName, setTeamName] = useState(team.team_name);
+  // const [teamNameError, setTeamNameError] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [emailInput, setEmailInput] = useState("");
   const [matchingUsers, setMatchingUsers] = useState<any[]>([]);
@@ -62,11 +56,12 @@ const TeamCard: React.FC<{
   const [addedMembers, setAddedMembers] = useState<any[]>(team.members ?? []);
   const [teamMemberError, setTeamMemberError] = useState(false);
   const [isopen, setIsOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchSpaces = async () => {
-    let { data: spaces, error } = await supabase.from("spaces").select("*");
-  };
+  const isDeleting = false;
+
+  // const fetchSpaces = async () => {
+  //   let { data: spaces, error } = await supabase.from("spaces").select("*");
+  // };
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -81,10 +76,10 @@ const TeamCard: React.FC<{
     }
 
     if (data) {
-      const teamData = data.map((team: any) => ({
-        ...team,
-        tasks: [],
-      }));
+      // const teamData = data.map((team: any) => ({
+      //   ...team,
+      //   tasks: [],
+      // }));
       setTeams(data || []);
     }
   };
@@ -239,7 +234,7 @@ const TeamCard: React.FC<{
   };
   const handleTeamUndo = async (teamId: number) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("tasks")
         .update({ is_deleted: false })
         .eq("team_id", teamId);
@@ -269,6 +264,7 @@ const TeamCard: React.FC<{
         duration: 5000,
       });
     } catch (error) {
+      console.log(error);
       toast({
         title: "Error",
         description: "Failed to restore the deleted team. Please try again.",
@@ -378,8 +374,11 @@ const TeamCard: React.FC<{
   }, [spaceId]);
 
   return (
-    <CarouselItem key={team.id} className="w-[339px] h-auto   basis-[28%]">
+    <CarouselItem key={team.id} className="w-[339px] h-auto basis-[28%]">
       <>
+      <div className="hidden">
+        <span>{teams.length}</span>
+      </div>
         <Card>
           <CardContent className="p-[18px] w-full h-full">
             <div className="flex justify-between items-center">

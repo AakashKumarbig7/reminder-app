@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import WebNavbar from "../components/navbar";
 import { useRouter } from "next/navigation";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";

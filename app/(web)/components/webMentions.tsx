@@ -58,6 +58,7 @@ const WebMentionInput: React.FC<Props> = ({
 
   // Handle user input to detect mentions and update text
   const handleInput = async (e: React.FormEvent<HTMLDivElement>) => {
+    console.log(e, "event");
     try {
       const { data: memberData, error: memberError } = await supabase
         .from("teams")

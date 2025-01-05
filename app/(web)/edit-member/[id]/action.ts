@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function passwordReset(password: string) {
     const supabase = createClient();
-    const { data: userData, error: userError } = await supabase.auth.updateUser({
+    const { error: userError } = await supabase.auth.updateUser({
       password: password,
     });
     if (userError) {

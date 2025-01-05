@@ -60,7 +60,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   );
   const [teams, setTeams] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const isDeleting = false;
 
   // const [datafromChild, setdatafromchild] = useState("");
   // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
@@ -358,9 +358,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     fetchSelectedSpace();
     fetchTeams();
   }, [spaceId]);
-  const onAllTeamMembersSavebutton = () => {
-    // console.log(teams);
-  };
+  
   const onTeamDataTrigger = (user: any, teamId: number, type: string) => {
     setTeams((prevTeams) =>
       prevTeams.map((team) =>

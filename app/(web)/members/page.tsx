@@ -26,7 +26,6 @@ import { Trash2, Pencil, ClipboardPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { updateMetadata } from "./action";
-import { z } from "zod";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "@/hooks/use-toast";
