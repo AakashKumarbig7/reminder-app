@@ -218,7 +218,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
   return (
     <>
       <div className="hidden">
-        <span>{teams}</span>
+        <span>{teams.length}</span>
       </div>
       <Sheet open={memberAddDialogOpen} onOpenChange={setMemberAddDialogOpen}>
         <SheetTrigger asChild>

@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import WebNavbar from "@/app/(web)/components/navbar";
+import { Trash2, CirclePlus, Plus } from "lucide-react";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +26,9 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import TeamCard from "../../components/teamCard";
 
 // const notify = (message: string, success: boolean) =>
@@ -58,13 +61,27 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const [selectedSpace, setSelectedSpace] = useState<string | undefined>(
     undefined
   );
+
+  // const [selectedTeam, setSelectedTeam] = useState<any>(null); // Store the selected team data
+  // const [isSaving, setIsSaving] = useState(false); // For handling the save state (loading)
+  // Team-related states
   const [teams, setTeams] = useState<any[]>([]);
+  // const [memberAddDialogOpen, setMemberAddDialogOpen] = useState(false);
+
+  // const [teamName, setTeamName] = useState("");
+  const [teamNameError, setTeamNameError] = useState(false);
+  // const [emailInput, setEmailInput] = useState("");
+  const [matchingUsers, setMatchingUsers] = useState<any[]>([]);
+  // const [noUserFound, setNoUserFound] = useState(false);
+  // const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  // const [addedMembers, setAddedMembers] = useState<any[]>([]);
+  // const [teamMemberError, setTeamMemberError] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 const [cancelLoader, setCancelLoader] = useState(false);
 const [saveLoader, setSaveLoader] = useState(false);
-  const [datafromChild, setdatafromchild] = useState("");
-  const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
+  // const [datafromChild, setdatafromchild] = useState("");
+  // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
   const router = useRouter();
   const { spaceId } = params;
 
@@ -76,7 +93,7 @@ const [saveLoader, setSaveLoader] = useState(false);
     setSaveLoader(true);
     try {
       for (const team of teams) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("teams")
           .update({ members: team.members }) // Update members in the database
           .eq("id", team.id)
@@ -84,11 +101,14 @@ const [saveLoader, setSaveLoader] = useState(false);
   
         if (error) {
           console.error("Error updating team:", error);
+          // notify("Error saving changes. Please try again.", false);
           return;
         }
         setSaveLoader(false);
       }
-      fetchTeams();
+  
+      // notify(" Teams updated successfully!", true);
+      fetchTeams(); // Refresh teams to sync with the database
     } catch (error) {
       console.error("Error saving changes:", error);
       // notify("An error occurred. Please try again.", false);
@@ -98,7 +118,7 @@ const [saveLoader, setSaveLoader] = useState(false);
   
 
   const handleDelete = async (spaceId:any) => {
-    const backupData: {
+    let backupData: {
       tasks: any[];
       teams: any[];
       space: any;
@@ -362,7 +382,9 @@ const [saveLoader, setSaveLoader] = useState(false);
     fetchSelectedSpace();
     fetchTeams();
   }, [spaceId]);
-  
+  const onAllTeamMembersSavebutton = () => {
+    // console.log(teams);
+  };
   const onTeamDataTrigger = (user: any, teamId: number, type: string) => {
     setTeams((prevTeams) =>
       prevTeams.map((team) =>
@@ -543,7 +565,7 @@ const [saveLoader, setSaveLoader] = useState(false);
                     <CardContent className="px-3 py-3">
                       <AddTeam
                         spaceId={spaceId as number}
-                        sendDataToParent={fetchTeams}
+                        sendDataToParent={fetchTeams as any}
                       />
                     </CardContent>
                   </Card>
