@@ -333,16 +333,16 @@ const Members = () => {
             <div className="flex space-x-[10px]">
               <button
                 onClick={() => router.push(`/spaceSetting`)}
-                className="rounded-lg text-sm text-gray-400 border w-[134px] hover:bg-slate-50 h-[41px]"
+                className="rounded-lg text-sm font-inter font-medium text-gray-400 border boredr-gray-300 w-[134px] hover:bg-slate-50 h-[41px]"
               >
                 Space Settings
               </button>
-              <button className="rounded-lg text-sm border w-[104px] h-[41px] text-white hover:bg-blue-600 hover:text-white bg-primaryColor-700">
+              <button className="rounded-lg text-sm font-inter font-medium border w-[104px] h-[41px] text-white hover:bg-blue-600 hover:text-white bg-primaryColor-700">
                 Members
               </button>
               <button
                 onClick={() => router.push(`/access`)}
-                className="rounded-lg text-sm border w-[89px] h-[41px] hover:bg-slate-50 text-gray-400"
+                className="rounded-lg text-sm  font-inter font-medium border border-gray-300 w-[89px] h-[41px] hover:bg-slate-50 text-gray-400"
               >
                 Access
               </button>
@@ -368,12 +368,12 @@ const Members = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Button className="w-[149px] h-[41px] space-x-2 px-5 py-[2.5px] border bg-[#E5ECF6] border-gray-300 text-sm text-gray-800 rounded-lg font-normal gap-[10px] flex items-center hover:bg-gray-300 cursor-pointer ">
-              <Upload className="h-5 w-5" />
+            <Button className="w-[149px] h-[41px] space-x-2 px-5 py-[2.5px] border bg-[#E5ECF6] border-gray-300 text-sm text-gray-800 rounded-lg font-inter font-normal gap-[10px] flex items-center hover:bg-gray-200  ">
+              <Upload className="h-5 w-5 text-gray-900" />
               Upload CSV
             </Button>
             <Button
-              className="rounded-lg text-sm text-white border flex items-center max-w-[142px] w-[165px] h-[41px] bg-primaryColor-700 space-x-2  px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
+              className="rounded-lg text-sm font-medium font-inter  text-white border flex items-center max-w-[142px] w-[165px] h-[41px] bg-primaryColor-700 space-x-2  px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
               onClick={() => {
                 setSaveLoader(true);
                 setTimeout(() => {
@@ -407,29 +407,29 @@ const Members = () => {
               ) : (
                 <>
                   <ClipboardPlus className="h-5 w-5" />
-                  Add member
+                  Add New User
                 </>
               )}
             </Button>
           </div>
         </div>
         <div className="pt-[18px] pb-[18px]">
-          <Table className=" block w-[98vw] max-h-[500px] overflow-y-auto playlist-scroll bg-white rounded-[10px]  font-inter">
-            <TableHeader className="sticky top-0 ">
+          <Table className=" block w-[98vw] max-h-[500px] overflow-y-auto playlist-scroll bg-white  rounded-[10px]  font-inter">
+            <TableHeader className="sticky top-0 bg-white z-0 ">
               <TableRow>
-                <TableHead className="w-[18%] px-4 py-4 text-sm font-semibold text-gray-500">
+                <TableHead className="w-[18%] px-4 py-4 text-sm font-inter font-semibold text-gray-500">
                   NAME
                 </TableHead>
-                <TableHead className=" w-[25%] px-4 py-4 text-sm font-semibold text-gray-500 ">
+                <TableHead className=" w-[25%] px-4 py-4 text-sm font-inter font-semibold text-gray-500 ">
                   DESIGNATION
                 </TableHead>
-                <TableHead className="  w-[25%] px-4 py-4 text-sm font-semibold text-gray-500 ">
+                <TableHead className="  w-[25%] px-4 py-4 text-sm font-inter font-semibold text-gray-500 ">
                   EMAIL
                 </TableHead>
-                <TableHead className=" w-[25%] px-4 py-4  text-sm font-semibold text-gray-500">
+                <TableHead className=" w-[25%] px-4 py-4  text-sm  font-inter font-semibold text-gray-500">
                   MOBILE
                 </TableHead>
-                <TableHead className=" w-[25%] px-4 py-4  text-sm font-semibold text-gray-500">
+                <TableHead className=" w-[25%] px-4 py-4  text-sm  font-inter font-semibold text-gray-500">
                   ACTION
                 </TableHead>
               </TableRow>
@@ -473,16 +473,16 @@ const Members = () => {
                               className="w-8 h-8 rounded-full object-cover"
                             />
                           )}
-                          <span>{member.username}</span>
+                          <span className="text-gray-900 font-inter">{member.username}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 py-4 text-sm text-gray-900">
+                      <TableCell className="px-4 py-4 text-sm font-inter font-normal  text-gray-500">
                         {member.designation}
                       </TableCell>
-                      <TableCell className="px-4 py-4 text-sm text-gray-900">
+                      <TableCell className="px-4 py-4 text-sm font-inter font-normal  text-gray-500">
                         {member.email}
                       </TableCell>
-                      <TableCell className="px-4 py-4 text-sm text-gray-900">
+                      <TableCell className="px-4 py-4 text-sm font-inter font-normal  text-gray-500">
                         {member.mobile}
                       </TableCell>
                       <TableCell>
@@ -567,7 +567,7 @@ const Members = () => {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="px-4 py-4 text-center text-sm text-gray-500"
+                    className="px-4 py-4 text-center font-inter font-medium  text-sm text-gray-500"
                   >
                     Members not found
                   </TableCell>

@@ -86,7 +86,7 @@ const FilterComponent: React.FC<FilterProps> = ({
       }
 
       if (data) {
-        if (loggedUserData?.role === "admin") {
+        if (loggedUserData?.role === "admin"){
           setTeamData(data);}
           else
           {
@@ -97,7 +97,7 @@ const FilterComponent: React.FC<FilterProps> = ({
           //     filteredTeam.push(data[i]);
               
           //   }
-          if(data[i].members.some((member: any) => member.name === UserData.entity_name)){
+          if(data[i].members.some((member: any) => member.name === "Prasanth")){
             filteredTeam.push(data[i]);
           }
         }

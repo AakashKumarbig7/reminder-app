@@ -193,7 +193,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         setActiveTab(data[0].id);
          // Set the first tab as active initially
          
-      sessionStorage.setItem("spaceData", JSON.stringify(data[0]));
+     
       }
     }
   };
@@ -215,11 +215,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     if (data) {
       setSpaceId(data.id);
       setSpaceName(data.space_name);
-      let spaceData ={} as any ;
-      spaceData.id = data.id;
-      spaceData.space_name = data.space_name;
-      sessionStorage.setItem("spaceData", JSON.stringify(spaceData));
-    
       const { data: spaceId, error: spaceError } = await supabase
         .from("teams")
         .select("*")
@@ -348,7 +343,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       setActiveTab(newTabs[0].id);
        // Set first tab as active if any left
        
-      sessionStorage.setItem("spaceData", JSON.stringify(newTabs[0]));
+     
     } else {
       setActiveTab(null);
     }

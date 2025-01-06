@@ -378,7 +378,7 @@ const TeamCard: React.FC<{
   }, [spaceId]);
 
   return (
-    <CarouselItem key={team.id} className="w-[339vw] h-auto max-w-[500px]  basis-[28%]">
+    <CarouselItem key={team.id} className="w-[339vw] max-h-[500px] max-w-[500px]  basis-[28%]">
       <>
         <Card>
           <CardContent className="p-[18px] w-full h-full">
