@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
+import { getLoggedInUserData} from "@/app/(signin-setup)/sign-in/action";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { supabase } from "@/utils/supabase/supabaseClient";

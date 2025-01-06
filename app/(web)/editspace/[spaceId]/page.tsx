@@ -60,11 +60,11 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   );
   const [teams, setTeams] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const isDeleting = false;
-
-  // const [datafromChild, setdatafromchild] = useState("");
-  // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
-
+  const [isDeleting, setIsDeleting] = useState(false);
+const [cancelLoader, setCancelLoader] = useState(false);
+const [saveLoader, setSaveLoader] = useState(false);
+  const [datafromChild, setdatafromchild] = useState("");
+  const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
   const router = useRouter();
   const { spaceId } = params;
 
@@ -73,6 +73,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   // };
 
   const handleUpdateTeam = async () => {
+    setSaveLoader(true);
     try {
       for (const team of teams) {
         const { error } = await supabase
@@ -85,10 +86,13 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
           console.error("Error updating team:", error);
           return;
         }
+        setSaveLoader(false);
       }
       fetchTeams();
     } catch (error) {
       console.error("Error saving changes:", error);
+      // notify("An error occurred. Please try again.", false);
+      setSaveLoader(false);
     }
   };
   
@@ -325,7 +329,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     const id = await fetchSpaceIdByName(value);
 
     if (id !== null) {
-      router.push(`/editspace/${id}`);
+      router.push(`/editspace/${id}`);                         
       // Perform any log
 
       console.log(`Selected space ID: ${id}`);
@@ -380,11 +384,11 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     <>
       {/* <WebNavbar /> */}
       {/* <Toaster /> */}
-      <div className="px-3 h-full   space-y-[18px]">
+      <div className="px-3 max-h-[400px]   space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <div className="px-3 flex w-full items-center justify-between">
             {/* Title Section */}
-            <p className="text-lg font-semibold text-center">Space Setting</p>
+            <p className="text-base font-inter font-bold text-[#000] text-center">Space Setting</p>
 
             {/* Action Buttons */}
             <div className="flex space-x-[18px] items-center">
@@ -395,19 +399,19 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
                     className="border border-gray-200 w-[41px] h-[41px] flex items-center justify-center rounded-[8px] cursor-pointer hover:bg-slate-50"
                     onClick={() => setIsOpen(true)}
                   >
-                    <Trash2 className="h-5 w-5" />
+                    <Trash2 className="h-5 w-5 text-[#111928]"  />
                   </button>
                 </DialogTrigger>
 
                 {/* Dialog content */}
                 <DialogContent>
-                  <div className="text-center">
-                    <h2 className="text-lg font-semibold">Are you sure?</h2>
+                  <div className="text-start">
+                    <h2 className="text-lg font-bold">Delete Space</h2>
                     <p className="mt-2 text-sm text-gray-600">
                       Do you really want to delete this space
                     </p>
                   </div>
-                  <DialogFooter className="flex justify-end mt-4">
+                  <DialogFooter className="flex items-start mt-4">
                     {/* Cancel button */}
                     <button
                       className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
@@ -423,7 +427,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
                       onClick={() =>handleDelete(spaceId)}
                       disabled={isDeleting}
                     >
-                      {isDeleting ? "Deleting..." : "Delete"}
+                      Delete
                     </button>
                   </DialogFooter>
                 </DialogContent>
@@ -431,18 +435,72 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
 
               {/* Cancel button */}
               <button
-                className="text-gray-400 border border-gray-200 rounded-[8px] text-sm w-[87px] h-[41px] cursor-pointer hover:bg-slate-50"
-                onClick={() => router.back()}
+                className="text-gray-800 font-inter font-medium border gray-200 rounded-[8px] text-sm w-[87px] h-[41px] cursor-pointer hover:bg-slate-50"
+                onClick={() => {
+                  setCancelLoader(true);
+                  setTimeout(() => {
+                    router.push("/spaceSetting");
+                    setCancelLoader(false);
+                  }, 2000);
+                }}
+                disabled={cancelLoader}
               >
-                Cancel
+               {cancelLoader ? (
+                <svg
+                  className="animate-spin h-5 w-5 m-auto"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#1A56DB"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-100"
+                    fill="#1A56DB"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                "Cancel"
+              )}
               </button>
 
               {/* Save button */}
               <button
-                className="rounded-lg text-sm text-white w-[134px] h-[41px] bg-primaryColor-700 cursor-pointer hover:bg-blue-600"
+                className="rounded-lg text-sm font-inter font-medium text-white w-[134px] h-[41px] bg-primaryColor-700 cursor-pointer hover:bg-blue-600"
                 onClick={handleUpdateTeam}
+                disabled={saveLoader}
               >
-                Save Changes
+              {saveLoader ? (
+                <svg
+                  className="animate-spin h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#fff"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-100"
+                    fill="#fff"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                "Save Changes"
+              )}
               </button>
             </div>
           </div>

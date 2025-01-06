@@ -143,7 +143,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       const newTabs = tabs.filter((tab) => tab.id !== id);
       setTabs(newTabs);
       if (newTabs.length > 0) {
-        setActiveTab(newTabs[0].id); // Set first tab as active if any left
+        setActiveTab(newTabs[0].id);
+         // Set first tab as active if any left
       } else {
         setActiveTab(null);
       }
@@ -337,7 +338,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     const newTabs = tabs.filter((tab) => tab.id !== id);
     setTabs(newTabs);
     if (newTabs.length > 0) {
-      setActiveTab(newTabs[0].id); // Set first tab as active if any left
+      setActiveTab(newTabs[0].id);
+       // Set first tab as active if any left
+       
+     
     } else {
       setActiveTab(null);
     }

@@ -46,6 +46,7 @@ export default function SpaceSetting({}) {
   // const [isDeleting, setIsDeleting] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState<string | null>(null);
   const [teamData, setTeamData] = useState<any[]>([]);
+  
 
   const router = useRouter();
   const isDeleting = false;
@@ -386,18 +387,18 @@ export default function SpaceSetting({}) {
         {/* Header with navigation and New Space button */}
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex space-x-[10px]">
-            <button className="rounded-lg text-sm text-white border w-[134px] h-[41px] bg-primaryColor-700">
+            <button className="rounded-lg text-sm font-inter font-medium text-white border w-[134px] h-[41px] bg-primaryColor-700">
               Space Settings
             </button>
             <button
               onClick={() => router.push(`/members`)}
-              className="rounded-lg text-sm border w-[104px] h-[41px] text-gray-400"
+              className="rounded-lg font-inter font-medium text-sm border w-[104px] h-[41px] text-gray-400"
             >
               Members
             </button>
             <button
               onClick={() => router.push(`/access`)}
-              className="rounded-lg text-sm border w-[89px] h-[41px] text-gray-400"
+              className="rounded-lg font-inter font-medium text-sm border w-[89px] h-[41px] text-gray-400"
             >
               Access
             </button>
@@ -454,23 +455,23 @@ export default function SpaceSetting({}) {
         </div>
 
         {/* Table displaying spaces */}
-        <div className="pt-[18px] pb-[18px]">
-          <Table className="border-b   overflow-y-auto playlist-scroll border-gray-200 bg-white rounded-[10px]">
-            <TableHeader className=" sticky top-0">
+        <div className="pt-[18px] pb-[18px] ">
+          <Table className=" block w-[98vw] max-h-[500px]  overflow-y-auto playlist-scroll  bg-white rounded-[10px] font-inter">
+            <TableHeader className=" sticky top-0 bg-white z-0">
               <TableRow>
-                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4 w-[18%] font-semibold font-inter text-xs text-gray-500 ">
                   SPACE NAME
                 </TableHead>
-                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%] font-semibold text-gray-500 text-sm">
                   CREATED BY
                 </TableHead>
-                <TableHead className="px-4 py-4 font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%] font-semibold text-gray-500 text-sm">
                   TEAMS
                 </TableHead>
-                <TableHead className="px-4 py-4  font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%]  font-semibold text-gray-500 text-sm">
                   MEMBERS
                 </TableHead>
-                <TableHead className="px-4 py-4 text-right font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%] text-right font-semibold text-gray-500 text-sm">
                   ACTION
                 </TableHead>
               </TableRow>
@@ -482,10 +483,10 @@ export default function SpaceSetting({}) {
                     <TableCell className="px-4 py-4 text-sm text-gray-900">
                       {space.name}
                     </TableCell>
-                    <TableCell className="px-4 py-4 text-sm text-gray-500">
+                    <TableCell className="px-4 py-4 text-sm font-normal font-inter text-gray-500">
                       Laxman Sarav
                     </TableCell>
-                    <TableCell className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">
+                    <TableCell className="px-4 py-4 text-sm font-inter font-normal text-gray-500 whitespace-nowrap">
                       {space.teams && space.teams.length > 0 ? (
                         <TooltipProvider>
                           <Tooltip>
@@ -506,46 +507,6 @@ export default function SpaceSetting({}) {
                         "No teams"
                       )}
                     </TableCell>
-                    {/* <TableCell>
-                      {spaces.length > 0 ? (
-                        spaces.map((team: any, index: number) => (
-                          <div key={index} className="flex">
-                            {Array.isArray(team?.members) &&
-                            team.members.length > 0 ? (
-                              <>
-                                {team.members
-                                  .slice(0, 6)
-                                  .map((member: any, idx: number) => (
-                                    <Image
-                                      key={idx}
-                                      src={member.profile_image}
-                                      alt={member.name}
-                                      width={30}
-                                      height={30}
-                                      className={`w-[32px] h-[32px] rounded-full ${
-                                        team.members.length === 1
-                                          ? "mr-2.5"
-                                          : team.members.length > 0
-                                          ? "-mr-2.5"
-                                          : ""
-                                      } border-2 border-white`}
-                                    />
-                                  ))}
-                                {team.members.length > 6 && (
-                                  <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
-                                    +{team.members.length - 6}
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-gray-900 font-inter text-sm">
-                                No Members Found
-                              </p>
-                            )}
-                          </div>
-                        ))
-                      ) }
-                    </TableCell> */}
                     <TableCell className="px-4 py-4 text-sm text-gray-500">
                       <div className="flex">
                         {teamData && teamData.length > 0 ? (
@@ -586,7 +547,7 @@ export default function SpaceSetting({}) {
                             )}
                           </>
                         ) : (
-                          <p className="text-gray-900 font-inter text-sm">
+                          <p className="text-gray-500 font-normal font-inter text-sm">
                             No Members Found
                           </p>
                         )}
@@ -655,9 +616,9 @@ export default function SpaceSetting({}) {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center text-gray-500 py-4"
+                    className="text-center font-inter font-medium  text-gray-500 py-4"
                   >
-                    No spaces available. Click New Space to add one.
+                    No spaces available
                   </TableCell>
                 </TableRow>
               )}

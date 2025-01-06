@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
+import { Search, Upload, X } from "lucide-react";
 import WebNavbar from "@/app/(web)/components/navbar";
 import {
   Tooltip,
@@ -31,6 +32,7 @@ import Image from "next/image";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useGlobalContext } from "@/context/store";
+import { Input } from "@/components/ui/input";
 
 interface Member {
   id: string;
@@ -75,20 +77,21 @@ interface Member {
 // });
 
 const Members = () => {
-  const {userId} = useGlobalContext();
+  const { userId } = useGlobalContext();
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [saveLoader, setSaveLoader] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   // Fetch members from Supabase
   const fetchMembers = async () => {
     const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("is_deleted", false);
+      .from("users")
+      .select("*")
+      .eq("is_deleted", false);
     if (error) {
       console.error("Error fetching members:", error.message);
     } else {
@@ -237,7 +240,7 @@ const Members = () => {
     ); // Simple loader UI
   }
 
-  if (userId?.role === 'User'){
+  if (userId?.role === "User") {
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <div className="flex flex-col items-center gap-3">
@@ -250,7 +253,17 @@ const Members = () => {
           />
           <h1 className="text-9xl font-bold">403</h1>
           <p className="text-2xl font-bold">Access Denied!</p>
-          <h4 className="text-sm text-gray-500 text-center font-inter">You don’t have access to this area of application. Speak <br /> to your administrator to unblock this feature. <br /> You can go back to <Link href="/dashboard" className="text-primaryColor-700 underline font-bold">Dashboard</Link></h4>
+          <h4 className="text-sm text-gray-500 text-center font-inter">
+            You don’t have access to this area of application. Speak <br /> to
+            your administrator to unblock this feature. <br /> You can go back
+            to{" "}
+            <Link
+              href="/dashboard"
+              className="text-primaryColor-700 underline font-bold"
+            >
+              Dashboard
+            </Link>
+          </h4>
         </div>
       </div>
     );
@@ -276,19 +289,47 @@ const Members = () => {
             <div className="flex space-x-[10px]">
               <button
                 onClick={() => router.push(`/spaceSetting`)}
-                className="rounded-lg text-sm text-gray-400 border w-[134px] hover:bg-slate-50 h-[41px]"
+                className="rounded-lg text-sm font-inter font-medium text-gray-400 border boredr-gray-300 w-[134px] hover:bg-slate-50 h-[41px]"
               >
                 Space Settings
               </button>
-              <button className="rounded-lg text-sm border w-[104px] h-[41px] text-white hover:bg-blue-600 hover:text-white bg-primaryColor-700">
+              <button className="rounded-lg text-sm font-inter font-medium border w-[104px] h-[41px] text-white hover:bg-blue-600 hover:text-white bg-primaryColor-700">
                 Members
               </button>
-              <button onClick={() => router.push(`/access`)} className="rounded-lg text-sm border w-[89px] h-[41px] hover:bg-slate-50 text-gray-400">
+              <button
+                onClick={() => router.push(`/access`)}
+                className="rounded-lg text-sm  font-inter font-medium border border-gray-300 w-[89px] h-[41px] hover:bg-slate-50 text-gray-400"
+              >
                 Access
               </button>
             </div>
+          </div>
+        </div>
+        <div className="flex justify-between items-center mt-5">
+          <div className="relative">
+            <Search
+              size={14}
+              className="absolute top-3.5 left-2.5 text-gray-500"
+            />
+            <Input
+              placeholder="Search"
+              value={searchValue}
+              className="w-[384px] h-[42px] pl-8 pr-7 bg-white shadow-none font-medium justify-start gap-3 rounded-[10px] flex items-center"
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+            <X
+              size={14}
+              className="absolute top-3.5 right-2.5 cursor-pointer text-gray-500"
+              onClick={() => setSearchValue("")}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button className="w-[149px] h-[41px] space-x-2 px-5 py-[2.5px] border bg-[#E5ECF6] border-gray-300 text-sm text-gray-800 rounded-lg font-inter font-normal gap-[10px] flex items-center hover:bg-gray-200  ">
+              <Upload className="h-5 w-5 text-gray-900" />
+              Upload CSV
+            </Button>
             <Button
-              className="rounded-lg text-sm text-white border flex items-center max-w-[142px] w-[142px] h-[41px] bg-primaryColor-700 space-x-2 px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
+              className="rounded-lg text-sm font-medium font-inter  text-white border flex items-center max-w-[142px] w-[165px] h-[41px] bg-primaryColor-700 space-x-2  px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
               onClick={() => {
                 setSaveLoader(true);
                 setTimeout(() => {
@@ -322,125 +363,172 @@ const Members = () => {
               ) : (
                 <>
                   <ClipboardPlus className="h-5 w-5" />
-                  Add member
+                  Add New User
                 </>
               )}
             </Button>
           </div>
         </div>
         <div className="pt-[18px] pb-[18px]">
-          <Table className="border-b  max-h-[500px] overflow-y-auto playlist-scroll border-gray-200 bg-white rounded-[10px]">
-            <TableHeader className="sticky top-0 rounded-[12px]">
+          <Table className=" block w-[98vw] max-h-[500px] overflow-y-auto playlist-scroll bg-white  rounded-[10px]  font-inter">
+            <TableHeader className="sticky top-0 bg-white z-0 ">
               <TableRow>
-                <TableHead className="px-4 py-4 text-sm">NAME</TableHead>
-                <TableHead className="px-4 py-4 text-sm">DESIGNATION</TableHead>
-                <TableHead className="px-4 py-4 text-sm">EMAIL</TableHead>
-                <TableHead className="px-4 py-4 text-sm">MOBILE</TableHead>
-                <TableHead className="px-4 py-4 text-sm">ACTION</TableHead>
+                <TableHead className="w-[18%] px-4 py-4 text-sm font-inter font-semibold text-gray-500">
+                  NAME
+                </TableHead>
+                <TableHead className=" w-[25%] px-4 py-4 text-sm font-inter font-semibold text-gray-500 ">
+                  DESIGNATION
+                </TableHead>
+                <TableHead className="  w-[25%] px-4 py-4 text-sm font-inter font-semibold text-gray-500 ">
+                  EMAIL
+                </TableHead>
+                <TableHead className=" w-[25%] px-4 py-4  text-sm  font-inter font-semibold text-gray-500">
+                  MOBILE
+                </TableHead>
+                <TableHead className=" w-[25%] px-4 py-4  text-sm  font-inter font-semibold text-gray-500">
+                  ACTION
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="px-4 py-4 text-sm font-semibold text-gray-900">
-                    {/* Display Profile Image and Name */}
-                    <div className="flex items-center space-x-3">
-                      {member.profile_image && (
-                        <img
-                          src={member.profile_image}
-                          alt={`${member.username}'s profile`}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      )}
-                      <span>{member.username}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-4 text-sm text-gray-900">
-                    {member.designation}
-                  </TableCell>
-                  <TableCell className="px-4 py-4 text-sm text-gray-900">
-                    {member.email}
-                  </TableCell>
-                  <TableCell className="px-4 py-4 text-sm text-gray-900">
-                    {member.mobile}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-0">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              className="p-2 rounded hover:bg-gray-100"
-                              onClick={() => {
-                                router.push(`/edit-member/${member.id}`);
-                              }}
-                            >
-                              <Pencil className="h-5 w-5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div>
-                              <Dialog
-                                open={isDeleteDialogOpen}
-                                onOpenChange={setIsDeleteDialogOpen}
-                              >
-                                <DialogTrigger>
-                                  <button
-                                    className="p-2 rounded hover:bg-gray-100"
-                                    onClick={() => {
-                                      setMemberToDelete(member.id);
-                                      setIsDeleteDialogOpen(true);
-                                    }}
+              {members.filter(
+                (member) =>
+                  member.username
+                    .toLowerCase()
+                    .includes(searchValue.toLowerCase()) ||
+                  member.designation
+                    .toLowerCase()
+                    .includes(searchValue.toLowerCase()) ||
+                  member.email
+                    .toLowerCase()
+                    .includes(searchValue.toLowerCase()) ||
+                  member.mobile.includes(searchValue)
+              ).length > 0 ? (
+                members
+                  .filter(
+                    (member) =>
+                      member.username
+                        .toLowerCase()
+                        .includes(searchValue.toLowerCase()) ||
+                      member.designation
+                        .toLowerCase()
+                        .includes(searchValue.toLowerCase()) ||
+                      member.email
+                        .toLowerCase()
+                        .includes(searchValue.toLowerCase()) ||
+                      member.mobile.includes(searchValue)
+                  )
+                  .map((member) => (
+                    <TableRow key={member.id}>
+                      <TableCell className="px-4 py-4 text-sm font-semibold text-gray-900">
+                        <div className="flex items-center space-x-3">
+                          {member.profile_image && (
+                            <img
+                              src={member.profile_image}
+                              alt={`${member.username}'s profile`}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          )}
+                          <span className="text-gray-900 font-inter">{member.username}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-4 text-sm font-inter font-normal  text-gray-500">
+                        {member.designation}
+                      </TableCell>
+                      <TableCell className="px-4 py-4 text-sm font-inter font-normal  text-gray-500">
+                        {member.email}
+                      </TableCell>
+                      <TableCell className="px-4 py-4 text-sm font-inter font-normal  text-gray-500">
+                        {member.mobile}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-0">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  className="p-2 rounded hover:bg-gray-100"
+                                  onClick={() => {
+                                    router.push(`/edit-member/${member.id}`);
+                                  }}
+                                >
+                                  <Pencil className="h-5 w-5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div>
+                                  <Dialog
+                                    open={isDeleteDialogOpen}
+                                    onOpenChange={setIsDeleteDialogOpen}
                                   >
-                                    <Trash2 className="h-5 w-5" />
-                                  </button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <div className="text-center">
-                                    <h2 className="text-lg font-semibold">
-                                      Are you sure?
-                                    </h2>
-                                    <p className="mt-2 text-sm text-gray-600">
-                                      Do you really want to delete this space
-                                    </p>
-                                  </div>
-                                  <DialogFooter>
-                                    <div className="flex justify-end mt-4 space-x-3">
-                                      <Button
-                                        className="text-white bg-gray-400 hover:bg-gray-500"
-                                        onClick={() =>
-                                          setIsDeleteDialogOpen(false)
-                                        }
-                                      >
-                                        Cancel
-                                      </Button>
-                                      <Button
-                                        className="text-white bg-red-500 hover:bg-red-600"
+                                    <DialogTrigger>
+                                      <button
+                                        className="p-2 rounded hover:bg-gray-100"
                                         onClick={() => {
-                                          setIsDeleteDialogOpen(false);
-                                          if (memberToDelete) {
-                                            handleDelete(memberToDelete);
-                                          }
+                                          setMemberToDelete(member.id);
+                                          setIsDeleteDialogOpen(true);
                                         }}
                                       >
-                                        Delete
-                                      </Button>
-                                    </div>
-                                  </DialogFooter>
-                                </DialogContent>
-                              </Dialog>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
+                                        <Trash2 className="h-5 w-5" />
+                                      </button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                      <div className="text-start">
+                                        <h2 className="text-lg font-bold">
+                                          Delete 
+                                        </h2>
+                                        <p className="mt-2 text-sm text-gray-600">
+                                          Do you really want to delete this
+                                          member?
+                                        </p>
+                                      </div>
+                                      <DialogFooter>
+                                        <div className="flex justify-end mt-4 space-x-3">
+                                          <Button
+                                            className="text-white    hover:bg-gray-200"
+                                            onClick={() =>
+                                              setIsDeleteDialogOpen(false)
+                                            }
+                                          >
+                                            Cancel
+                                          </Button>
+                                          <Button
+                                            className="text-white bg-red-500 hover:bg-red-600"
+                                            onClick={() => {
+                                              setIsDeleteDialogOpen(false);
+                                              if (memberToDelete) {
+                                                handleDelete(memberToDelete);
+                                              }
+                                            }}
+                                          >
+                                            Delete
+                                          </Button>
+                                        </div>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  </Dialog>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="px-4 py-4 text-center font-inter font-medium  text-sm text-gray-500"
+                  >
+                    Members not found
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
@@ -448,5 +536,4 @@ const Members = () => {
     </>
   );
 };
-
 export default Members;

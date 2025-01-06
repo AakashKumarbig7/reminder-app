@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { useGlobalContext } from "@/context/store";
 interface FilterProps {
+  loggedUserData: any;
   // teamFilterValue: string;
   setTeamFilterValue: (value: string) => void;
   // taskStatusFilterValue: string;
@@ -54,6 +55,7 @@ const taskStatusOptions = [
 ];
 
 const FilterComponent: React.FC<FilterProps> = ({
+  loggedUserData,
   // teamFilterValue,
   setTeamFilterValue,
   // taskStatusFilterValue,
@@ -79,6 +81,9 @@ const FilterComponent: React.FC<FilterProps> = ({
     return date.toLocaleDateString("en-GB", options); // 'en-GB' gives the format "23 Aug 2024"
   };
 
+  let spaceData: any;
+  spaceData = sessionStorage.getItem("spaceData");
+  spaceData = JSON.parse(spaceData);
   const getTeamData = async () => {
     try {
       const { data, error } = await supabase
@@ -93,9 +98,26 @@ const FilterComponent: React.FC<FilterProps> = ({
       }
 
       if (data) {
-        console.log("Team data:", data);
-        setTeamData(data);
+        if (loggedUserData?.role === "admin"){
+          setTeamData(data);}
+          else
+          {
+        let filteredTeam = [];
+        for (let i = 0; i < data.length; i++) {
+          // for (let j = 0; j < data[i].members.length; j++) {
+          //   if (data[i].members[j].name == loggedUserData?.name) {
+          //     filteredTeam.push(data[i]);
+              
+          //   }
+          if(data[i].members.some((member: any) => member.name === "Prasanth")){
+            filteredTeam.push(data[i]);
+          }
+        }
+        // console.log("Team data:", data);
+        console.log(filteredTeam);
+        setTeamData(filteredTeam);
       }
+    }
     } catch (error) {
       console.error("Error fetching team data:", error);
     }
@@ -169,6 +191,7 @@ const FilterComponent: React.FC<FilterProps> = ({
                   placeholder="All / Design / Management"
                 />
               </div>
+
               <div className="pb-3">
                 <Label className="text-sm text-gray-900 block pb-1">
                   Task status

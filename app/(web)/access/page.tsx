@@ -194,17 +194,17 @@ const AccessPage = () => {
             <div className="flex space-x-[10px]">
               <button
                 onClick={() => route.push(`/spaceSetting`)}
-                className="rounded-lg text-sm text-gray-400 border w-[134px] hover:bg-slate-50 h-[41px]"
+                className="rounded-lg text-sm font-inter font-medium text-gray-400 border w-[134px] boreder-gray-300 hover:bg-slate-50 h-[41px]"
               >
                 Space Settings
               </button>
               <button
                 onClick={() => route.push(`/members`)}
-                className="rounded-lg text-sm text-gray-400 border w-[134px] hover:bg-slate-50 h-[41px]"
+                className="rounded-lg text-sm font-inter font-medium border-gray-300 text-gray-400 border w-[104px]  hover:bg-slate-50 h-[41px]"
               >
                 Members
               </button>
-              <button className="rounded-lg text-sm border w-[89px] h-[41px] hover:bg-blue-600 bg-primaryColor-700 text-white">
+              <button className="rounded-lg text-sm font-medium font-inter border w-[89px] h-[41px] hover:bg-blue-600 bg-primaryColor-700 text-white">
                 Access
               </button>
             </div>
@@ -302,22 +302,22 @@ const AccessPage = () => {
         <Table className="block w-[98vw] max-h-[500px] overflow-y-auto playlist-scroll bg-white rounded-[10px] my-5 font-inter">
           <TableHeader className="sticky top-0 bg-white">
             <TableRow>
-              <TableHead className="text-left w-[18%] pl-4 text-sm font-semibold text-gray-500 py-5">
+              <TableHead className="text-left w-[18%] pl-4 text-sm font-inter font-semibold text-gray-500 py-5">
                 NAME
               </TableHead>
-              <TableHead className="text-left w-[20%] text-sm font-semibold text-gray-500 py-5">
+              <TableHead className="text-left w-[20%] text-sm font-semibold font-inter text-gray-500 py-5">
                 DESIGNATION
               </TableHead>
-              <TableHead className="text-center w-[20%] text-sm font-semibold text-gray-500 py-5">
+              <TableHead className="text-center w-[20%] text-sm font-semibold font-inter text-gray-500 py-5">
                 SPACE CRUD
               </TableHead>
-              <TableHead className="text-center w-[20%] text-sm font-semibold text-gray-500 py-5">
+              <TableHead className="text-center w-[20%] text-sm font-semibold font-inter text-gray-500 py-5">
                 TEAM CRUD
               </TableHead>
-              <TableHead className="text-center w-[20%] text-sm font-semibold text-gray-500 py-5">
+              <TableHead className="text-center w-[20%] text-sm font-semibold font-inter text-gray-500 py-5">
                 TASK CRUD
               </TableHead>
-              <TableHead className="text-center w-[20%] pr-4 text-sm font-semibold text-gray-500 py-5">
+              <TableHead className="text-center w-[20%] pr-4 text-sm font-semibold font-inter text-gray-500 py-5">
                 ALL
               </TableHead>
             </TableRow>
@@ -326,10 +326,10 @@ const AccessPage = () => {
             {filteredEmployees.length > 0 ? (
               filteredEmployees?.map((employee: any) => (
                 <TableRow key={employee.id}>
-                  <TableCell className="pl-4 text-sm font-semibold text-gray-900 capitalize py-4">
+                  <TableCell className="pl-4 text-sm font-semibold font-inter text-gray-900 capitalize py-4">
                     {employee.username}
                   </TableCell>
-                  <TableCell className="text-sm text-gray-500">
+                  <TableCell className="text-sm font-inter font-normal text-gray-500">
                     {employee.designation || "N/A"}
                   </TableCell>
                   {["space", "team", "task", "all"].map((accessKey) => (
@@ -357,7 +357,7 @@ const AccessPage = () => {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center text-gray-500 text-base py-4"
+                  className="text-center font-inter font-medium  text-gray-500 text-base py-4"
                 >
                   No employees found.
                 </TableCell>
