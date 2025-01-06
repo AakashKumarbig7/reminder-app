@@ -37,7 +37,6 @@ const MentionInput: React.FC<Props> = ({
     MentionableEntity[]
   >([]);
   const editableRef = useRef<HTMLDivElement | null>(null);
-  const [mentionColor, setMentionColor] = useState(false);
 
   // Fetch mentionable entities from the database
   const getMentions = async () => {

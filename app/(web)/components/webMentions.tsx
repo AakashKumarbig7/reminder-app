@@ -26,11 +26,11 @@ interface MentionableEntity {
 type EntityType = "Employee" | "Team" | "Space";
 
 // Define a color mapping for each entity type
-const entityTypeColors: Record<EntityType, string> = {
-  Employee: "#518A37",
-  Team: "#8692ee",
-  Space: "#df478e",
-};
+// const entityTypeColors: Record<EntityType, string> = {
+//   Employee: "#518A37",
+//   Team: "#8692ee",
+//   Space: "#df478e",
+// };
 
 const WebMentionInput: React.FC<Props> = ({
   text,
@@ -52,13 +52,13 @@ const WebMentionInput: React.FC<Props> = ({
     MentionableEntity[]
   >([]);
   const editableRef = useRef<HTMLDivElement | null>(null);
-  const [mentionColor, setMentionColor] = useState(false);
 
   useEffect(() => {
   }, [mentionTrigger, setMentionTrigger]);
 
   // Handle user input to detect mentions and update text
   const handleInput = async (e: React.FormEvent<HTMLDivElement>) => {
+    console.log(e, "event");
     try {
       const { data: memberData, error: memberError } = await supabase
         .from("teams")

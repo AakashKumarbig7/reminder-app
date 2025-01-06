@@ -1,7 +1,6 @@
 "use client";
 import "rsuite/dist/rsuite-no-reset.min.css";
 import { Toaster } from "@/components/ui/toaster";
-import WebNavbar from "./components/navbar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { getLoggedInUserData } from "../(signin-setup)/sign-in/action";

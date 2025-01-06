@@ -5,7 +5,6 @@ import addicon from "@/public/images/Frame.png";
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -18,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "./ui/button";
-import styles from "../styles/newtask.module.css";
 import axios from "axios";
 import MentionInput from "./mentionInput";
 import { supabase } from "@/utils/supabase/supabaseClient";

@@ -125,12 +125,12 @@ const UserProfile = () => {
   };
 
   const onSubmit = async (data: any) => {
-    const entityName = data.name.split(" ").join("_");
+    // const entityName = data.name.split(" ").join("_");
     try {
         setSaveLoader(true);
         let imageUrl = data.profile_image;
         if (file) {
-          const { data: uploadData, error: uploadError } =
+          const { error: uploadError } =
             await supabase.storage
               .from("profiles")
               .upload(`profiles/${file.name}`, file, {
@@ -262,12 +262,16 @@ const UserProfile = () => {
         navbarItems={false}
         searchValue=""
         setSearchValue=""
-        teamFilterValue=""
+        // teamFilterValue=""
         setTeamFilterValue=""
-        taskStatusFilterValue=""
+        // taskStatusFilterValue=""
         setTaskStatusFilterValue=""
+        setDateFilterValue=""
         filterFn=""
       />
+      <div className="hidden">
+        <span>{modalPassword}</span>
+      </div>
       <div className="px-3">
         <div className="w-full pb-4 pt-14">
           <div className="bg-white pt-4 pb-10 mt-5 rounded-[10px]">

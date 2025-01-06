@@ -9,7 +9,6 @@ import {
   DrawerContent,
   DrawerTrigger,
   DrawerTitle,
-  DrawerFooter,
 } from "@/components/ui/drawer";
 import {
   Command,
@@ -27,9 +26,8 @@ export default function NavBar() {
     "One Tusk Event",
     "Badminton Group",
     "Family",
-   
   ];
-  const [spacesList, setSpacesList] = useState(initialSpaces);
+  // const [spacesList, setSpacesList] = useState(initialSpaces);
 
   const handleSelected = (space:any) => {
     setSelectedSpace(space);
@@ -54,7 +52,7 @@ export default function NavBar() {
             <Command>
               <CommandList>
                 <ul className="mt-4 space-y-5 px-5 pt-3">
-                  {spacesList.map((space) => (
+                  {initialSpaces.map((space) => (
                     <li
                       key={space}
                       onClick={() => handleSelected(space)}

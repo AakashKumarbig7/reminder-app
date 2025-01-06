@@ -41,19 +41,19 @@ import TeamCard from "../../components/teamCard";
 //     position: "top-right",
 //     duration: 3000,
 //   });
-interface Team {
-  id: number;
-  team_name: string;
-}
-interface Tab {
-  id: number;
-  space_name: string;
-  email: string;
-  username: string;
-  designation: string;
-  role: string;
-  department: string;
-}
+// interface Team {
+//   id: number;
+//   team_name: string;
+// }
+// interface Tab {
+//   id: number;
+//   space_name: string;
+//   email: string;
+//   username: string;
+//   designation: string;
+//   role: string;
+//   department: string;
+// }
 
 const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   // States
@@ -80,14 +80,14 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 const [cancelLoader, setCancelLoader] = useState(false);
 const [saveLoader, setSaveLoader] = useState(false);
-  const [datafromChild, setdatafromchild] = useState("");
+  // const [datafromChild, setdatafromchild] = useState("");
   // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
   const router = useRouter();
   const { spaceId } = params;
 
-  const handleDataFromChild = (data: any) => {
-    setdatafromchild(data);
-  };
+  // const handleDataFromChild = (data: any) => {
+  //   setdatafromchild(data);
+  // };
 
   const handleUpdateTeam = async () => {
     setSaveLoader(true);
@@ -565,7 +565,7 @@ const [saveLoader, setSaveLoader] = useState(false);
                     <CardContent className="px-3 py-3">
                       <AddTeam
                         spaceId={spaceId as number}
-                        sendDataToParent={fetchTeams}
+                        sendDataToParent={fetchTeams as any}
                       />
                     </CardContent>
                   </Card>

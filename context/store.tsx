@@ -18,15 +18,20 @@ interface UserData {
 interface ContextProps {
   userId: UserData | null;
   setUserId: Dispatch<SetStateAction<UserData | null>>;
+  selectedActiveTab: string | number | null;
+  setSelectedActiveTab: Dispatch<SetStateAction<string | number | null>>;
 }
 
 const GlobalContext = createContext<ContextProps>({
   userId: null,
   setUserId: () => null,
+  selectedActiveTab: null,
+  setSelectedActiveTab: () => null
 });
 
 export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userId, setUserId] = useState<UserData | null>(null);
+  const [selectedActiveTab, setSelectedActiveTab] = useState<number | string | null>(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -59,7 +64,7 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <GlobalContext.Provider value={{ userId, setUserId }}>
+    <GlobalContext.Provider value={{ userId, setUserId, selectedActiveTab, setSelectedActiveTab }}>
       {children}
     </GlobalContext.Provider>
   );

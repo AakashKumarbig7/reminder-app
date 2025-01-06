@@ -1,11 +1,7 @@
 "use client";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import {
-  CirclePlus,
-  CircleX,
-  Ellipsis,
   EllipsisVertical,
-  Route,
   Trash2,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -28,9 +24,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import WebNavbar from "./navbar";
-import { useGlobalContext } from "@/context/store";
 import { HiMiniDocumentPlus } from "react-icons/hi2";
-import { set } from "date-fns";
+import { useGlobalContext } from "@/context/store";
 
 interface Tab {
   id: number;
@@ -59,11 +54,9 @@ interface loggedUserDataProps {
 //   });
 
 const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
-  const { userId } = useGlobalContext();
   const route = useRouter();
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<number | null>(null);
-  const [isEditing, setIsEditing] = useState<number | null>(null);
   const [emailInput, setEmailInput] = useState<string>("");
   const [matchingUsers, setMatchingUsers] = useState<Tab[]>([]);
   const [noUserFound, setNoUserFound] = useState<boolean>(false);
@@ -85,11 +78,15 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [taskStatusFilterValue, setTaskStatusFilterValue] = useState<
     string | null
   >("");
+  const [dateFilterValue, setDateFilterValue] = useState<string | null>("");
   const [filterFn, setFilterFn] = useState(() => {});
   const [allTasks, setAllTasks] = useState<any>([]);
   const [loggedSpaceId, setLoggedSpaceId] = useState<any[]>([]);
   const [spaceLength, setSpaceLength] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [activeTabName, setActiveTabName] = useState();
+
+  const {setSelectedActiveTab} = useGlobalContext();
 
   useEffect(() => {
     fetchSpaces();
@@ -111,7 +108,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         return;
       }
 
-      const { data: taskData, error: taskError } = await supabase
+      const { error: taskError } = await supabase
         .from("tasks")
         .update({ is_deleted: true })
         .in(
@@ -124,7 +121,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         return;
       }
 
-      const { data, error: spaceError } = await supabase
+      const { error: spaceError } = await supabase
         .from("teams")
         .update({ is_deleted: true })
         .in(
@@ -190,10 +187,9 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     if (data) {
       setTabs(data);
       if (data.length > 0) {
-        setActiveTab(data[0].id);
-         // Set the first tab as active initially
-         
-     
+        setActiveTab(data[0].id); // Set the first tab as active initially
+        setActiveTabName(data[0].space_name);
+        setSelectedActiveTab(data[0].id);
       }
     }
   };
@@ -231,6 +227,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       }
     }
     setActiveTab(id);
+    setActiveTabName(data?.space_name);
+    setSelectedActiveTab(id)
   };
 
   // Add a new tab in database and UI
@@ -255,7 +253,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   // Delete a tab from database and UI
   const deleteTab = async (id: number) => {
-    let backupData: {
+    const backupData: {
       tasks: any[];
       teams: any[];
       space: any;
@@ -527,7 +525,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   const fetchTeamData = async () => {
     if (!spaceId) return;
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("teams")
       .select("*")
       .eq("is_deleted", false)
@@ -583,7 +581,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
       try {
         // Insert selected user details as array of objects into the `teams` table
-        const { data: insertedData, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from("teams")
           .insert({
             team_name: teamName,
@@ -628,7 +626,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   };
 
   const fetchTeams = async () => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("teams")
       .select("*")
       .eq("is_deleted", false)
@@ -736,63 +734,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     }
   };
 
-  const filteredTabs = tabs.filter((tab) =>
-    loggedSpaceId.some((space) => space.id === tab.id)
-  );
-
-  // const handleFilterTasksAndTeams = async () => {
-  //   try {
-  //     if (teamFilterValue === "" || taskStatusFilterValue === "") {
-  //       fetchTeams();
-  //       fetchTasks();
-  //     } else {
-  //       let query = supabase.from("tasks").select("*").eq("is_deleted", false);
-
-  //       if (teamFilterValue !== "") {
-  //         const { data, error } = await supabase
-  //           .from("teams")
-  //           .select("id")
-  //           .eq("is_deleted", 0)
-  //           // .eq("userId", signedInUserId)
-  //           .eq("team_name", teamFilterValue)
-  //           .single(); // Use single() to directly fetch a single object
-
-  //         if (error) {
-  //           throw error;
-  //         }
-  //         query = query.eq("orientation", data.id).eq("is_deleted", false);
-  //       }
-
-  //       if (taskStatusFilterValue !== "") {
-  //         query = query
-  //           .eq("task_status", taskStatusFilterValue)
-  //           .eq("is_deleted", false);
-  //       }
-
-  //       const { data: filteredTasks, error: filterError } = await query.order(
-  //         "id",
-  //         { ascending: false }
-  //       );
-
-  //       if (filterError) {
-  //         throw filterError;
-  //       }
-
-  //       if (filteredTasks && filteredTasks.length > 0) {
-  //         setAllTasks(filteredTasks);
-  //       } else {
-  //         toast({
-  //           title: "No data found",
-  //           description: "No data found for the selected filters.",
-  //         });
-  //         setAllTasks([]);
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => {
@@ -817,14 +758,21 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         navbarItems={true}
         searchValue={searchValue}
         setSearchValue={setSearchValue}
-        teamFilterValue={teamFilterValue as string}
+        // teamFilterValue={teamFilterValue as string}
         setTeamFilterValue={setTeamFilterValue as any}
-        taskStatusFilterValue={taskStatusFilterValue as string}
+        // taskStatusFilterValue={taskStatusFilterValue as string}
         setTaskStatusFilterValue={setTaskStatusFilterValue as any}
+        setDateFilterValue={setDateFilterValue as any}
         filterFn={filterFn as any}
         // spaceId={spaceId}
         // teamData={teamData}
       />
+      <div className="hidden">
+        <span>{spaceEditDialogOpen}</span>
+        <span>{allTasks.length}</span>
+        <span>{loading}</span>
+        <span>{loading}</span>
+      </div>
       <div className="px-3 flex justify-start items-center gap-3 h-[calc(100vh-70px)]">
         <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[170px] max-w-[200px] h-full pt-0 pb-0 playlist-scroll">
               <div className="text-sm text-gray-400 flex flex-col gap-2.5">
@@ -911,7 +859,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                               >
                                 Teams
                               </Label>
-                              <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[70vh] max-h-[70vh] overflow-auto playlist-scroll">
+                              <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[67vh] max-h-[70vh] overflow-auto playlist-scroll">
                                 {spaceDetails.length > 0 ? (
                                   spaceDetails.map(
                                     (team: any, index: number) => (
@@ -1089,7 +1037,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                                 >
                                   Teams
                                 </Label>
-                                <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[70vh] max-h-[70vh] overflow-auto playlist-scroll">
+                                <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[67vh] max-h-[70vh] overflow-auto playlist-scroll">
                                   {spaceDetails.length > 0 ? (
                                     spaceDetails.map((team, index) => (
                                       <div
@@ -1203,25 +1151,24 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           
           
         </div>
-        <div className="w-full flex gap-3 h-[calc(100vh-70px)]">
-          <div className="w-[183px] h-full flex flex-col justify-center items-center border border-dashed border-gray-400 rounded-[10px] px-4">
+        <div className="w-[calc(100%-170px)] flex flex-col gap-3 h-[calc(100vh-70px)]">
+          <div className="w-full h-[60px] flex justify-between items-center bg-white rounded-[10px] p-4">
+            <p className="text-xl font-semibold font-inter">{activeTabName || spaceName}</p>
           {(loggedUserData?.role === "owner" ||
             (loggedUserData?.role === "User" &&
               ((loggedUserData?.access?.team !== true &&
                 loggedUserData?.access?.all === true) ||
                 loggedUserData?.access?.team === true) && (spaceLength > 0 || spaceLength === 1))) && (
-            <div className="flex gap-2 text-sm text-gray-400 w-full">
+            <div className="flex gap-2 text-sm text-gray-400">
               <Sheet
                 open={memberAddDialogOpen}
                 onOpenChange={setMemberAddDialogOpen}
               >
                 <SheetTrigger asChild>
                   <button
-                    className="rounded-[10px] border-dashed border border-gray-400 px-2 py-0.5 flex items-center justify-center gap-2 h-10 w-full"
+                    className="rounded-[10px] border border-gray-400 text-gray-800 px-2 py-0.5 flex items-center justify-center gap-2 h-10"
                   >
-                    <span className="text-gray-600">
-                      <CirclePlus size={16} />
-                    </span>{" "}
+                    <HiMiniDocumentPlus className="w-5 h-5" />
                     Add Team
                   </button>
                 </SheetTrigger>
@@ -1391,6 +1338,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           setTeamFilterValue={setTeamFilterValue as any}
           taskStatusFilterValue={taskStatusFilterValue as string}
           setTaskStatusFilterValue={setTaskStatusFilterValue as any}
+          dateFilterValue={dateFilterValue as string}
+          setDateFilterValue={setDateFilterValue as any}
           setFilterFn={setFilterFn as any}
           // allTasks={allTasks as any}
           // setAllTasks={setAllTasks as any}

@@ -4,16 +4,14 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import { FiSearch } from "react-icons/fi";
 import { FaEllipsisH } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa6";
-import { useState, createContext, useContext } from "react";
+import { useState } from "react";
 import {
   Drawer,
   DrawerContent,
   DrawerTrigger,
   DrawerTitle,
-  DrawerFooter,
 } from "@/components/ui/drawer";
 import { Command, CommandList } from "@/components/ui/command";
-
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const Teams = [

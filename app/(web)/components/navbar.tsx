@@ -19,6 +19,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import FilterComponent from "./filter";
+import Notification from "./notificationComp";
 // import FilterTeamSearch from "./filterTeamSearch";
 
 interface loggedUserDataProps {
@@ -26,10 +27,11 @@ interface loggedUserDataProps {
   navbarItems: any;
   searchValue: any;
   setSearchValue: any;
-  teamFilterValue: any;
+  // teamFilterValue: any;
   setTeamFilterValue: any;
-  taskStatusFilterValue: any;
+  // taskStatusFilterValue: any;
   setTaskStatusFilterValue: any;
+  setDateFilterValue: any;
   filterFn: any;
 }
 
@@ -38,15 +40,15 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
   navbarItems,
   searchValue,
   setSearchValue,
-  teamFilterValue,
+  // teamFilterValue,
   setTeamFilterValue,
-  taskStatusFilterValue,
+  // taskStatusFilterValue,
   setTaskStatusFilterValue,
+  setDateFilterValue,
   filterFn,
 }) => {
   const route = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
-  const [loading, setLoading] = useState(true);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
   const [totalTasks, setTotalTasks] = useState<number>(0);
   const [inprogressTasks, setInProgressTasks] = useState<number>(0);
@@ -120,7 +122,7 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                   placeholder="Search"
                   value={searchValue}
                   className="w-[384px] h-[42px] pl-8 pr-7 bg-white shadow-none font-medium justify-start gap-3 rounded-[10px] flex items-center "
-                  onChange={(e)  =>{console.log(e.target.value), setSearchValue(e.target.value)}}
+                  onChange={(e)  => {setSearchValue(e.target.value)}}
                   // onFocus={() => setIsFocused(true)} // Set focus state to true
                   // onBlur={() => setIsFocused(false)} // Optional: Handle blur to close the page
                 />
@@ -132,10 +134,11 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                 />
               </div>
               <FilterComponent
-                teamFilterValue={teamFilterValue}
+                // teamFilterValue={teamFilterValue}
                 setTeamFilterValue={setTeamFilterValue}
-                taskStatusFilterValue={taskStatusFilterValue}
+                // taskStatusFilterValue={taskStatusFilterValue}
                 setTaskStatusFilterValue={setTaskStatusFilterValue}
+                setDateFilterValue={setDateFilterValue}
                 filterFn={filterFn}
                 loggedUserData={loggedUserData}
                
@@ -186,6 +189,7 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                   )}
                 </div>
               </div>
+              <Notification />
             </>
           )}
 

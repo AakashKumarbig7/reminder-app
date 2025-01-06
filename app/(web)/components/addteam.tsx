@@ -4,16 +4,15 @@ import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
   SheetFooter,
 } from "@/components/ui/sheet";
 
-import { Trash2, CirclePlus, Plus } from "lucide-react";
+import { Trash2, CirclePlus } from "lucide-react";
 import Image from "next/image";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import { supabase } from "@/utils/supabase/supabaseClient";
@@ -148,22 +147,20 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
       }
       try {
         // Insert selected user details as array of objects into the `teams` table
-        const { data: insertedData, error: insertError } = await supabase
-          .from("teams")
-          .insert({
-            team_name: teamName,
-            members: fetchedMembers.map((member) => ({
-              id: member.id,
-              name: member.username, // Assuming `name` is a field in your `users` table
-              role: member.role,
-              department: member.department,
-              designation: member.designation,
-              email: member.email, // Assuming `email` is a field in your `users` table
-              entity_name: member.entity_name,
-            })),
-            space_id: spaceId,
-            is_deleted: false,
-          });
+        const { error: insertError } = await supabase.from("teams").insert({
+          team_name: teamName,
+          members: fetchedMembers.map((member) => ({
+            id: member.id,
+            name: member.username, // Assuming `name` is a field in your `users` table
+            role: member.role,
+            department: member.department,
+            designation: member.designation,
+            email: member.email, // Assuming `email` is a field in your `users` table
+            entity_name: member.entity_name,
+          })),
+          space_id: spaceId,
+          is_deleted: false,
+        });
 
         if (insertError) {
           console.error("Error saving members:", insertError);
@@ -220,6 +217,9 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
 
   return (
     <>
+      <div className="hidden">
+        <span>{teams.length}</span>
+      </div>
       <Sheet open={memberAddDialogOpen} onOpenChange={setMemberAddDialogOpen}>
         <SheetTrigger asChild>
           <button

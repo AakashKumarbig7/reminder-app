@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
     email: z.string().min(1, { message: "This field has to be filled." })

@@ -1,10 +1,8 @@
 "use client";
-import { supabase } from "@/utils/supabase/supabaseClient";
 import SpaceBar from "../components/spacebar";
 import "./style.css";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { useGlobalContext } from "@/context/store";
 
 const WebDashboard = () => {

@@ -56,6 +56,8 @@ interface SearchBarProps {
   setTeamFilterValue: any;
   taskStatusFilterValue: string | null;
   setTaskStatusFilterValue: any;
+  dateFilterValue: string | null;
+  setDateFilterValue: any;
   setFilterFn: any;
 }
 
@@ -88,6 +90,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   setTeamFilterValue,
   taskStatusFilterValue,
   setTaskStatusFilterValue,
+  dateFilterValue,
+  setDateFilterValue,
   setFilterFn,
 }) => {
   const route = useRouter();
@@ -574,6 +578,72 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
     setUpdateTaskId({ teamId: 0, taskId: 0 });
   };
 
+  const handleFilterTasksAndTeams = async () => {
+    try {
+      // If no filters are selected, fetch all teams and tasks
+      if (!teamFilterValue && !taskStatusFilterValue && !dateFilterValue) {
+        await fetchTeams();
+        await fetchTasks();
+      } else {
+        let filteredTeams = [];
+        let filteredTasks = [];
+  
+        // Apply filters if teamFilterValue is selected
+        if (teamFilterValue) {
+          filteredTeams = teams.filter(team =>
+            team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
+          );
+        } else {
+          filteredTeams = teams; // No team filter, return all teams
+        }
+  
+        // Apply task filters based on selected values
+        filteredTasks = allTasks.filter((task : any) => {
+          const matchesTeam =
+            teamFilterValue
+              ? teams.some(
+                  team =>
+                    team.id === task.team_id &&
+                    team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
+                )
+              : true;
+  
+          const matchesStatus =
+            taskStatusFilterValue
+              ? task.task_status.toLowerCase().includes(taskStatusFilterValue.toLowerCase())
+              : true;
+  
+          const matchesDate =
+            dateFilterValue ? task.due_date.includes(dateFilterValue) : true;
+
+            console.log(matchesTeam, matchesStatus, matchesDate);
+  
+          // Logic for combining filters: match any one, any two, or all values
+          if (teamFilterValue && taskStatusFilterValue && dateFilterValue) {
+            return matchesTeam && matchesStatus && matchesDate; // All values selected
+          } else if (teamFilterValue && taskStatusFilterValue) {
+            return matchesTeam && matchesStatus; // Two values selected
+          } else if (teamFilterValue && dateFilterValue) {
+            return matchesTeam && matchesDate; // Two values selected
+          } else if (taskStatusFilterValue && dateFilterValue) {
+            return matchesStatus && matchesDate; // Two values selected
+          } else {
+            return matchesTeam || matchesStatus || matchesDate; // Any one value selected
+          }
+        });
+  
+        // Update the UI with filtered data
+        setTeams(filteredTeams);
+        setAllTasks(filteredTasks);
+      }
+    } catch (error) {
+      console.error("Error filtering tasks and teams:", error);
+    }
+  };
+  
+  
+  
+
   // setFilterFn(handleFilterTasksAndTeams);
 
   useEffect(() => {
@@ -585,7 +655,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
   useEffect(() => {
     const getUser = async () => {
       const user = await getLoggedInUserData();
-      console.log(user, " user");
+      // console.log(user, " user");
 
       const { data, error } = await supabase
         .from("users")
@@ -606,64 +676,38 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
 
   const filterBySearchValue = (
     items: any[],
-    key: string,
     searchValue: string
   ) => {
     // Validate searchValue and convert to lowercase if it's a string
     const lowercasedSearchValue =
       typeof searchValue === "string" ? searchValue.toLowerCase() : "";
-
+  
     return items.filter((item) => {
-      const itemValue = item[key];
-
-      // Ensure item[key] is a string before calling toLowerCase
-      if (typeof itemValue === "string") {
-        return itemValue.toLowerCase().includes(lowercasedSearchValue);
-      }
-
-      // Exclude the item if the value is not a string
-      return false;
+      // Extract and validate task_content and mentions
+      const taskContent = typeof item.task_content === "string" ? item.task_content.toLowerCase() : "";
+      const mentions = Array.isArray(item.mentions)
+        ? item.mentions.map((mention: any) => (typeof mention === "string" ? mention.toLowerCase() : ""))
+        : [];
+  
+      // Check if searchValue is found in task_content or mentions
+      return (
+        taskContent.includes(lowercasedSearchValue) ||
+        mentions.some((mention : any) => mention.includes(lowercasedSearchValue))
+      );
     });
   };
 
-  const parseDateTime = (dateTimeString: string) => {
-    const [datePart, timePart] = dateTimeString.split(",");
-    const [day, month, year] = datePart.split(".");
-    return new Date(`${year}-${month}-${day}T${timePart}`);
-  };
+  // const parseDateTime = (dateTimeString: string) => {
+  //   const [datePart, timePart] = dateTimeString.split(",");
+  //   const [day, month, year] = datePart.split(".");
+  //   return new Date(`${year}-${month}-${day}T${timePart}`);
+  // };
 
-  const sortItems = (
-    items: any[] | any[], // Assuming FolderData is the type for folders
-    sortOrder: string | null,
-    key: "task_content" | "mentions" // Key to sort by: screenname for screens, name for folders
-  ) => {
-    switch (sortOrder) {
-      case "asc":
-        return [...items].sort((a, b) => a[key].localeCompare(b[key]));
-      case "desc":
-        return [...items].sort((a, b) => b[key].localeCompare(a[key]));
-      case "date-asc":
-        return [...items].sort(
-          (a, b) =>
-            parseDateTime(a.time).getTime() - parseDateTime(b.time).getTime()
-        );
-      case "date-desc":
-        return [...items].sort(
-          (a, b) =>
-            parseDateTime(b.time).getTime() - parseDateTime(a.time).getTime()
-        );
-      default:
-        return items;
-    }
-  };
-
-  const filteredTasks = sortItems(
-    filterBySearchValue(allTasks, "task_content", searchValue as string),
-    sortedValue,
-    "mentions"
-  );
+  const filteredTasks = filterBySearchValue(allTasks, searchValue as string);
+    
 
   const handleAddTask = async (teamId: any, spaceId: number) => {
+    console.log(loggedUserData?.username, " loggedUserData id");
     setTeams((prevTeams) =>
       prevTeams.map((team) =>
         team.id === teamId
@@ -696,6 +740,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
           space_id: spaceId,
           due_date: formatDate(addDays(new Date(), 1)),
           is_deleted: false,
+          notify_read: false,
+          created_by: loggedUserData?.username,
         })
         .select()
         .order("id", { ascending: false });
@@ -733,7 +779,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
   };
 
   return (
-    <div className="w-full h-[calc(100vh-70px)]">
+    <div className="w-full h-[calc(100vh-142px)]">
+      <Button onClick={handleFilterTasksAndTeams}>Check</Button>
       {teams.length > 0 ? (
         <div className="w-full h-full pb-4 px-0">
           <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">
@@ -744,7 +791,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
               teams.map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="max-w-[340px] h-[calc(100vh-70px)] basis-[30%] overflow-y-auto relative playlist-scroll"
+                  className="max-w-[340px] h-[calc(100vh-142px)] basis-[30%] overflow-y-auto relative playlist-scroll"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="w-full h-full p-0">
@@ -1536,7 +1583,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
               )).map((team, index) => (
                 <CarouselItem1
                   key={team.id}
-                  className="max-w-[340px] basis-[30%] h-[calc(100vh-70px)] overflow-y-auto relative playlist-scroll"
+                  className="max-w-[340px] basis-[30%] h-[calc(100vh-142px)] overflow-y-auto relative playlist-scroll"
                 >
                   <Card key={index}>
                     <CardContent key={index} className="w-full h-full p-0">
