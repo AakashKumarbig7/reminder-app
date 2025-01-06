@@ -59,6 +59,8 @@ interface SearchBarProps {
   dateFilterValue: string | null;
   setDateFilterValue: any;
   allTasks: any;
+  filterTeams : any;
+  setFilterTeams : any
 }
 
 interface Team {
@@ -93,6 +95,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   dateFilterValue,
   setDateFilterValue,
   allTasks,
+  filterTeams,
+  setFilterTeams
 }) => {
   const styledInputRef = useRef<HTMLDivElement>(null);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -147,7 +151,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         ...team,
         tasks: [], // Initialize each team with an empty tasks array
       }));
-      setTeams(teamData as Team[]);
+      // setTeams(teamData as Team[]);
     }
   };
 
@@ -576,6 +580,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     fetchTeams();
     fetchTasks();
     recoverTask();
+    console.log(allTasks, " allTasks data");
+    console.log(filterTeams, " filterTeams data");
   }, [spaceId, teamData, setTeamData]);
 
   useEffect(() => {
@@ -634,8 +640,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   const handleAddTask = async (teamId: any, spaceId: number) => {
     console.log(loggedUserData?.username, " loggedUserData id");
-    setTeams((prevTeams) =>
-      prevTeams.map((team) =>
+    setFilterTeams((prevTeams : any) =>
+      prevTeams.map((team : any) =>
         team.id === teamId
           ? {
               ...team,
@@ -707,14 +713,14 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   return (
     <div className="w-full h-[calc(100vh-142px)]">
       {/* <Button onClick={handleFilterTasksAndTeams}>Check</Button> */}
-      {teams.length > 0 ? (
+      {filterTeams.length > 0 ? (
         <div className="w-full h-full pb-4 px-0">
           <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">
             {
               loggedUserData?.role === "owner" ? (
                 <CarouselContent1 className="flex space-x-1">
               {
-              teams.map((team, index) => (
+              filterTeams.map((team : any, index : number) => (
                 <CarouselItem1
                   key={team.id}
                   className="max-w-[340px] h-[calc(100vh-142px)] basis-[30%] overflow-y-auto relative playlist-scroll"
@@ -1504,9 +1510,9 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
               ) : (
 <CarouselContent1 className="flex space-x-1">
               {
-              teams.filter((team, index) => (
+              filterTeams.filter((team : any, index : any) => (
                 team.members.some((member: any) => member.id === loggedUserData?.id)
-              )).map((team, index) => (
+              )).map((team : any, index : any) => (
                 <CarouselItem1
                   key={team.id}
                   className="max-w-[340px] basis-[30%] h-[calc(100vh-142px)] overflow-y-auto relative playlist-scroll"

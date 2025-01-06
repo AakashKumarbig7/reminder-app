@@ -88,7 +88,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [dateFilterValue, setDateFilterValue] = useState<string | null>("");
   // const [filterFn, setFilterFn] = useState(() => {});
   const [allTasks, setAllTasks] = useState<any>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [FilterTeams, setFilterTeams] = useState<Team[]>([]);
   const [loggedSpaceId, setLoggedSpaceId] = useState<any[]>([]);
   const [spaceLength, setSpaceLength] = useState<number>(0);
   const [loading, setLoading] = useState(false);
@@ -676,7 +676,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     return data;
   };
 
-  const newFetchTeams = async () => {
+  const filterFetchTeams = async () => {
       if (!spaceId) return;
       const { data, error } = await supabase
         .from("teams")
@@ -694,7 +694,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           ...team,
           tasks: [], // Initialize each team with an empty tasks array
         }));
-        setTeams(teamData as Team[]);
+        setFilterTeams(teamData as Team[]);
+        console.log(teamData);
       }
     };
 
@@ -765,10 +766,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   };
 
   const handleFilterTasksAndTeams = async () => {
+    console.log("update worked");
       try {
         // If no filters are selected, fetch all teams and tasks
         if (!teamFilterValue && !taskStatusFilterValue && !dateFilterValue) {
-          await newFetchTeams();
+          await filterFetchTeams();
           await fetchTasks();
         } else {
           let filteredTeams = [];
@@ -776,18 +778,18 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     
           // Apply filters if teamFilterValue is selected
           if (teamFilterValue) {
-            filteredTeams = teams.filter(team =>
+            filteredTeams = FilterTeams.filter(team =>
               team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
             );
           } else {
-            filteredTeams = teams; // No team filter, return all teams
+            filteredTeams = FilterTeams; // No team filter, return all teams
           }
     
           // Apply task filters based on selected values
           filteredTasks = allTasks.filter((task : any) => {
             const matchesTeam =
               teamFilterValue
-                ? teams.some(
+                ? FilterTeams.some(
                     team =>
                       team.id === task.team_id &&
                       team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
@@ -819,7 +821,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           });
     
           // Update the UI with filtered data
-          setTeams(filteredTeams);
+          setFilterTeams(filteredTeams);
           setAllTasks(filteredTasks);
         }
       } catch (error) {
@@ -842,6 +844,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   useEffect(() => {
     fetchTasks();
+    filterFetchTeams();
   }, [loggedUserData, activeTab]);
 
   return (
@@ -1434,6 +1437,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           dateFilterValue={dateFilterValue as string}
           setDateFilterValue={setDateFilterValue as any}
           allTasks={allTasks as any}
+          filterTeams = {FilterTeams as any}
+          setFilterTeams = {setFilterTeams as any}
           // setAllTasks={setAllTasks as any}
         />
         </div>
