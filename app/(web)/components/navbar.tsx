@@ -27,10 +27,11 @@ interface loggedUserDataProps {
   navbarItems: any;
   searchValue: any;
   setSearchValue: any;
-  teamFilterValue: any;
+  // teamFilterValue: any;
   setTeamFilterValue: any;
-  taskStatusFilterValue: any;
+  // taskStatusFilterValue: any;
   setTaskStatusFilterValue: any;
+  setDateFilterValue: any;
   filterFn: any;
 }
 
@@ -39,10 +40,11 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
   navbarItems,
   searchValue,
   setSearchValue,
-  teamFilterValue,
+  // teamFilterValue,
   setTeamFilterValue,
-  taskStatusFilterValue,
+  // taskStatusFilterValue,
   setTaskStatusFilterValue,
+  setDateFilterValue,
   filterFn,
 }) => {
   const route = useRouter();
@@ -132,10 +134,11 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                 />
               </div>
               <FilterComponent
-                teamFilterValue={teamFilterValue}
+                // teamFilterValue={teamFilterValue}
                 setTeamFilterValue={setTeamFilterValue}
-                taskStatusFilterValue={taskStatusFilterValue}
+                // taskStatusFilterValue={taskStatusFilterValue}
                 setTaskStatusFilterValue={setTaskStatusFilterValue}
+                setDateFilterValue={setDateFilterValue}
                 filterFn={filterFn}
               />
               <div className="max-w-[300px] w-[273px] h-[42px] bg-white shadow-none pl-2 font-bold justify-start gap-3 rounded-[10px] flex items-center">

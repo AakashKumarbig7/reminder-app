@@ -15,18 +15,18 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Filter } from "lucide-react";
+import { CalendarDays, Filter } from "lucide-react";
 import Select from "react-select";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { useGlobalContext } from "@/context/store";
 interface FilterProps {
-  teamFilterValue: string;
+  // teamFilterValue: string;
   setTeamFilterValue: (value: string) => void;
-  taskStatusFilterValue: string;
+  // taskStatusFilterValue: string;
   setTaskStatusFilterValue: (value: string) => void;
+  setDateFilterValue: (value: string) => void;
   filterFn: () => void;
 }
 
@@ -36,16 +36,16 @@ const taskStatusOptions = [
     label: "All",
   },
   {
-    value: "Todo",
-    label: "Todo",
+    value: "todo",
+    label: "todo",
   },
   {
-    value: "Inprogress",
-    label: "Inprogress",
+    value: "In progress",
+    label: "In progress",
   },
   {
-    value: "Feedback",
-    label: "Feedback",
+    value: "feedback",
+    label: "feedback",
   },
   {
     value: "Completed",
@@ -54,22 +54,37 @@ const taskStatusOptions = [
 ];
 
 const FilterComponent: React.FC<FilterProps> = ({
-  teamFilterValue,
+  // teamFilterValue,
   setTeamFilterValue,
-  taskStatusFilterValue,
+  // taskStatusFilterValue,
   setTaskStatusFilterValue,
+  setDateFilterValue,
   filterFn,
 }) => {
   const [teamData, setTeamData] = useState<any>([]);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const [selectedTaskStatus, setSelectedTaskStatus] = useState<any>(null);
   const [date, setDate] = useState<any>(null);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+
+  const {selectedActiveTab} = useGlobalContext();
+
+  const formatDate = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    };
+
+    return date.toLocaleDateString("en-GB", options); // 'en-GB' gives the format "23 Aug 2024"
+  };
 
   const getTeamData = async () => {
     try {
       const { data, error } = await supabase
         .from("teams")
         .select("*")
+        .eq("space_id", selectedActiveTab)
         .eq("is_deleted", false);
         // console.log("Team data:", data);
       if (error) {
@@ -78,7 +93,7 @@ const FilterComponent: React.FC<FilterProps> = ({
       }
 
       if (data) {
-        // console.log("Team data:", data);
+        console.log("Team data:", data);
         setTeamData(data);
       }
     } catch (error) {
@@ -98,26 +113,38 @@ const FilterComponent: React.FC<FilterProps> = ({
   const handleSelectChange = (selectedOption: any) => {
     setSelectedTeam(selectedOption);
     setTeamFilterValue(selectedOption?.value || "");
-    // console.log("Selected Team:", selectedOption);
+    console.log("Selected Team:", selectedOption);
   };
 
   const handleSelectStatus = (selectedOption: any) => {
     setSelectedTaskStatus(selectedOption);
     setTaskStatusFilterValue(selectedOption?.value || "");
-    // console.log("Selected Task Status:", selectedOption);
+    console.log("Selected Task Status:", selectedOption);
+  };
+
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    setDate(selectedDate || null);
+    setDateFilterValue(selectedDate ? formatDate(selectedDate) : "");
+    console.log("Selected Date: ", selectedDate ? formatDate(selectedDate) : "");
   };
 
   useEffect(() => {
     getTeamData();
-  }, []);
-  // handleCloseCancel = () => {
-  //   setSelectedTeam(null);
-  //   setSelectedTaskStatus(null);
-  //   setDate(null);
-  // }
+  }, [selectedActiveTab]);
+
+   const handleCloseCancel = () => {
+    setSelectedTeam(null);
+    setSelectedTaskStatus(null);
+    setDate(null);
+    setFilterDialogOpen(false);
+  }
+
   return (
     <>
-      <Sheet>
+      <Sheet
+      open={filterDialogOpen}
+      onOpenChange={setFilterDialogOpen}
+      >
         <SheetTrigger asChild>
           <Button variant="outline" className="px-2.5 rounded-[10px] h-[42px]">
             <Filter className="w-5 h-5" />
@@ -134,12 +161,12 @@ const FilterComponent: React.FC<FilterProps> = ({
               <div className="py-3">
                 <Label className="text-sm text-gray-900 block pb-1">Team</Label>
                 <Select
-                  className="w-full mt-1"
+                  className="w-full mt-1 text-sm"
                   options={allTeamData}
                   onChange={handleSelectChange} // Log selected team to console
                   value={selectedTeam} // Controlled value
                   isClearable
-                  placeholder="Select a team"
+                  placeholder="All / Design / Management"
                 />
               </div>
               <div className="pb-3">
@@ -147,12 +174,12 @@ const FilterComponent: React.FC<FilterProps> = ({
                   Task status
                 </Label>
                 <Select
-                  className="w-full mt-1"
+                  className="w-full mt-1 text-sm"
                   options={taskStatusOptions}
                   onChange={handleSelectStatus} // Log selected team to console
                   value={selectedTaskStatus} // Controlled value
                   isClearable
-                  placeholder="Select a team"
+                  placeholder="All / To Do / In Progress / Feedback"
                 />
               </div>
               <div>
@@ -167,18 +194,18 @@ const FilterComponent: React.FC<FilterProps> = ({
                         type="button"
                       >
                         {date ? (
-                          <span>{format(date, "dd/MMM/yyyy")}</span>
+                          <span className="text-sm text-gray-500">{format(date, "dd/MMM/yyyy")}</span>
                         ) : (
-                          <span>Pick a date</span>
+                          <span className="text-sm text-gray-500">00/00/0000</span>
                         )}
-                        <CalendarIcon className="ml-2" />
+                        <CalendarDays size={20} className="ml-2 text-gray-500" />
                       </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
                         selected={date}
-                        onSelect={setDate}
+                        onSelect={handleDateChange}
                         initialFocus
                       />
                     </PopoverContent>
@@ -188,7 +215,7 @@ const FilterComponent: React.FC<FilterProps> = ({
             </div>
 
             <SheetFooter className="w-full flex gap-2 pb-4">
-              <Button className="w-1/2" variant="outline" >
+              <Button className="w-1/2" variant="outline" onClick={handleCloseCancel}>
                 Cancel
               </Button>
               <Button

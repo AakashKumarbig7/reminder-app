@@ -274,10 +274,11 @@ const AddMember = () => {
        navbarItems={false}
        searchValue=''
        setSearchValue=''
-       teamFilterValue=''
+      //  teamFilterValue=''
        setTeamFilterValue=''
-       taskStatusFilterValue=''
+      //  taskStatusFilterValue=''
        setTaskStatusFilterValue=''
+       setDateFilterValue=''
        filterFn=''
         />
       <div

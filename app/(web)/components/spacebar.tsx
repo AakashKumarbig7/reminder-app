@@ -25,6 +25,7 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import WebNavbar from "./navbar";
 import { HiMiniDocumentPlus } from "react-icons/hi2";
+import { useGlobalContext } from "@/context/store";
 
 interface Tab {
   id: number;
@@ -77,12 +78,15 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [taskStatusFilterValue, setTaskStatusFilterValue] = useState<
     string | null
   >("");
+  const [dateFilterValue, setDateFilterValue] = useState<string | null>("");
   const [filterFn, setFilterFn] = useState(() => {});
   const [allTasks, setAllTasks] = useState<any>([]);
   const [loggedSpaceId, setLoggedSpaceId] = useState<any[]>([]);
   const [spaceLength, setSpaceLength] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [activeTabName, setActiveTabName] = useState();
+
+  const {setSelectedActiveTab} = useGlobalContext();
 
   useEffect(() => {
     fetchSpaces();
@@ -184,6 +188,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       if (data.length > 0) {
         setActiveTab(data[0].id); // Set the first tab as active initially
         setActiveTabName(data[0].space_name);
+        setSelectedActiveTab(data[0].id);
       }
     }
   };
@@ -222,6 +227,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     }
     setActiveTab(id);
     setActiveTabName(data?.space_name);
+    setSelectedActiveTab(id)
   };
 
   // Add a new tab in database and UI
@@ -724,63 +730,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     }
   };
 
-  // const filteredTabs = tabs.filter((tab) =>
-  //   loggedSpaceId.some((space) => space.id === tab.id)
-  // );
-
-  // const handleFilterTasksAndTeams = async () => {
-  //   try {
-  //     if (teamFilterValue === "" || taskStatusFilterValue === "") {
-  //       fetchTeams();
-  //       fetchTasks();
-  //     } else {
-  //       let query = supabase.from("tasks").select("*").eq("is_deleted", false);
-
-  //       if (teamFilterValue !== "") {
-  //         const { data, error } = await supabase
-  //           .from("teams")
-  //           .select("id")
-  //           .eq("is_deleted", 0)
-  //           // .eq("userId", signedInUserId)
-  //           .eq("team_name", teamFilterValue)
-  //           .single(); // Use single() to directly fetch a single object
-
-  //         if (error) {
-  //           throw error;
-  //         }
-  //         query = query.eq("orientation", data.id).eq("is_deleted", false);
-  //       }
-
-  //       if (taskStatusFilterValue !== "") {
-  //         query = query
-  //           .eq("task_status", taskStatusFilterValue)
-  //           .eq("is_deleted", false);
-  //       }
-
-  //       const { data: filteredTasks, error: filterError } = await query.order(
-  //         "id",
-  //         { ascending: false }
-  //       );
-
-  //       if (filterError) {
-  //         throw filterError;
-  //       }
-
-  //       if (filteredTasks && filteredTasks.length > 0) {
-  //         setAllTasks(filteredTasks);
-  //       } else {
-  //         toast({
-  //           title: "No data found",
-  //           description: "No data found for the selected filters.",
-  //         });
-  //         setAllTasks([]);
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => {
@@ -805,10 +754,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         navbarItems={true}
         searchValue={searchValue}
         setSearchValue={setSearchValue}
-        teamFilterValue={teamFilterValue as string}
+        // teamFilterValue={teamFilterValue as string}
         setTeamFilterValue={setTeamFilterValue as any}
-        taskStatusFilterValue={taskStatusFilterValue as string}
+        // taskStatusFilterValue={taskStatusFilterValue as string}
         setTaskStatusFilterValue={setTaskStatusFilterValue as any}
+        setDateFilterValue={setDateFilterValue as any}
         filterFn={filterFn as any}
         // spaceId={spaceId}
         // teamData={teamData}
@@ -1384,6 +1334,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           setTeamFilterValue={setTeamFilterValue as any}
           taskStatusFilterValue={taskStatusFilterValue as string}
           setTaskStatusFilterValue={setTaskStatusFilterValue as any}
+          dateFilterValue={dateFilterValue as string}
+          setDateFilterValue={setDateFilterValue as any}
           setFilterFn={setFilterFn as any}
           // allTasks={allTasks as any}
           // setAllTasks={setAllTasks as any}

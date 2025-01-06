@@ -262,10 +262,11 @@ const UserProfile = () => {
         navbarItems={false}
         searchValue=""
         setSearchValue=""
-        teamFilterValue=""
+        // teamFilterValue=""
         setTeamFilterValue=""
-        taskStatusFilterValue=""
+        // taskStatusFilterValue=""
         setTaskStatusFilterValue=""
+        setDateFilterValue=""
         filterFn=""
       />
       <div className="hidden">

@@ -239,10 +239,11 @@ const EditMember = (props: Props) => {
        navbarItems={false}
        searchValue=''
        setSearchValue=''
-       teamFilterValue=''
+      //  teamFilterValue=''
        setTeamFilterValue=''
-       taskStatusFilterValue=''
+      //  taskStatusFilterValue=''
        setTaskStatusFilterValue=''
+       setDateFilterValue=''
        filterFn=''
         />
         <div className="hidden">

@@ -263,10 +263,11 @@ const Members = () => {
        navbarItems={false}
        searchValue=''
        setSearchValue=''
-       teamFilterValue=''
+      //  teamFilterValue=''
        setTeamFilterValue=''
-       taskStatusFilterValue=''
+      //  taskStatusFilterValue=''
        setTaskStatusFilterValue=''
+       setDateFilterValue=''
        filterFn=''
         />
       <div className="px-3">
