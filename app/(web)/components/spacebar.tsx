@@ -146,7 +146,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       const newTabs = tabs.filter((tab) => tab.id !== id);
       setTabs(newTabs);
       if (newTabs.length > 0) {
-        setActiveTab(newTabs[0].id); // Set first tab as active if any left
+        setActiveTab(newTabs[0].id);
+         // Set first tab as active if any left
       } else {
         setActiveTab(null);
       }
@@ -189,7 +190,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     if (data) {
       setTabs(data);
       if (data.length > 0) {
-        setActiveTab(data[0].id); // Set the first tab as active initially
+        setActiveTab(data[0].id);
+         // Set the first tab as active initially
+         
+      sessionStorage.setItem("spaceData", JSON.stringify(data[0]));
       }
     }
   };
@@ -211,6 +215,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     if (data) {
       setSpaceId(data.id);
       setSpaceName(data.space_name);
+      let spaceData ={} as any ;
+      spaceData.id = data.id;
+      spaceData.space_name = data.space_name;
+      sessionStorage.setItem("spaceData", JSON.stringify(spaceData));
+    
       const { data: spaceId, error: spaceError } = await supabase
         .from("teams")
         .select("*")
@@ -336,7 +345,10 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     const newTabs = tabs.filter((tab) => tab.id !== id);
     setTabs(newTabs);
     if (newTabs.length > 0) {
-      setActiveTab(newTabs[0].id); // Set first tab as active if any left
+      setActiveTab(newTabs[0].id);
+       // Set first tab as active if any left
+       
+      sessionStorage.setItem("spaceData", JSON.stringify(newTabs[0]));
     } else {
       setActiveTab(null);
     }

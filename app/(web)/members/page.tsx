@@ -532,7 +532,7 @@ const Members = () => {
                                       <DialogFooter>
                                         <div className="flex justify-end mt-4 space-x-3">
                                           <Button
-                                            className="text-white bg-gray-400 hover:bg-gray-500"
+                                            className="text-white    hover:bg-gray-200"
                                             onClick={() =>
                                               setIsDeleteDialogOpen(false)
                                             }

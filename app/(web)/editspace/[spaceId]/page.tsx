@@ -346,7 +346,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     const id = await fetchSpaceIdByName(value);
 
     if (id !== null) {
-      router.push(`/editspace/${id}`);
+      router.push(`/editspace/${id}`);                         
       // Perform any log
 
       console.log(`Selected space ID: ${id}`);
@@ -403,7 +403,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     <>
       {/* <WebNavbar /> */}
       {/* <Toaster /> */}
-      <div className="px-3 h-full   space-y-[18px]">
+      <div className="px-3 h-max-[500px]   space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <div className="px-3 flex w-full items-center justify-between">
             {/* Title Section */}
@@ -455,7 +455,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
               {/* Cancel button */}
               <button
                 className="text-gray-400 border border-gray-200 rounded-[8px] text-sm w-[87px] h-[41px] cursor-pointer hover:bg-slate-50"
-                onClick={() => router.back()}
+                onClick={() => router.push(`/spaceSetting`)}
               >
                 Cancel
               </button>

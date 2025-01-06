@@ -67,24 +67,46 @@ const FilterComponent: React.FC<FilterProps> = ({
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const [selectedTaskStatus, setSelectedTaskStatus] = useState<any>(null);
   const [date, setDate] = useState<any>(null);
+  const[UserData, setUserData] = useState<any>(null);
 
+  let spaceData: any;
+  spaceData = sessionStorage.getItem("spaceData");
+  spaceData = JSON.parse(spaceData);
   const getTeamData = async () => {
     try {
       const { data, error } = await supabase
         .from("teams")
         .select("*")
-        .eq("is_deleted", false);
-        console.log("Team data:", data);
+        .eq("is_deleted", false)
+        .eq("space_id", spaceData?.id);
+   
       if (error) {
         console.error("Error fetching team data:", error);
         return;
       }
 
       if (data) {
-        console.log("Team data:", data);
-        setTeamData(data);
+        if (loggedUserData?.role === "admin") {
+          setTeamData(data);}
+          else
+          {
+        let filteredTeam = [];
+        for (let i = 0; i < data.length; i++) {
+          // for (let j = 0; j < data[i].members.length; j++) {
+          //   if (data[i].members[j].name == loggedUserData?.name) {
+          //     filteredTeam.push(data[i]);
+              
+          //   }
+          if(data[i].members.some((member: any) => member.name === UserData.entity_name)){
+            filteredTeam.push(data[i]);
+          }
+        }
+        // console.log("Team data:", data);
+        console.log(filteredTeam);
+        setTeamData(filteredTeam);
       }
-    } catch (error) { 
+    }
+    } catch (error) {
       console.error("Error fetching team data:", error);
     }
   };
@@ -93,28 +115,28 @@ const FilterComponent: React.FC<FilterProps> = ({
     value: team.team_name,
     label: team.team_name,
   }));
-  //  useEffect(() => {
-  //     const getUser = async () => {
-  //       const user = await getLoggedInUserData();
-  //       console.log(user, " user");
-  
-  //       const { data, error } = await supabase
-  //       .from("users")
-  //       .select("*")
-  //       .eq("userId", user?.id) // Ensure the key matches the actual column name in your table
-  //       .single();
-  
-  //       if (error) {
-  //         console.log(error);
-  //         return;
-  //       }
-  //       console.log(data, "data");
-  //       setTeamData(data );
-  //     };
-  
-  //     getUser();
-  //   }, []);
+  useEffect(() => {
+    const getUser = async () => {
+      const user:any = await getLoggedInUserData();
+      console.log("userAakash",user);
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("userId", user?.id)
+        .single();
 
+      if (error) {
+        console.log(error);
+        return;
+      }
+      // console.log(data);
+      setUserData(data);
+    };
+
+    getUser();
+
+    // localStorage.setItem("user", JSON.stringify(loggedUserData));
+  }, []);
   const handleSelectChange = (selectedOption: any) => {
     setSelectedTeam(selectedOption);
     setTeamFilterValue(selectedOption?.value || "");
@@ -139,7 +161,7 @@ const FilterComponent: React.FC<FilterProps> = ({
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" className="px-3 rounded-[10px]">
+          <Button variant="outline" onClick={getTeamData} className="px-3 rounded-[10px]">
             <Filter size={20} />
           </Button>
         </SheetTrigger>
@@ -162,8 +184,7 @@ const FilterComponent: React.FC<FilterProps> = ({
                   placeholder="Select a team"
                 />
               </div>
-              
-              
+
               <div className="pb-3">
                 <Label className="text-sm text-gray-900 block pb-1">
                   Task status
@@ -176,7 +197,6 @@ const FilterComponent: React.FC<FilterProps> = ({
                   isClearable
                   placeholder="Select a team"
                 />
-                
               </div>
               <div>
                 <Label className="text-sm text-gray-900 block pb-1">
@@ -211,7 +231,7 @@ const FilterComponent: React.FC<FilterProps> = ({
             </div>
 
             <SheetFooter className="w-full flex gap-2 pb-4">
-              <Button className="w-1/2" variant="outline" >
+              <Button className="w-1/2" variant="outline">
                 Cancel
               </Button>
               <Button
