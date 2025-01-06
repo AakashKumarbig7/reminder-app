@@ -81,7 +81,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
 const [cancelLoader, setCancelLoader] = useState(false);
 const [saveLoader, setSaveLoader] = useState(false);
   const [datafromChild, setdatafromchild] = useState("");
-  const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
+  // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
   const router = useRouter();
   const { spaceId } = params;
 

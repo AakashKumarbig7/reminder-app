@@ -49,7 +49,7 @@ export default function SpaceSetting({}) {
   const [spaceToDelete, setSpaceToDelete] = useState<string | null>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [teamData, setTeamData] = useState<any[]>([]);
-  
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
