@@ -58,7 +58,7 @@ interface SearchBarProps {
   setTaskStatusFilterValue: any;
   dateFilterValue: string | null;
   setDateFilterValue: any;
-  setFilterFn: any;
+  allTasks: any;
 }
 
 interface Team {
@@ -92,9 +92,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   setTaskStatusFilterValue,
   dateFilterValue,
   setDateFilterValue,
-  setFilterFn,
+  allTasks,
 }) => {
-  const route = useRouter();
   const styledInputRef = useRef<HTMLDivElement>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [text, setText] = useState<string>("");
@@ -103,7 +102,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     errorId: 0,
   });
   const [taskStatus, setTaskStatus] = useState<string>("todo");
-  const [allTasks, setAllTasks] = useState<any>([]);
+  // const [allTasks, setAllTasks] = useState<any>([]);
   const [teamName, setTeamName] = useState<string>("");
   const [teamNameDialogOpen, setTeamNameDialogOpen] = useState(false);
   const [teamNameSheetOpen, setTeamNameSheetOpen] = useState(false);
@@ -121,7 +120,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   const [role, setRole] = useState("");
   const [sortedValue, setSortedValue] = useState<string | null>("");
   const [loggedTeamId, setLoggedTeamId] = useState<number[]>([]);
-const [searchInput, setSearchInput] = useState(""); // Search input state
 
   // Helper function to toggle options for a specific team
   const toggleUpdateOption = (teamId: any) => {
@@ -305,12 +303,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
       const includesTrueTasks = data.filter((task) =>
         task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
       );
-      console.log(
-        includesTrueTasks.map((task) => task.team_id),
-        "includesTrueTasks"
-      );
       setLoggedTeamId(includesTrueTasks.map((task) => task.team_id));
-      setAllTasks(data);
+      // setAllTasks(data);
     }
   };
 
@@ -578,74 +572,6 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
     setUpdateTaskId({ teamId: 0, taskId: 0 });
   };
 
-  const handleFilterTasksAndTeams = async () => {
-    try {
-      // If no filters are selected, fetch all teams and tasks
-      if (!teamFilterValue && !taskStatusFilterValue && !dateFilterValue) {
-        await fetchTeams();
-        await fetchTasks();
-      } else {
-        let filteredTeams = [];
-        let filteredTasks = [];
-  
-        // Apply filters if teamFilterValue is selected
-        if (teamFilterValue) {
-          filteredTeams = teams.filter(team =>
-            team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
-          );
-        } else {
-          filteredTeams = teams; // No team filter, return all teams
-        }
-  
-        // Apply task filters based on selected values
-        filteredTasks = allTasks.filter((task : any) => {
-          const matchesTeam =
-            teamFilterValue
-              ? teams.some(
-                  team =>
-                    team.id === task.team_id &&
-                    team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
-                )
-              : true;
-  
-          const matchesStatus =
-            taskStatusFilterValue
-              ? task.task_status.toLowerCase().includes(taskStatusFilterValue.toLowerCase())
-              : true;
-  
-          const matchesDate =
-            dateFilterValue ? task.due_date.includes(dateFilterValue) : true;
-
-            console.log(matchesTeam, matchesStatus, matchesDate);
-  
-          // Logic for combining filters: match any one, any two, or all values
-          if (teamFilterValue && taskStatusFilterValue && dateFilterValue) {
-            return matchesTeam && matchesStatus && matchesDate; // All values selected
-          } else if (teamFilterValue && taskStatusFilterValue) {
-            return matchesTeam && matchesStatus; // Two values selected
-          } else if (teamFilterValue && dateFilterValue) {
-            return matchesTeam && matchesDate; // Two values selected
-          } else if (taskStatusFilterValue && dateFilterValue) {
-            return matchesStatus && matchesDate; // Two values selected
-          } else {
-            return matchesTeam || matchesStatus || matchesDate; // Any one value selected
-          }
-        });
-  
-        // Update the UI with filtered data
-        setTeams(filteredTeams);
-        setAllTasks(filteredTasks);
-      }
-    } catch (error) {
-      console.error("Error filtering tasks and teams:", error);
-    }
-  };
-  
-  
-  
-
-  // setFilterFn(handleFilterTasksAndTeams);
-
   useEffect(() => {
     fetchTeams();
     fetchTasks();
@@ -780,7 +706,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
 
   return (
     <div className="w-full h-[calc(100vh-142px)]">
-      <Button onClick={handleFilterTasksAndTeams}>Check</Button>
+      {/* <Button onClick={handleFilterTasksAndTeams}>Check</Button> */}
       {teams.length > 0 ? (
         <div className="w-full h-full pb-4 px-0">
           <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">

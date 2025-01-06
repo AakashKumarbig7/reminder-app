@@ -98,25 +98,8 @@ const FilterComponent: React.FC<FilterProps> = ({
       }
 
       if (data) {
-        if (loggedUserData?.role === "admin"){
-          setTeamData(data);}
-          else
-          {
-        let filteredTeam = [];
-        for (let i = 0; i < data.length; i++) {
-          // for (let j = 0; j < data[i].members.length; j++) {
-          //   if (data[i].members[j].name == loggedUserData?.name) {
-          //     filteredTeam.push(data[i]);
-              
-          //   }
-          if(data[i].members.some((member: any) => member.name === "Prasanth")){
-            filteredTeam.push(data[i]);
-          }
-        }
-        // console.log("Team data:", data);
-        console.log(filteredTeam);
-        setTeamData(filteredTeam);
-      }
+        setTeamData(data);
+      
     }
     } catch (error) {
       console.error("Error fetching team data:", error);

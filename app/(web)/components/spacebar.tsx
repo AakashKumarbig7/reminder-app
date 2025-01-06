@@ -42,6 +42,13 @@ interface loggedUserDataProps {
   loggedUserData: any;
 }
 
+interface Team {
+  id: number;
+  team_name: string;
+  tasks: { id: number; inputValue: string }[];
+  members: any[];
+}
+
 // const notify = (message: string, success: boolean) =>
 //   toast[success ? "success" : "error"](message, {
 //     style: {
@@ -79,8 +86,9 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     string | null
   >("");
   const [dateFilterValue, setDateFilterValue] = useState<string | null>("");
-  const [filterFn, setFilterFn] = useState(() => {});
+  // const [filterFn, setFilterFn] = useState(() => {});
   const [allTasks, setAllTasks] = useState<any>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [loggedSpaceId, setLoggedSpaceId] = useState<any[]>([]);
   const [spaceLength, setSpaceLength] = useState<number>(0);
   const [loading, setLoading] = useState(false);
@@ -668,6 +676,28 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     return data;
   };
 
+  const newFetchTeams = async () => {
+      if (!spaceId) return;
+      const { data, error } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("is_deleted", false)
+        .eq("space_id", spaceId);
+  
+      if (error) {
+        console.log(error);
+        return;
+      }
+  
+      if (data) {
+        const teamData = data.map((team) => ({
+          ...team,
+          tasks: [], // Initialize each team with an empty tasks array
+        }));
+        setTeams(teamData as Team[]);
+      }
+    };
+
   const fetchTasks = async () => {
     const { data: tasksData, error: tasksError } = await supabase
       .from("tasks")
@@ -734,6 +764,69 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     }
   };
 
+  const handleFilterTasksAndTeams = async () => {
+      try {
+        // If no filters are selected, fetch all teams and tasks
+        if (!teamFilterValue && !taskStatusFilterValue && !dateFilterValue) {
+          await newFetchTeams();
+          await fetchTasks();
+        } else {
+          let filteredTeams = [];
+          let filteredTasks = [];
+    
+          // Apply filters if teamFilterValue is selected
+          if (teamFilterValue) {
+            filteredTeams = teams.filter(team =>
+              team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
+            );
+          } else {
+            filteredTeams = teams; // No team filter, return all teams
+          }
+    
+          // Apply task filters based on selected values
+          filteredTasks = allTasks.filter((task : any) => {
+            const matchesTeam =
+              teamFilterValue
+                ? teams.some(
+                    team =>
+                      team.id === task.team_id &&
+                      team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
+                  )
+                : true;
+    
+            const matchesStatus =
+              taskStatusFilterValue
+                ? task.task_status.toLowerCase().includes(taskStatusFilterValue.toLowerCase())
+                : true;
+    
+            const matchesDate =
+              dateFilterValue ? task.due_date.includes(dateFilterValue) : true;
+  
+              console.log(matchesTeam, matchesStatus, matchesDate);
+    
+            // Logic for combining filters: match any one, any two, or all values
+            if (teamFilterValue && taskStatusFilterValue && dateFilterValue) {
+              return matchesTeam && matchesStatus && matchesDate; // All values selected
+            } else if (teamFilterValue && taskStatusFilterValue) {
+              return matchesTeam && matchesStatus; // Two values selected
+            } else if (teamFilterValue && dateFilterValue) {
+              return matchesTeam && matchesDate; // Two values selected
+            } else if (taskStatusFilterValue && dateFilterValue) {
+              return matchesStatus && matchesDate; // Two values selected
+            } else {
+              return matchesTeam || matchesStatus || matchesDate; // Any one value selected
+            }
+          });
+    
+          // Update the UI with filtered data
+          setTeams(filteredTeams);
+          setAllTasks(filteredTasks);
+        }
+      } catch (error) {
+        console.error("Error filtering tasks and teams:", error);
+      }
+    };
+
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => {
@@ -763,7 +856,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         // taskStatusFilterValue={taskStatusFilterValue as string}
         setTaskStatusFilterValue={setTaskStatusFilterValue as any}
         setDateFilterValue={setDateFilterValue as any}
-        filterFn={filterFn as any}
+        filterFn={() => handleFilterTasksAndTeams()}
         // spaceId={spaceId}
         // teamData={teamData}
       />
@@ -1340,8 +1433,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           setTaskStatusFilterValue={setTaskStatusFilterValue as any}
           dateFilterValue={dateFilterValue as string}
           setDateFilterValue={setDateFilterValue as any}
-          setFilterFn={setFilterFn as any}
-          // allTasks={allTasks as any}
+          allTasks={allTasks as any}
           // setAllTasks={setAllTasks as any}
         />
         </div>
