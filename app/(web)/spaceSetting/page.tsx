@@ -101,6 +101,9 @@ const SettingsPage = () => {
        setTaskStatusFilterValue=''
        setDateFilterValue=''
        filterFn=''
+       filterDialogOpen={''}
+        setFilterDialogOpen={''}
+        teamResetFn = {() => {}}
         />
       <SpaceSetting/> 
     </>

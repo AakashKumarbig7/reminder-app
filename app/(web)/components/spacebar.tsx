@@ -95,6 +95,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [activeTabName, setActiveTabName] = useState();
 
   const {setSelectedActiveTab} = useGlobalContext();
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchSpaces();
@@ -618,6 +619,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         setTeamMemberError(false);
         setMemberAddDialogOpen(false);
         fetchTeamData();
+        filterFetchTeams();
         // notify("Members saved successfully", true);
       } catch (err) {
         console.error("Unexpected error:", err);
@@ -695,7 +697,6 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           tasks: [], // Initialize each team with an empty tasks array
         }));
         setFilterTeams(teamData as Team[]);
-        console.log(teamData);
       }
     };
 
@@ -766,68 +767,101 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   };
 
   const handleFilterTasksAndTeams = async () => {
-    console.log("update worked");
-      try {
-        // If no filters are selected, fetch all teams and tasks
-        if (!teamFilterValue && !taskStatusFilterValue && !dateFilterValue) {
-          await filterFetchTeams();
-          await fetchTasks();
-        } else {
-          let filteredTeams = [];
-          let filteredTasks = [];
-    
-          // Apply filters if teamFilterValue is selected
-          if (teamFilterValue) {
-            filteredTeams = FilterTeams.filter(team =>
-              team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
-            );
-          } else {
-            filteredTeams = FilterTeams; // No team filter, return all teams
-          }
-    
-          // Apply task filters based on selected values
-          filteredTasks = allTasks.filter((task : any) => {
-            const matchesTeam =
-              teamFilterValue
-                ? FilterTeams.some(
-                    team =>
-                      team.id === task.team_id &&
-                      team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
-                  )
-                : true;
-    
-            const matchesStatus =
-              taskStatusFilterValue
-                ? task.task_status.toLowerCase().includes(taskStatusFilterValue.toLowerCase())
-                : true;
-    
-            const matchesDate =
-              dateFilterValue ? task.due_date.includes(dateFilterValue) : true;
-  
-              console.log(matchesTeam, matchesStatus, matchesDate);
-    
-            // Logic for combining filters: match any one, any two, or all values
-            if (teamFilterValue && taskStatusFilterValue && dateFilterValue) {
-              return matchesTeam && matchesStatus && matchesDate; // All values selected
-            } else if (teamFilterValue && taskStatusFilterValue) {
-              return matchesTeam && matchesStatus; // Two values selected
-            } else if (teamFilterValue && dateFilterValue) {
-              return matchesTeam && matchesDate; // Two values selected
-            } else if (taskStatusFilterValue && dateFilterValue) {
-              return matchesStatus && matchesDate; // Two values selected
-            } else {
-              return matchesTeam || matchesStatus || matchesDate; // Any one value selected
-            }
-          });
-    
-          // Update the UI with filtered data
-          setFilterTeams(filteredTeams);
-          setAllTasks(filteredTasks);
-        }
-      } catch (error) {
-        console.error("Error filtering tasks and teams:", error);
+    try {
+      // If no filters are selected, fetch all teams and tasks
+      if (!teamFilterValue && !taskStatusFilterValue && !dateFilterValue) {
+        await filterFetchTeams();
+        await fetchTasks();
+        toast({
+          title: "Select a filter",
+          description: "Please select at least one filter option to get meaningful results.",
+          duration: 3000,
+        });
+        return;
       }
-    };
+  
+      let filteredTeams = [];
+      let filteredTasks = [];
+  
+      // Filter teams based on teamFilterValue
+      if (teamFilterValue) {
+        filteredTeams = FilterTeams.filter(team =>
+          team.team_name?.toLowerCase().includes(teamFilterValue.toLowerCase())
+        );
+      } else {
+        filteredTeams = FilterTeams; // No filter, include all teams
+      }
+  
+      // Filter tasks based on the selected filters
+      filteredTasks = allTasks.filter((task : any) => {
+        const matchesTeam = teamFilterValue
+          ? FilterTeams.some(
+              team =>
+                team.id === task.team_id &&
+                team.team_name?.toLowerCase().includes(teamFilterValue.toLowerCase())
+            )
+          : true; // Include if no team filter applied
+  
+        const matchesStatus = taskStatusFilterValue
+          ? task.task_status?.toLowerCase().includes(taskStatusFilterValue.toLowerCase())
+          : true; // Include if no status filter applied
+  
+        const matchesDate = dateFilterValue
+          ? task.due_date?.includes(dateFilterValue)
+          : true; // Include if no date filter applied
+  
+        // Task matches if all selected filters match
+        return matchesTeam && matchesStatus && matchesDate;
+      });
+  
+      // Map filtered tasks to their corresponding teams
+      const tasksWithTeams = filteredTasks.map((task : any) => {
+        const team = FilterTeams.find(team => team.id === task.team_id);
+        return {
+          ...task,
+          teamName: team?.team_name || "No team found", // Include team name or fallback
+        };
+      });
+  
+      // Show toast messages based on results
+      if (tasksWithTeams.length === 0) {
+        toast({
+          title: "No tasks found",
+          description: "No tasks matched the selected filter criteria.",
+          duration: 3000,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Tasks filtered",
+          description: `${tasksWithTeams.length} task(s) found with matching criteria.`,
+          duration: 3000,
+        });
+      }
+  
+      if (filteredTeams.length === 0) {
+        toast({
+          title: "No teams found",
+          description: "No teams matched the selected filter criteria.",
+          duration: 3000,
+          variant: "destructive",
+        });
+      }
+  
+      // Update the UI with filtered data
+      setFilterTeams(filteredTeams);
+      setAllTasks(tasksWithTeams); // Update tasks with their corresponding teams
+      setFilterDialogOpen(false);
+    } catch (error) {
+      console.error("Error filtering tasks and teams:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while filtering tasks and teams.",
+        duration: 3000,
+      });
+    }
+  };
+  
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -845,7 +879,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   useEffect(() => {
     fetchTasks();
     filterFetchTeams();
-  }, [loggedUserData, activeTab]);
+  }, [loggedUserData, activeTab, teamFilterValue, taskStatusFilterValue, dateFilterValue]);
 
   return (
     <>
@@ -862,6 +896,9 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         filterFn={() => handleFilterTasksAndTeams()}
         // spaceId={spaceId}
         // teamData={teamData}
+        filterDialogOpen={filterDialogOpen}
+        setFilterDialogOpen={setFilterDialogOpen}
+        teamResetFn = {() => {filterFetchTeams(); fetchTasks();}}
       />
       <div className="hidden">
         <span>{spaceEditDialogOpen}</span>
@@ -1440,6 +1477,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           filterTeams = {FilterTeams as any}
           setFilterTeams = {setFilterTeams as any}
           // setAllTasks={setAllTasks as any}
+          filterFetchTeams={filterFetchTeams as any}
+          filterFetchTasks={fetchTasks as any}
         />
         </div>
       </div>

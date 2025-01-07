@@ -44,6 +44,7 @@ import { getLoggedInUserData} from "@/app/(signin-setup)/sign-in/action";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import SpaceBar from "./spacebar";
 
 interface SearchBarProps {
   spaceId: number;
@@ -61,6 +62,8 @@ interface SearchBarProps {
   allTasks: any;
   filterTeams : any;
   setFilterTeams : any
+  filterFetchTeams: any
+  filterFetchTasks: any
 }
 
 interface Team {
@@ -96,10 +99,11 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   setDateFilterValue,
   allTasks,
   filterTeams,
-  setFilterTeams
+  setFilterTeams,
+  filterFetchTeams,
+  filterFetchTasks
 }) => {
   const styledInputRef = useRef<HTMLDivElement>(null);
-  const [teams, setTeams] = useState<Team[]>([]);
   const [text, setText] = useState<string>("");
   const [taskErrorMessage, setTaskErrorMessage] = useState({
     status: false,
@@ -110,7 +114,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   const [teamName, setTeamName] = useState<string>("");
   const [teamNameDialogOpen, setTeamNameDialogOpen] = useState(false);
   const [teamNameSheetOpen, setTeamNameSheetOpen] = useState(false);
-  const [updateOptionStates, setUpdateOptionStates] = useState<any>({});
   const [addedMembers, setAddedMembers] = useState<any[]>([]);
   const [matchingUsers, setMatchingUsers] = useState<Tab[]>([]);
   const [noUserFound, setNoUserFound] = useState<boolean>(false);
@@ -122,16 +125,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   const [mentionTrigger, setMentionTrigger] = useState(false);
   const [role, setRole] = useState("");
-  const [sortedValue, setSortedValue] = useState<string | null>("");
   const [loggedTeamId, setLoggedTeamId] = useState<number[]>([]);
-
-  // Helper function to toggle options for a specific team
-  const toggleUpdateOption = (teamId: any) => {
-    setUpdateOptionStates((prev: any) => ({
-      ...prev,
-      [teamId]: !prev[teamId],
-    }));
-  };
 
   const fetchTeams = async () => {
     if (!spaceId) return;
@@ -175,7 +169,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     if (error) throw error;
 
     console.log(data, " deleted task");
-    fetchTasks();
+    // fetchTasks();
+    filterFetchTasks();
     setTaskDeleteOpen(false);
     toast({
       title: "Deleted Successfully!",
@@ -201,7 +196,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
       if (error) throw error;
 
-      fetchTasks(); // Refresh the tasks list
+      // fetchTasks(); // Refresh the tasks list
+      filterFetchTasks();
       toast({
         title: "Undo Successful",
         description: "The task has been restored.",
@@ -281,8 +277,10 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   const resetInputAndFetchUpdates = () => {
     setText(""); // Clear the input text
-    fetchTasks(); // Refresh task list
+    // fetchTasks(); // Refresh task list
+    filterFetchTasks();
     fetchTeams(); // Refresh team data
+    filterFetchTeams();
     setMentionTrigger(!mentionTrigger);
 
     const styledInput = styledInputRef.current;
@@ -347,6 +345,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       // Additional cleanup actions
       setTeamNameDialogOpen(false);
       fetchTeams();
+      filterFetchTeams();
       toast({
         title: "Deleted Successfully!",
         description: "Team deleted successfully!",
@@ -387,6 +386,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       // Additional cleanup actions
       setTeamNameDialogOpen(false);
       fetchTeams();
+      filterFetchTeams();
       toast({
         title: "Undo Successful",
         description: "The deleted team has been restored.",
@@ -431,6 +431,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         // if (data) {
         console.log("Team name updated successfully:", data);
         fetchTeams();
+        filterFetchTeams();
         setTeamNameSheetOpen(false);
         setTeamNameError(false);
         toast({
@@ -551,7 +552,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       console.log(fetchError);
     }
     setUpdateTaskId({ teamId, taskId });
-    fetchTasks();
+    // fetchTasks();
+    filterFetchTasks();
   };
 
   useEffect(() => {
@@ -578,11 +580,17 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
     fetchTeams();
-    fetchTasks();
+    // filterFetchTeams();
+    // fetchTasks();
     recoverTask();
     console.log(allTasks, " allTasks data");
     console.log(filterTeams, " filterTeams data");
   }, [spaceId, teamData, setTeamData]);
+
+  useEffect(() => {
+    filterFetchTeams();
+    filterFetchTasks();
+  }, []);
 
   useEffect(() => {
     const getUser = async () => {
@@ -629,15 +637,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     });
   };
 
-  // const parseDateTime = (dateTimeString: string) => {
-  //   const [datePart, timePart] = dateTimeString.split(",");
-  //   const [day, month, year] = datePart.split(".");
-  //   return new Date(`${year}-${month}-${day}T${timePart}`);
-  // };
-
   const filteredTasks = filterBySearchValue(allTasks, searchValue as string);
     
-
   const handleAddTask = async (teamId: any, spaceId: number) => {
     console.log(loggedUserData?.username, " loggedUserData id");
     setFilterTeams((prevTeams : any) =>
@@ -653,7 +654,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
           : team
       )
     );
-    fetchTasks();
+    // fetchTasks();
+    filterFetchTasks();
 
     // Insert the new task into the database
     try {
@@ -703,7 +705,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
       if (fetchedTasks) {
         console.log(fetchedTasks, "team data");
-        fetchTasks();
+        // fetchTasks();
+        filterFetchTasks();
       }
     } catch (error) {
       console.error("Error adding or fetching tasks:", error);
@@ -712,7 +715,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   return (
     <div className="w-full h-[calc(100vh-142px)]">
-      {/* <Button onClick={handleFilterTasksAndTeams}>Check</Button> */}
       {filterTeams.length > 0 ? (
         <div className="w-full h-full pb-4 px-0">
           <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">
@@ -1243,7 +1245,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                               //   `Task status updated to "${value}"`,
                                               //   true
                                               // );
-                                              fetchTasks();
+                                              // fetchTasks();
+                                              filterFetchTasks();
                                             }}
                                           >
                                             <SelectTrigger
@@ -1455,7 +1458,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                             );
                                           }
                                           setTaskStatus(value);
-                                          fetchTasks();
+                                          // fetchTasks();
+                                          filterFetchTasks();
                                         }}
                                       >
                                         <SelectTrigger
@@ -2035,7 +2039,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                               //   `Task status updated to "${value}"`,
                                               //   true
                                               // );
-                                              fetchTasks();
+                                              // fetchTasks();
+                                              filterFetchTasks();
                                             }}
                                           >
                                             <SelectTrigger
@@ -2247,7 +2252,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                             );
                                           }
                                           setTaskStatus(value);
-                                          fetchTasks();
+                                          // fetchTasks();
+                                          filterFetchTasks();
                                         }}
                                       >
                                         <SelectTrigger

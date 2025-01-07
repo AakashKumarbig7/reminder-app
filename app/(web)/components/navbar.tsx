@@ -33,6 +33,9 @@ interface loggedUserDataProps {
   setTaskStatusFilterValue: any;
   setDateFilterValue: any;
   filterFn: any;
+  filterDialogOpen: any;
+  setFilterDialogOpen: any;
+  teamResetFn: any;
 }
 
 const WebNavbar: React.FC<loggedUserDataProps> = ({
@@ -46,6 +49,9 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
   setTaskStatusFilterValue,
   setDateFilterValue,
   filterFn,
+  filterDialogOpen,
+  setFilterDialogOpen,
+  teamResetFn
 }) => {
   const route = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
@@ -141,7 +147,9 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                 setDateFilterValue={setDateFilterValue}
                 filterFn={filterFn}
                 loggedUserData={loggedUserData}
-               
+                filterDialogOpen={filterDialogOpen}
+                setFilterDialogOpen={setFilterDialogOpen}
+                teamResetFn={teamResetFn}
               />
               <div className="max-w-[300px] w-[273px] h-[42px] bg-white shadow-none pl-2 font-bold justify-start gap-3 rounded-[10px] flex items-center">
                 <div className="w-full border-r border-zinc-300">

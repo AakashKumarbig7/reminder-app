@@ -280,6 +280,9 @@ const AddMember = () => {
        setTaskStatusFilterValue=''
        setDateFilterValue=''
        filterFn=''
+       filterDialogOpen={''}
+        setFilterDialogOpen={''}
+        teamResetFn = {() => {}}
         />
       <div
         className="w-full relative"
