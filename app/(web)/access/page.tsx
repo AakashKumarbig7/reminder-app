@@ -41,6 +41,8 @@ const AccessPage = () => {
   const [employeesData, setEmployeesData] = useState<employeeData[] | null>([]);
   const [saveLoader, setSaveLoader] = useState(false);
   const [cancelLoader, setCancelLoader] = useState(false);
+  const[saveLoaderSpaceSetting, setSaveLoaderSpaceSetting] = useState(false);
+  const[saveLoaderMember, setSaveLoaderMember] = useState(false);
 
   const getEmployeesData = async () => {
     const { data, error } = await supabase
@@ -192,18 +194,78 @@ const AccessPage = () => {
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex justify-between w-full">
             <div className="flex space-x-[10px]">
-              <button
-                onClick={() => route.push(`/spaceSetting`)}
-                className="rounded-lg text-sm font-inter font-medium text-gray-400 border w-[134px] boreder-gray-300 hover:bg-slate-50 h-[41px]"
+            <button
+               onClick={() => {
+                setSaveLoaderSpaceSetting(true);
+                setTimeout(() => {
+                  route.push("/spaceSetting");
+                  setSaveLoaderSpaceSetting(false);
+                }, 1000);
+              }}
+              disabled={saveLoaderSpaceSetting}
+              className="rounded-lg font-inter font-medium text-sm border w-[134px] h-[41px] text-gray-400"
+            >
+              {saveLoaderSpaceSetting ? (
+                <svg
+                className="animate-spin h-5 w-5 m-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
               >
-                Space Settings
-              </button>
-              <button
-                onClick={() => route.push(`/members`)}
-                className="rounded-lg text-sm font-inter font-medium border-gray-300 text-gray-400 border w-[104px]  hover:bg-slate-50 h-[41px]"
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#1A56DB"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-100"
+                  fill="#1A56DB"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              ) : (
+                "Space Settings"
+              )}
+            </button>
+            <button
+               onClick={() => {
+                setSaveLoaderMember(true);
+                setTimeout(() => {
+                  route.push("/members");
+                  setSaveLoaderMember(false);
+                }, 1000);
+              }}
+              disabled={saveLoaderMember}
+              className="rounded-lg font-inter font-medium text-sm border w-[104px] h-[41px] text-gray-400"
+            >
+              {saveLoaderMember ? (
+                <svg
+                className="animate-spin h-5 w-5 m-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
               >
-                Members
-              </button>
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#1A56DB"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-100"
+                  fill="#1A56DB"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              ) : (
+                "Members"
+              )}
+            </button>
               <button className="rounded-lg text-sm font-medium font-inter border w-[89px] h-[41px] hover:bg-blue-600 bg-primaryColor-700 text-white">
                 Access
               </button>

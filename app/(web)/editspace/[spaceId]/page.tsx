@@ -7,7 +7,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import AddTeam from "@/app/(web)/components/addteam";
-import { ToastAction } from "@/components/ui/toast";
+import { Toast, ToastAction } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,
@@ -19,6 +19,7 @@ import {
   Dialog,
   DialogContent,
   DialogFooter,
+  DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -30,6 +31,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import TeamCard from "../../components/teamCard";
+import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
+import { useGlobalContext } from "@/context/store";
+
 
 // const notify = (message: string, success: boolean) =>
 //   toast[success ? "success" : "error"](message, {
@@ -61,7 +66,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const [selectedSpace, setSelectedSpace] = useState<string | undefined>(
     undefined
   );
-
+ const {userId} = useGlobalContext();
   // const [selectedTeam, setSelectedTeam] = useState<any>(null); // Store the selected team data
   // const [isSaving, setIsSaving] = useState(false); // For handling the save state (loading)
   // Team-related states
@@ -78,8 +83,8 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   // const [teamMemberError, setTeamMemberError] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-const [cancelLoader, setCancelLoader] = useState(false);
-const [saveLoader, setSaveLoader] = useState(false);
+  const [cancelLoader, setCancelLoader] = useState(false);
+  const [saveLoader, setSaveLoader] = useState(false);
   // const [datafromChild, setdatafromchild] = useState("");
   // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
   const router = useRouter();
@@ -98,7 +103,7 @@ const [saveLoader, setSaveLoader] = useState(false);
           .update({ members: team.members }) // Update members in the database
           .eq("id", team.id)
           .eq("space_id", spaceId);
-  
+
         if (error) {
           console.error("Error updating team:", error);
           // notify("Error saving changes. Please try again.", false);
@@ -106,7 +111,7 @@ const [saveLoader, setSaveLoader] = useState(false);
         }
         setSaveLoader(false);
       }
-  
+
       // notify(" Teams updated successfully!", true);
       fetchTeams(); // Refresh teams to sync with the database
     } catch (error) {
@@ -115,97 +120,94 @@ const [saveLoader, setSaveLoader] = useState(false);
       setSaveLoader(false);
     }
   };
-  
 
-  const handleDelete = async (spaceId:any) => {
+  const handleDelete = async (spaceId: any) => {
     let backupData: {
       tasks: any[];
       teams: any[];
       space: any;
     } = { tasks: [], teams: [], space: null };
-    console.log("hi")
-  
+    console.log("hi");
+
     // Fetch tasks
     const { data: tasks, error: tasksError } = await supabase
       .from("tasks")
       .select("*")
       .eq("is_deleted", false)
       .eq("space_id", spaceId);
-  
+
     if (tasksError) {
       console.error("Error fetching tasks:", tasksError);
       return;
     }
     backupData.tasks = tasks || [];
     // console.log(tasksError)
-  
+
     // Fetch teams
     const { data: teams, error: teamsError } = await supabase
       .from("teams")
       .select("*")
       .eq("is_deleted", false)
       .eq("space_id", spaceId);
-  
+
     if (teamsError) {
       console.error("Error fetching teams:", teamsError);
       return;
     }
     backupData.teams = teams || [];
-  
+
     // Fetch space
     const { data: space, error: spaceError } = await supabase
       .from("spaces")
       .select("*")
       .eq("id", spaceId)
       .single();
-  
+
     if (spaceError) {
       console.error("Error fetching space:", spaceError);
       return;
     }
     backupData.space = space;
-    console.log("hello")
-  
+    console.log("hello");
+
     // Mark tasks as deleted
     const { error: tasksDeleteError } = await supabase
       .from("tasks")
       .update({ is_deleted: true })
       .eq("space_id", spaceId);
-  
+
     if (tasksDeleteError) {
       console.error("Error deleting tasks:", tasksDeleteError);
       return;
     }
-  
+
     // Mark teams as deleted
     const { error: teamsDeleteError } = await supabase
       .from("teams")
       .update({ is_deleted: true })
       .eq("space_id", spaceId);
-  
+
     if (teamsDeleteError) {
       console.error("Error deleting teams:", teamsDeleteError);
       return;
     }
-  
+
     // Mark space as deleted
     const { error: spaceDeleteError } = await supabase
       .from("spaces")
       .update({ is_deleted: true })
       .eq("id", spaceId);
-  
+
     if (spaceDeleteError) {
       console.error("Error deleting space:", spaceDeleteError);
       return;
     }
-  
+
     // Update UI
     fetchSpace();
     fetchTeams();
     setIsOpen(false);
-  
-    
-  
+
     toast({
       title: "Deleted Successfully!",
       description: "Space deleted successfully!",
@@ -221,7 +223,7 @@ const [saveLoader, setSaveLoader] = useState(false);
       ),
     });
   };
-  
+
   // Undo functionality
   const handleSpaceUndo = async (backupData: {
     tasks: any[];
@@ -237,13 +239,13 @@ const [saveLoader, setSaveLoader] = useState(false);
           "id",
           backupData.tasks.map((task) => task.id)
         );
-  
+
       if (tasksRestoreError) {
         console.error("Error restoring tasks:", tasksRestoreError);
         return;
       }
     }
-  
+
     // Restore teams
     if (backupData.teams.length > 0) {
       const { error: teamsRestoreError } = await supabase
@@ -253,68 +255,66 @@ const [saveLoader, setSaveLoader] = useState(false);
           "id",
           backupData.teams.map((team) => team.id)
         );
-  
+
       if (teamsRestoreError) {
         console.error("Error restoring teams:", teamsRestoreError);
         return;
       }
     }
-  
+
     // Restore space
     if (backupData.space) {
       const { error: spaceRestoreError } = await supabase
         .from("spaces")
         .update({ is_deleted: false })
         .eq("id", backupData.space.id);
-  
+
       if (spaceRestoreError) {
         console.error("Error restoring space:", spaceRestoreError);
         return;
       }
     }
-  
+
     // Refresh UI
     fetchSpace();
     fetchTeams();
     router.refresh();
-    
+
     toast({
       title: "Undo Successful!",
       description: "Space, tasks, and teams have been restored.",
     });
   };
-  
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
       .from("teams")
       .select("*")
-      .eq("is_deleted",false)
+      .eq("is_deleted", false)
       .eq("space_id", spaceId);
-     
-  
+
     if (error) {
       console.error("Error fetching teams:", error);
       return;
     }
-  
+
     if (data) {
       setTeams(
-        data.map((team:any) => ({
+        data.map((team: any) => ({
           ...team,
-          tasks:[],
+          tasks: [],
           members: team.members || [], // Ensure members array is not null
         }))
       );
     }
   };
-  
+
   // Fetch all spaces from Supabase
   const fetchSpace = async () => {
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
-      .eq("is_deleted",false)
+      .eq("is_deleted", false)
       .order("space_name", { ascending: true });
 
     if (error) {
@@ -331,7 +331,7 @@ const [saveLoader, setSaveLoader] = useState(false);
     const { data, error } = await supabase
       .from("spaces")
       .select("id")
-      .eq("is_deleted",false)
+      .eq("is_deleted", false)
       .eq("space_name", spaceName)
       .single();
 
@@ -349,7 +349,7 @@ const [saveLoader, setSaveLoader] = useState(false);
     const id = await fetchSpaceIdByName(value);
 
     if (id !== null) {
-      router.push(`/editspace/${id}`);                         
+      router.push(`/editspace/${id}`);
       // Perform any log
 
       console.log(`Selected space ID: ${id}`);
@@ -365,7 +365,7 @@ const [saveLoader, setSaveLoader] = useState(false);
         const { data, error } = await supabase
           .from("spaces")
           .select("space_name")
-          .eq("is_deleted",false)
+          .eq("is_deleted", false)
           .eq("id", spaceId)
           .single();
 
@@ -400,17 +400,30 @@ const [saveLoader, setSaveLoader] = useState(false);
       )
     );
   };
-  
-  
+
   return (
     <>
-      {/* <WebNavbar /> */}
+      <WebNavbar
+        loggedUserData={userId as any}
+        navbarItems={false}
+        searchValue=""
+        setSearchValue=""
+        // teamFilterValue=""
+        setTeamFilterValue=""
+        // taskStatusFilterValue=""
+        setTaskStatusFilterValue=""
+        setDateFilterValue=""
+        filterFn=""
+      />
+      
       {/* <Toaster /> */}
-      <div className="px-3 max-h-[400px]   space-y-[18px]">
+      <div className="px-3 h-full pb-3  space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <div className="px-3 flex w-full items-center justify-between">
             {/* Title Section */}
-            <p className="text-base font-inter font-bold text-[#000] text-center">Space Setting</p>
+            <p className="text-base font-inter font-bold text-[#000] text-center">
+              Space Setting
+            </p>
 
             {/* Action Buttons */}
             <div className="flex space-x-[18px] items-center">
@@ -421,37 +434,37 @@ const [saveLoader, setSaveLoader] = useState(false);
                     className="border border-gray-200 w-[41px] h-[41px] flex items-center justify-center rounded-[8px] cursor-pointer hover:bg-slate-50"
                     onClick={() => setIsOpen(true)}
                   >
-                    <Trash2 className="h-5 w-5 text-[#111928]"  />
+                    <Trash2 className="h-5 w-5 text-[#111928]" />
                   </button>
                 </DialogTrigger>
 
                 {/* Dialog content */}
-                <DialogContent>
-                  <div className="text-start">
-                    <h2 className="text-lg font-bold">Delete Space</h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                      Do you really want to delete this space
-                    </p>
-                  </div>
-                  <DialogFooter className="flex items-start mt-4">
-                    {/* Cancel button */}
-                    <button
-                      className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle className="font-bold">Delete Space</DialogTitle>
+                    <DialogDescription>
+                      Do you want to delete  {" "}
+                      <span className="font-bold">{selectedSpace}</span>?
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex justify-center items-center w-full gap-4 mt-4">
+                    <Button
+                      variant="outline"
+                      className="w-1/3"
                       onClick={() => setIsOpen(false)}
                       disabled={isDeleting}
                     >
                       Cancel
-                    </button>
-
-                    {/* Delete button */}
-                    <button
-                      className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
-                      onClick={() =>handleDelete(spaceId)}
+                    </Button>
+                    <Button
+                      className="bg-red-600 hover:bg-red-500 w-1/3"
+                      onClick={() => handleDelete(spaceId)}
                       disabled={isDeleting}
                     >
                       Delete
-                    </button>
-                  </DialogFooter>
+                    </Button>
+                  </div>
                 </DialogContent>
               </Dialog>
 
@@ -467,30 +480,30 @@ const [saveLoader, setSaveLoader] = useState(false);
                 }}
                 disabled={cancelLoader}
               >
-               {cancelLoader ? (
-                <svg
-                  className="animate-spin h-5 w-5 m-auto"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="#1A56DB"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-100"
-                    fill="#1A56DB"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              ) : (
-                "Cancel"
-              )}
+                {cancelLoader ? (
+                  <svg
+                    className="animate-spin h-5 w-5 m-auto"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="#1A56DB"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-100"
+                      fill="#1A56DB"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  "Cancel"
+                )}
               </button>
 
               {/* Save button */}
@@ -499,38 +512,38 @@ const [saveLoader, setSaveLoader] = useState(false);
                 onClick={handleUpdateTeam}
                 disabled={saveLoader}
               >
-              {saveLoader ? (
-                <svg
-                  className="animate-spin h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="#fff"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-100"
-                    fill="#fff"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              ) : (
-                "Save Changes"
-              )}
+                {saveLoader ? (
+                  <svg
+                    className="animate-spin h-5 w-5 m-auto"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="#fff"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-100"
+                      fill="#fff"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  "Save Changes"
+                )}
               </button>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg bg-white h-full pb-[200px] w-full shadow-md">
+        <div className="rounded-lg bg-white h-[600px] pb-3  ">
           <div className="px-3">
-            <div className="w-full pt-[12px] items-center space-y-2">
+            <div className=" pt-[12px] items-center space-y-2">
               <Label
                 htmlFor="space-name"
                 className="text-gray-900  text-sm font-medium font-inter"
@@ -557,10 +570,17 @@ const [saveLoader, setSaveLoader] = useState(false);
             <hr />
           </div>
 
-          <div className="px-3  flex gap-[18px]">
-            <Carousel opts={{ align: "start" }} className="w-full max-w-full ">
+          <div className="px-3 flex gap-[18px]">
+            <div className="">
+
+          <AddTeam
+                        spaceId={spaceId as number}
+                        sendDataToParent={fetchTeams as any}
+                      />
+                      </div>
+            <Carousel opts={{ align: "start" }} className="w-full max-w-full  ">
               <CarouselContent className="flex  ">
-                <CarouselItem className="basis-[28%] ">
+                {/* <CarouselItem className="basis-[28%] ">
                   <Card className="border border-gray-300 w-[339px] h-[65px] rounded-[12px] items-center">
                     <CardContent className="px-3 py-3">
                       <AddTeam
@@ -569,7 +589,7 @@ const [saveLoader, setSaveLoader] = useState(false);
                       />
                     </CardContent>
                   </Card>
-                </CarouselItem>
+                </CarouselItem> */}
 
                 {teams.length > 0 ? (
                   teams.map((team: any) => (
@@ -590,7 +610,7 @@ const [saveLoader, setSaveLoader] = useState(false);
           </div>
         </div>
       </div>
-    </>                      
+    </>
   );
 };
 export default EditSpace;

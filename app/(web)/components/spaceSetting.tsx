@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import Image from "next/image";
+import { DialogDescription } from "@radix-ui/react-dialog";
 interface Space {
   id: string;
   name: string;
@@ -47,6 +48,10 @@ export default function SpaceSetting({}) {
   const [spaceToDelete, setSpaceToDelete] = useState<string | null>(null);
   const [teamData, setTeamData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [saveLoader, setSaveLoader] = useState(false);
+  const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
+  const [saveLoaderMember, setSaveLoaderMember] = useState(false);
+  const[saveLoaderAccess,setSaveLoaderAccess]=useState(false);
 
   const router = useRouter();
   const isDeleting = false;
@@ -391,16 +396,76 @@ export default function SpaceSetting({}) {
               Space Settings
             </button>
             <button
-              onClick={() => router.push(`/members`)}
+              onClick={() => {
+                setSaveLoaderMember(true);
+                setTimeout(() => {
+                  router.push("/members");
+                  setSaveLoaderMember(false);
+                }, 1000);
+              }}
+              disabled={saveLoaderMember}
               className="rounded-lg font-inter font-medium text-sm border w-[104px] h-[41px] text-gray-400"
             >
-              Members
+              {saveLoaderMember ? (
+                <svg
+                className="animate-spin h-5 w-5 m-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#1A56DB"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-100"
+                  fill="#1A56DB"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              ) : (
+                "Members"
+              )}
             </button>
             <button
-              onClick={() => router.push(`/access`)}
+              onClick={() => {
+                setSaveLoaderAccess(true);
+                setTimeout(() => {
+                  router.push("/access");
+                  setSaveLoaderAccess(false);
+                }, 1000);
+              }}
+              disabled={saveLoaderAccess}
               className="rounded-lg font-inter font-medium text-sm border w-[89px] h-[41px] text-gray-400"
             >
-              Access
+             {saveLoaderAccess ? (
+                <svg
+                className="animate-spin h-5 w-5 m-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#1A56DB"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-100"
+                  fill="#1A56DB"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              ) : (
+                "Access"
+              )}
             </button>
           </div>
 
@@ -455,23 +520,23 @@ export default function SpaceSetting({}) {
         </div>
 
         {/* Table displaying spaces */}
-        <div className="pt-[18px] pb-[18px] ">
-          <Table className=" block w-[98vw] max-h-[500px]  overflow-y-auto playlist-scroll  bg-white rounded-[10px] font-inter">
-            <TableHeader className=" sticky top-0 bg-white z-0">
+        <div className="pt-[18px] pb-[18px]">
+          <Table className="block w-[98vw] max-h-[500px] overflow-y-auto playlist-scroll bg-white rounded-[10px] font-inter ">
+            <TableHeader className="sticky top-0 bg-white ">
               <TableRow>
-                <TableHead className="px-4 py-4 w-[18%] font-semibold font-inter text-xs text-gray-500 ">
+                <TableHead className="px-4 py-4 w-[28%] text-left text-sm font-inter font-semibold text-gray-500">
                   SPACE NAME
                 </TableHead>
-                <TableHead className="px-4 py-4  w-[25%] font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4 w-[25%] text-left text-sm font-inter font-semibold text-gray-500">
                   CREATED BY
                 </TableHead>
-                <TableHead className="px-4 py-4  w-[25%] font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[25%] text-left text-sm font-inter font-semibold text-gray-500">
                   TEAMS
                 </TableHead>
-                <TableHead className="px-4 py-4  w-[25%]  font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4 w-[25%] text-left text-sm font-inter font-semibold text-gray-500">
                   MEMBERS
                 </TableHead>
-                <TableHead className="px-4 py-4  w-[25%] text-right font-semibold text-gray-500 text-sm">
+                <TableHead className="px-4 py-4  w-[30%] text-right text-sm font-inter font-semibold text-gray-500">
                   ACTION
                 </TableHead>
               </TableRow>
@@ -480,13 +545,18 @@ export default function SpaceSetting({}) {
               {spaces.length > 0 ? (
                 spaces.map((space) => (
                   <TableRow key={space.id}>
+                    {/* Space Name */}
                     <TableCell className="px-4 py-4 text-sm text-gray-900">
                       {space.name}
                     </TableCell>
-                    <TableCell className="px-4 py-4 text-sm font-normal font-inter text-gray-500">
+
+                    {/* Created By */}
+                    <TableCell className="px-4 py-4 text-sm text-gray-500">
                       Laxman Sarav
                     </TableCell>
-                    <TableCell className="px-4 py-4 text-sm font-inter font-normal text-gray-500 whitespace-nowrap">
+
+                    {/* Teams */}
+                    <TableCell className="px-4 py-4 text-sm text-gray-500">
                       {space.teams && space.teams.length > 0 ? (
                         <TooltipProvider>
                           <Tooltip>
@@ -496,8 +566,8 @@ export default function SpaceSetting({}) {
                                 {space.teams.length > 2 && `, ...`}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent className=" w-[172px] h-auto">
-                              <div className="px-[10px] py-[10px] text-xs font-inter font-normal">
+                            <TooltipContent className="w-40">
+                              <div className="px-2 py-2 text-xs">
                                 {space.teams.join(", ")}
                               </div>
                             </TooltipContent>
@@ -507,105 +577,132 @@ export default function SpaceSetting({}) {
                         "No teams"
                       )}
                     </TableCell>
-                    <TableCell className="px-4 py-4 text-sm text-gray-500">
-                      <div className="flex">
+
+                    {/* Members */}
+                    <TableCell className="px-4 py-4">
+                      <div className="flex items-center">
                         {teamData && teamData.length > 0 ? (
                           <>
                             {teamData
-                              .filter((team: any) => team.space_id === space.id) // Get teams for this space
-                              .flatMap((team: any) => team?.members || []) // Flatten all members
-                              .slice(0, 6) // Limit to first 6 members
-                              .map((member: any, index: number) => (
+                              .filter((team) => team.space_id === space.id)
+                              .flatMap((team) => team?.members || [])
+                              .slice(0, 6)
+                              .map((member, index) => (
                                 <Image
                                   key={index}
                                   src={member.profile_image}
                                   alt={member.name}
-                                  width={30}
-                                  height={30}
-                                  className={`w-[32px] h-[32px] rounded-full ${
-                                    teamData.length === 1
-                                      ? "mr-2.5"
-                                      : teamData.length > 0
-                                      ? "-mr-2.5"
-                                      : ""
+                                  width={32}
+                                  height={32}
+                                  className={`w-8 h-8 rounded-full ${
+                                    teamData.length > 1 ? "-mr-2.5" : "mr-2.5"
                                   } border-2 border-white`}
                                 />
                               ))}
                             {teamData
-                              .filter((team: any) => team.space_id === space.id)
-                              .flatMap((team: any) => team?.members || [])
-                              .length > 6 && (
-                              <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
+                              .filter((team) => team.space_id === space.id)
+                              .flatMap((team) => team?.members || []).length >
+                              6 && (
+                              <div className="bg-gray-900 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs border-2 border-white">
                                 +
                                 {teamData
-                                  .filter(
-                                    (team: any) => team.space_id === space.id
-                                  )
-                                  .flatMap((team: any) => team?.members || [])
+                                  .filter((team) => team.space_id === space.id)
+                                  .flatMap((team) => team?.members || [])
                                   .length - 6}
                               </div>
                             )}
                           </>
                         ) : (
-                          <p className="text-gray-500 font-normal font-inter text-sm">
+                          <span className="text-sm text-gray-500">
                             No Members Found
-                          </p>
+                          </span>
                         )}
                       </div>
                     </TableCell>
 
-                    <TableCell className="px-4 py-4 items-center">
-                      <div className="flex justify-end">
+                    {/* Actions */}
+                    <TableCell className="px-4 py-4 text-right">
+                      <div className="flex justify-end items-center space-x-0">
+                        {/* Edit Button */}
                         <button
-                          onClick={() => router.push(`/editspace/${space.id}`)}
+                          onClick={() => {
+                            setCurrentEditingId(space.id);
+                            setTimeout(() => {
+                              router.push(`/editspace/${space.id}`);
+                              setCurrentEditingId(null);
+                            }, 2000);
+                          }}
+                          
+                          disabled={currentEditingId === space.id}
+                          className="p-2"
                         >
-                          <Pencil className="h-5 w-5 " />
+                          {currentEditingId === space.id ? (
+                            <svg
+                              className="animate-spin h-5 w-5 m-auto"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="#1A56DB"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-100"
+                                fill="#1A56DB"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          ) : (
+                            <Pencil className="h-5 w-5" />
+                          )}
                         </button>
+
+                        {/* Delete Button */}
                         <Dialog open={isOpen} onOpenChange={setIsOpen}>
                           <DialogTrigger>
                             <div
                               onClick={() => {
-                                console.log(space.id);
                                 setSpaceToDelete(space.id);
                                 setIsOpen(true);
                               }}
-                              className="py-4 px-4"
+                              className="p-2"
                             >
-                              <Trash2 className="h-5 w-5 items-center" />
+                              <Trash2 className="h-5 w-5" />
                             </div>
                           </DialogTrigger>
-                          <DialogContent>
-                            <div className="">
-                              <h2 className="text-lg font-semibold">
-                                Are you sure?
-                              </h2>
-                              <p className="mt-2 text-sm text-gray-600">
-                                Do you really want to delete this
-                                <span className="font-bold pl-2">
-                                  {space.name}
-                                </span>
-                              </p>
-                            </div>
-                            <DialogFooter className="flex justify-end mt-4">
-                              <button
-                                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle>Delete Space</DialogTitle>
+                              <DialogDescription>
+                                Do you want to delete{" "}
+                                <span className="font-bold">{space.name}</span>?
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="flex justify-center items-center w-full gap-4 mt-4">
+                              <Button
+                                variant="outline"
+                                className="w-1/3"
                                 onClick={handleDeleteDialogClose}
                                 disabled={isDeleting}
                               >
                                 Cancel
-                              </button>
+                              </Button>
                               <Button
-                                className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
+                                className="bg-red-600 hover:bg-red-500 w-1/3"
                                 onClick={() => {
                                   if (spaceToDelete) {
                                     deleteSpace(spaceToDelete);
                                   }
                                 }}
-                                disabled={isDeleting}
                               >
                                 Delete
                               </Button>
-                            </DialogFooter>
+                            </div>
                           </DialogContent>
                         </Dialog>
                       </div>
@@ -616,7 +713,7 @@ export default function SpaceSetting({}) {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center font-inter font-medium  text-gray-500 py-4"
+                    className="text-center text-sm text-gray-500 py-4"
                   >
                     No spaces available
                   </TableCell>
@@ -629,3 +726,4 @@ export default function SpaceSetting({}) {
     </>
   );
 }
+// router.push(`/editspace/${space.id}`)}

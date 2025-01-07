@@ -21,6 +21,7 @@ import {
   DialogContent,
   DialogTrigger,
   DialogFooter,
+  DialogHeader,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { Trash2, Pencil, ClipboardPlus } from "lucide-react";
@@ -33,6 +34,7 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useGlobalContext } from "@/context/store";
 import { Input } from "@/components/ui/input";
+import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 
 interface Member {
   id: string;
@@ -85,6 +87,9 @@ const Members = () => {
   const [loading, setLoading] = useState(true);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
+  const [saveLoaderAccess, setSaveLoaderAccess] = useState(false);
+  const[saveLoaderSpaceSetting, setSaveLoaderSpaceSetting] = useState(false);
 
   // Fetch members from Supabase
   const fetchMembers = async () => {
@@ -178,7 +183,7 @@ const Members = () => {
       );
       toast({
         title: "Deleted Successfully!",
-        description: "Task deleted successfully!",
+        description: "Member deleted successfully!",
         action: (
           <ToastAction
             altText="Undo"
@@ -272,35 +277,95 @@ const Members = () => {
   return (
     <>
       <WebNavbar
-       loggedUserData={userId as any}
-       navbarItems={false}
-       searchValue=''
-       setSearchValue=''
-      //  teamFilterValue=''
-       setTeamFilterValue=''
-      //  taskStatusFilterValue=''
-       setTaskStatusFilterValue=''
-       setDateFilterValue=''
-       filterFn=''
-        />
+        loggedUserData={userId as any}
+        navbarItems={false}
+        searchValue=""
+        setSearchValue=""
+        //  teamFilterValue=''
+        setTeamFilterValue=""
+        //  taskStatusFilterValue=''
+        setTaskStatusFilterValue=""
+        setDateFilterValue=""
+        filterFn=""
+      />
       <div className="px-3">
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex justify-between w-full">
             <div className="flex space-x-[10px]">
               <button
-                onClick={() => router.push(`/spaceSetting`)}
-                className="rounded-lg text-sm font-inter font-medium text-gray-400 border boredr-gray-300 w-[134px] hover:bg-slate-50 h-[41px]"
+               onClick={() => {
+                setSaveLoaderSpaceSetting(true);
+                setTimeout(() => {
+                  router.push("/spaceSetting");
+                  setSaveLoaderSpaceSetting(false);
+                }, 1000);
+              }}
+              disabled={saveLoaderSpaceSetting}
+              className="rounded-lg font-inter font-medium text-sm border w-[134px] h-[41px] text-gray-400"
+            >
+              {saveLoaderSpaceSetting ? (
+                <svg
+                className="animate-spin h-5 w-5 m-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
               >
-                Space Settings
-              </button>
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#1A56DB"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-100"
+                  fill="#1A56DB"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              ) : (
+                "Space Settings"
+              )}
+            </button>
               <button className="rounded-lg text-sm font-inter font-medium border w-[104px] h-[41px] text-white hover:bg-blue-600 hover:text-white bg-primaryColor-700">
                 Members
               </button>
               <button
-                onClick={() => router.push(`/access`)}
-                className="rounded-lg text-sm  font-inter font-medium border border-gray-300 w-[89px] h-[41px] hover:bg-slate-50 text-gray-400"
+                 onClick={() => {
+                  setSaveLoaderAccess(true);
+                  setTimeout(() => {
+                    router.push("/access");
+                    setSaveLoaderAccess(false);
+                  }, 1000);
+                }}
+                disabled={saveLoaderAccess}
+                className="rounded-lg font-inter font-medium text-sm border w-[89px] h-[41px] text-gray-400"
               >
-                Access
+               {saveLoaderAccess ? (
+                  <svg
+                  className="animate-spin h-5 w-5 m-auto"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#1A56DB"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-100"
+                    fill="#1A56DB"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                ) : (
+                  "Access"
+                )}
               </button>
             </div>
           </div>
@@ -373,7 +438,7 @@ const Members = () => {
           <Table className=" block w-[98vw] max-h-[500px] overflow-y-auto playlist-scroll bg-white  rounded-[10px]  font-inter">
             <TableHeader className="sticky top-0 bg-white z-0 ">
               <TableRow>
-                <TableHead className="w-[18%] px-4 py-4 text-sm font-inter font-semibold text-gray-500">
+                <TableHead className="w-[28%] px-4 py-4 text-sm font-inter font-semibold text-gray-500">
                   NAME
                 </TableHead>
                 <TableHead className=" w-[25%] px-4 py-4 text-sm font-inter font-semibold text-gray-500 ">
@@ -385,7 +450,7 @@ const Members = () => {
                 <TableHead className=" w-[25%] px-4 py-4  text-sm  font-inter font-semibold text-gray-500">
                   MOBILE
                 </TableHead>
-                <TableHead className=" w-[25%] px-4 py-4  text-sm  font-inter font-semibold text-gray-500">
+                <TableHead className=" w-[30%] px-4 py-4  text-sm  font-inter font-semibold text-gray-500">
                   ACTION
                 </TableHead>
               </TableRow>
@@ -429,7 +494,9 @@ const Members = () => {
                               className="w-8 h-8 rounded-full object-cover"
                             />
                           )}
-                          <span className="text-gray-900 font-inter">{member.username}</span>
+                          <span className="text-gray-900 font-inter">
+                            {member.username}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-4 text-sm font-inter font-normal  text-gray-500">
@@ -449,10 +516,38 @@ const Members = () => {
                                 <button
                                   className="p-2 rounded hover:bg-gray-100"
                                   onClick={() => {
-                                    router.push(`/edit-member/${member.id}`);
+                                    setCurrentEditingId(member.id); // Set the current editing space ID
+                                    setTimeout(() => {
+                                      router.push(`/edit-member/${member.id}`);
+                                      setCurrentEditingId(null); // Reset after redirection
+                                    }, 2000);
                                   }}
+                                  disabled={currentEditingId === member.id}
                                 >
-                                  <Pencil className="h-5 w-5" />
+                                  {currentEditingId === member.id ? (
+                                    <svg
+                                      className="animate-spin h-5 w-5"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="#1A56DB"
+                                        strokeWidth="4"
+                                      ></circle>
+                                      <path
+                                        className="opacity-100"
+                                        fill="#1A56DB"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                      ></path>
+                                    </svg>
+                                  ) : (
+                                    <Pencil className="h-5 w-5 " />
+                                  )}
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>Edit</TooltipContent>
@@ -471,43 +566,45 @@ const Members = () => {
                                           setMemberToDelete(member.id);
                                           setIsDeleteDialogOpen(true);
                                         }}
+                                        disabled={currentEditingId === member.id}
                                       >
                                         <Trash2 className="h-5 w-5" />
                                       </button>
                                     </DialogTrigger>
-                                    <DialogContent>
-                                      <div className="text-start">
-                                        <h2 className="text-lg font-bold">
-                                          Delete 
-                                        </h2>
-                                        <p className="mt-2 text-sm text-gray-600">
-                                          Do you really want to delete this
-                                          member?
-                                        </p>
-                                      </div>
-                                      <DialogFooter>
-                                        <div className="flex justify-end mt-4 space-x-3">
-                                          <Button
-                                            className="text-white    hover:bg-gray-200"
-                                            onClick={() =>
-                                              setIsDeleteDialogOpen(false)
+                                   
+                                    <DialogContent className="sm:max-w-[425px]">
+                                      <DialogHeader>
+                                        <DialogTitle>Delete Space</DialogTitle>
+                                        <DialogDescription>
+        Do you want to delete{" "}
+        <span className="font-bold">
+          {currentEditingId === member.id ? member.username : "this member"}
+        </span>
+        ?
+      </DialogDescription>
+                                      </DialogHeader>
+                                      <div className="flex justify-center items-center w-full gap-4 mt-4">
+                                        <Button
+                                          variant="outline"
+                                          className="w-1/3"
+                                          onClick={() =>
+                                            setIsDeleteDialogOpen(false)
+                                          }
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          className="bg-red-600 hover:bg-red-500 w-1/3"
+                                          onClick={() => {
+                                            if (memberToDelete) {
+                                              handleDelete(memberToDelete);
                                             }
-                                          >
-                                            Cancel
-                                          </Button>
-                                          <Button
-                                            className="text-white bg-red-500 hover:bg-red-600"
-                                            onClick={() => {
-                                              setIsDeleteDialogOpen(false);
-                                              if (memberToDelete) {
-                                                handleDelete(memberToDelete);
-                                              }
-                                            }}
-                                          >
-                                            Delete
-                                          </Button>
-                                        </div>
-                                      </DialogFooter>
+                                          }}
+                                         
+                                        >
+                                          Delete
+                                        </Button>
+                                      </div>
                                     </DialogContent>
                                   </Dialog>
                                 </div>
@@ -537,3 +634,4 @@ const Members = () => {
   );
 };
 export default Members;
+// router.push(`/edit-member/${member.id}`);

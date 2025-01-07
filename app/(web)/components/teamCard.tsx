@@ -14,8 +14,11 @@ import {
   Dialog,
   DialogContent,
   DialogFooter,
+  DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
+import { Button } from "@/components/ui/button";
 // const notify = (message: string, success: boolean) =>
 //   toast[success ? "success" : "error"](message, {
 //     style: {
@@ -214,11 +217,11 @@ const TeamCard: React.FC<{
       }
 
       console.log("Team deleted successfully.");
-      
+
       // Additional cleanup actions
       setIsOpen(false);
       fetchTeams();
-      
+
       toast({
         title: "Deleted Successfully!",
         description: "Team deleted successfully!",
@@ -374,13 +377,16 @@ const TeamCard: React.FC<{
   }, [spaceId]);
 
   return (
-    <CarouselItem key={team.id} className="w-[339vw] max-h-[500px] max-w-[500px]  basis-[28%]">
+    <CarouselItem
+      key={team.id}
+      className="max-w-[250vw] basis-[28%] "
+    >
       <>
-      <div className="hidden">
-        <span>{teams.length}</span>
-      </div>
+        <div className="hidden">
+          <span>{teams.length}</span>
+        </div>
         <Card>
-          <CardContent className="p-[18px] w-full h-full">
+          <CardContent className="p-[18px] w-full h-[450px]  ">
             <div className="flex justify-between items-center">
               <p className="text-lg font-semibold text-black font-geist">
                 {team.team_name}
@@ -393,33 +399,35 @@ const TeamCard: React.FC<{
                     onClick={() => setIsOpen(true)}
                   />
                 </DialogTrigger>
-                <DialogContent>
-                  <div className="text-start">
-                    <h2 className="text-lg font-inter font-semibold">Delete Team</h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                      Do you really want to delete this{" "}
-                      <span className="font-bold">{team.team_name}</span>
-                    </p>
-                  </div>
-                  <DialogFooter className=" justify-start items-start mt-4">
-                    {/* Cancel button */}
-                    <button
-                      className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Delete Team</DialogTitle>
+                    <DialogDescription>
+                      Do you want to delete{" "}
+                      <span className="font-bold">{team.team_name}?</span>
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="flex justify-center items-center w-full gap-4">
+                    <Button
+                      variant="outline"
+                      className="w-1/3"
+                      type="submit"
                       onClick={() => setIsOpen(false)}
                       disabled={isDeleting}
                     >
                       Cancel
-                    </button>
-
-                    {/* Delete button */}
-                      <button
-                        className="ml-2 px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
-                        onClick={() => handleDeleteTeam(team.id)}
-                        disabled={isDeleting}
-                      >
-                        Delete
-                      </button>
-                  </DialogFooter>
+                    </Button>
+                    <Button
+                      className="bg-red-600 hover:bg-red-500 w-1/3" 
+                      type="button"
+                      onClick={() => handleDeleteTeam(team.id)}
+                      disabled={isDeleting}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>
@@ -495,7 +503,7 @@ const TeamCard: React.FC<{
                 </p>
               )}
               {addedMembers.length > 0 && (
-                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md max-h-64 overflow-y-auto playlist-scroll">
+                <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md max-h-[200px] overflow-y-auto playlist-scroll">
                   {addedMembers
                     .filter(
                       (member, index, self) =>
@@ -506,7 +514,7 @@ const TeamCard: React.FC<{
                         key={member.id}
                         className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
                       >
-                        <div className="flex items-center gap-1 overflow-y-auto">
+                        <div className="flex items-center gap-1 ">
                           <Image
                             src={member.profile_image}
                             alt="user image"
@@ -549,4 +557,3 @@ const TeamCard: React.FC<{
 };
 
 export default TeamCard;
- 

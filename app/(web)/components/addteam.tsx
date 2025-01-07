@@ -222,10 +222,12 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
       </div>
       <Sheet open={memberAddDialogOpen} onOpenChange={setMemberAddDialogOpen}>
         <SheetTrigger asChild>
+          <div className="border   flex flex-col justify-between items-center pt-2 pb-2 border-dashed rounded-[12px] w-[170px] h-[450px] max-w-[200px]">
           <button
-            className="  bg-white w-[315px] h-[41px] rounded-[8px] border border-gray-300 border-dashed items-center flex justify-center cursor-pointer hover:bg-slate-50"
+            className=" px-3 bg-white w-[130px] h-[41px] rounded-[8px] border border-gray-300 border-dashed items-center flex justify-center cursor-pointer hover:bg-slate-50"
             // onClick={toggleDrawer}
           >
+            
             <span className="text-gray-600 px-[5px]">
               <CirclePlus size={16} />
             </span>
@@ -233,6 +235,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
               Add Team
             </p>
           </button>
+          </div>
         </SheetTrigger>
         <SheetContent
           className="min-h-screen overflow-y-scroll"
