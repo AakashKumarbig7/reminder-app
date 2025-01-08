@@ -219,8 +219,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       const mentions = text.match(/@\w+/g) || []; // Extract mentions
       const content = text.replace(/@\w+/g, "").trim(); // Remove mentions and trim content
 
-      console.log(taskId, "taskId");
-
       // Fetch the current task by ID and Team ID
       const { data: taskData, error: fetchError } = await supabase
         .from("tasks")
@@ -235,20 +233,14 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       }
 
       if (taskData) {
-        console.log(taskData.task_content, "task data");
-        console.log(taskData, "current task data");
-
         // Validate if both content and mentions are empty
-        if (!content && mentions.length === 0) {
+        if (!content || mentions.length === 0) {
           setTaskErrorMessage({ status: true, errorId: taskId });
-          console.warn("Please enter both content and mentions.");
           return;
         }
-
         // Reset the error message state if validation passes
         setTaskErrorMessage({ status: false, errorId: taskId });
 
-        console.log(mentions, content, "parsed text");
 
         // Update the task in the database
         const { data: updatedTask, error: updateError } = await supabase
@@ -268,7 +260,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         }
 
         resetInputAndFetchUpdates();
-        // notify("Task created successfully", true);
       }
     } catch (error) {
       console.error("Error in handleUpdateTask:", error);
@@ -286,7 +277,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     const styledInput = styledInputRef.current;
     if (styledInput) {
       styledInput.innerText = ""; // Clear styled input
-      console.log("Styled input cleared.");
     }
   };
 

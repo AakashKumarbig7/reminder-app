@@ -35,7 +35,6 @@ import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { useGlobalContext } from "@/context/store";
 
-
 // const notify = (message: string, success: boolean) =>
 //   toast[success ? "success" : "error"](message, {
 //     style: {
@@ -66,7 +65,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const [selectedSpace, setSelectedSpace] = useState<string | undefined>(
     undefined
   );
- const {userId} = useGlobalContext();
+  const { userId } = useGlobalContext();
   // const [selectedTeam, setSelectedTeam] = useState<any>(null); // Store the selected team data
   // const [isSaving, setIsSaving] = useState(false); // For handling the save state (loading)
   // Team-related states
@@ -114,9 +113,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
 
       // notify(" Teams updated successfully!", true);
       fetchTeams(); // Refresh teams to sync with the database
-    } 
-  
-    catch (error) {
+    } catch (error) {
       console.error("Error saving changes:", error);
       // notify("An error occurred. Please try again.", false);
       setSaveLoader(false);
@@ -420,11 +417,11 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
         setTaskStatusFilterValue=""
         setDateFilterValue=""
         filterFn=""
-        filterDialogOpen={''}
-        setFilterDialogOpen={''}
-        teamResetFn = {() => {}}
+        filterDialogOpen={""}
+        setFilterDialogOpen={""}
+        teamResetFn={() => {}}
       />
-      
+
       {/* <Toaster /> */}
       <div className="px-3  pb-3  space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
@@ -451,9 +448,11 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
 
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
-                    <DialogTitle className="font-bold">Delete Space</DialogTitle>
+                    <DialogTitle className="font-bold">
+                      Delete Space
+                    </DialogTitle>
                     <DialogDescription>
-                      Do you want to delete  {" "}
+                      Do you want to delete{" "}
                       <span className="font-bold">{selectedSpace}</span>?
                     </DialogDescription>
                   </DialogHeader>
@@ -581,13 +580,15 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
 
           <div className="px-3 flex gap-[18px]">
             <div className="">
-
-          <AddTeam
-                        spaceId={spaceId as number}
-                        sendDataToParent={fetchTeams as any}
-                      />
-                      </div>
-            <Carousel opts={{ align: "start" }} className="w-[calc(100%-190px)] max-w-full">
+              <AddTeam
+                spaceId={spaceId as number}
+                sendDataToParent={fetchTeams as any}
+              />
+            </div>
+            <Carousel
+              opts={{ align: "start" }}
+              className="w-[calc(100%-190px)] max-w-full"
+            >
               <CarouselContent className="flex  ">
                 {/* <CarouselItem className="basis-[28%] ">
                   <Card className="border border-gray-300 w-[339px] h-[65px] rounded-[12px] items-center">
