@@ -1,13 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import WebNavbar from "@/app/(web)/components/navbar";
-import { Trash2, CirclePlus, Plus } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
 import AddTeam from "@/app/(web)/components/addteam";
-import { Toast, ToastAction } from "@/components/ui/toast";
+import { ToastAction } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,
@@ -18,21 +17,17 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Carousel,
   CarouselContent,
-  CarouselItem,
 } from "@/components/ui/carousel";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import TeamCard from "../../components/teamCard";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { useGlobalContext } from "@/context/store";
 
 // const notify = (message: string, success: boolean) =>
