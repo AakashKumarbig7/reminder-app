@@ -175,7 +175,7 @@ const SignIn = () => {
         <div className="lg:w-[515px] p-10 md:w-full w-full md:p-12 lg:p-0 m-auto lg_start_width">
           <div className="absolute top-4 left-4"></div>
           <h1 className="text-3xl font-bold mb-7">Sign In</h1>
-          <Form {...form}>
+          {/* <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
               <FormField
                 control={form.control}
@@ -327,7 +327,7 @@ const SignIn = () => {
                 )}
               </Button>
             </form>
-          </Form>
+          </Form> */}
         </div>
       </div>
       <div className="w-1/2 lottie_img sm:none md:block flex justify-center items-center h-screen">
