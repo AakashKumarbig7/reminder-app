@@ -809,9 +809,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         const matchesDate = dateFilterValue
           ? task.due_date?.includes(dateFilterValue)
           : true; // Include if no date filter applied
+
+          const isNotDeleted = task.is_deleted === false;
   
         // Task matches if all selected filters match
-        return matchesTeam && matchesStatus && matchesDate;
+        return matchesTeam && matchesStatus && matchesDate && isNotDeleted;
       });
   
       // Map filtered tasks to their corresponding teams

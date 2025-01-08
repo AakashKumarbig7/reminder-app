@@ -583,8 +583,6 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
     // filterFetchTeams();
     // fetchTasks();
     recoverTask();
-    console.log(allTasks, " allTasks data");
-    console.log(filterTeams, " filterTeams data");
   }, [spaceId, teamData, setTeamData]);
 
   useEffect(() => {

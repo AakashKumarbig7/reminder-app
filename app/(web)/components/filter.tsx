@@ -230,12 +230,12 @@ const FilterComponent: React.FC<FilterProps> = ({
                   </Popover>
                 </div>
               </div>
-              <div className="flex items-center mt-4 gap-2">
+              {/* <div className="flex items-center mt-4 gap-2">
                 <input type="checkbox" />
                 <label className="text-sm text-gray-900 block">
                   Task assigned to me
                 </label>
-              </div>
+              </div> */}
             </div>
 
             <SheetFooter className="w-full flex gap-2 pb-4">
