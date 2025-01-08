@@ -3,7 +3,7 @@ import "rsuite/dist/rsuite-no-reset.min.css";
 import { Toaster } from "@/components/ui/toaster";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { getLoggedInUserData } from "../(signin-setup)/sign-in/action";
+import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { GlobalContextProvider } from "@/context/store";
 export default function DashboardLayout({
   children,
