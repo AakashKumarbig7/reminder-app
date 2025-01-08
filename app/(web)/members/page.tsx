@@ -277,17 +277,20 @@ const Members = () => {
   return (
     <>
       <WebNavbar
-        loggedUserData={userId as any}
-        navbarItems={false}
-        searchValue=""
-        setSearchValue=""
-        //  teamFilterValue=''
-        setTeamFilterValue=""
-        //  taskStatusFilterValue=''
-        setTaskStatusFilterValue=""
-        setDateFilterValue=""
-        filterFn=""
-      />
+       loggedUserData={userId as any}
+       navbarItems={false}
+       searchValue=''
+       setSearchValue=''
+      //  teamFilterValue=''
+       setTeamFilterValue=''
+      //  taskStatusFilterValue=''
+       setTaskStatusFilterValue=''
+       setDateFilterValue=''
+       filterFn=''
+       filterDialogOpen={''}
+       setFilterDialogOpen={''}
+       teamResetFn = {() => {}}
+        />
       <div className="px-3">
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex justify-between w-full">

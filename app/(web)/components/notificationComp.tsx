@@ -32,18 +32,20 @@ const Notification = () => {
         .select("*")
         .eq("notify_read", false)
         .eq("is_deleted", false);
-
+  
       if (error) {
         console.error("Error fetching tasks:", error);
         return;
       }
-
+  
       if (data) {
         const filteredTasks = data.filter((item: any) =>
+          Array.isArray(item.mentions) &&
           item.mentions.some((mention: string) =>
             mention.includes(`@${userId?.entity_name}`)
           )
         );
+  
         setAdminTaskNotify(data);
         setUnNotifiedTask(filteredTasks);
       }
@@ -51,6 +53,7 @@ const Notification = () => {
       console.error("Unexpected error:", err);
     }
   };
+  
 
   const handleCheckNotification = async (id: number) => {
     setIsRemoving((prev) => ({ ...prev, [id]: true }));

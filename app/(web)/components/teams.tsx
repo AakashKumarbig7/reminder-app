@@ -44,6 +44,7 @@ import { getLoggedInUserData} from "@/app/(signin-setup)/sign-in/action";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import SpaceBar from "./spacebar";
 
 interface SearchBarProps {
   spaceId: number;
@@ -58,7 +59,11 @@ interface SearchBarProps {
   setTaskStatusFilterValue: any;
   dateFilterValue: string | null;
   setDateFilterValue: any;
-  setFilterFn: any;
+  allTasks: any;
+  filterTeams : any;
+  setFilterTeams : any
+  filterFetchTeams: any
+  filterFetchTasks: any
 }
 
 interface Team {
@@ -92,22 +97,23 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   setTaskStatusFilterValue,
   dateFilterValue,
   setDateFilterValue,
-  setFilterFn,
+  allTasks,
+  filterTeams,
+  setFilterTeams,
+  filterFetchTeams,
+  filterFetchTasks
 }) => {
-  const route = useRouter();
   const styledInputRef = useRef<HTMLDivElement>(null);
-  const [teams, setTeams] = useState<Team[]>([]);
   const [text, setText] = useState<string>("");
   const [taskErrorMessage, setTaskErrorMessage] = useState({
     status: false,
     errorId: 0,
   });
   const [taskStatus, setTaskStatus] = useState<string>("todo");
-  const [allTasks, setAllTasks] = useState<any>([]);
+  // const [allTasks, setAllTasks] = useState<any>([]);
   const [teamName, setTeamName] = useState<string>("");
   const [teamNameDialogOpen, setTeamNameDialogOpen] = useState(false);
   const [teamNameSheetOpen, setTeamNameSheetOpen] = useState(false);
-  const [updateOptionStates, setUpdateOptionStates] = useState<any>({});
   const [addedMembers, setAddedMembers] = useState<any[]>([]);
   const [matchingUsers, setMatchingUsers] = useState<Tab[]>([]);
   const [noUserFound, setNoUserFound] = useState<boolean>(false);
@@ -119,17 +125,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   const [mentionTrigger, setMentionTrigger] = useState(false);
   const [role, setRole] = useState("");
-  const [sortedValue, setSortedValue] = useState<string | null>("");
   const [loggedTeamId, setLoggedTeamId] = useState<number[]>([]);
-const [searchInput, setSearchInput] = useState(""); // Search input state
-
-  // Helper function to toggle options for a specific team
-  const toggleUpdateOption = (teamId: any) => {
-    setUpdateOptionStates((prev: any) => ({
-      ...prev,
-      [teamId]: !prev[teamId],
-    }));
-  };
 
   const fetchTeams = async () => {
     if (!spaceId) return;
@@ -149,7 +145,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
         ...team,
         tasks: [], // Initialize each team with an empty tasks array
       }));
-      setTeams(teamData as Team[]);
+      // setTeams(teamData as Team[]);
     }
   };
 
@@ -173,7 +169,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
     if (error) throw error;
 
     console.log(data, " deleted task");
-    fetchTasks();
+    // fetchTasks();
+    filterFetchTasks();
     setTaskDeleteOpen(false);
     toast({
       title: "Deleted Successfully!",
@@ -199,7 +196,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
 
       if (error) throw error;
 
-      fetchTasks(); // Refresh the tasks list
+      // fetchTasks(); // Refresh the tasks list
+      filterFetchTasks();
       toast({
         title: "Undo Successful",
         description: "The task has been restored.",
@@ -279,8 +277,10 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
 
   const resetInputAndFetchUpdates = () => {
     setText(""); // Clear the input text
-    fetchTasks(); // Refresh task list
+    // fetchTasks(); // Refresh task list
+    filterFetchTasks();
     fetchTeams(); // Refresh team data
+    filterFetchTeams();
     setMentionTrigger(!mentionTrigger);
 
     const styledInput = styledInputRef.current;
@@ -305,12 +305,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
       const includesTrueTasks = data.filter((task) =>
         task?.mentions?.includes(`@${loggedUserData?.entity_name}`)
       );
-      console.log(
-        includesTrueTasks.map((task) => task.team_id),
-        "includesTrueTasks"
-      );
       setLoggedTeamId(includesTrueTasks.map((task) => task.team_id));
-      setAllTasks(data);
+      // setAllTasks(data);
     }
   };
 
@@ -349,6 +345,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
       // Additional cleanup actions
       setTeamNameDialogOpen(false);
       fetchTeams();
+      filterFetchTeams();
       toast({
         title: "Deleted Successfully!",
         description: "Team deleted successfully!",
@@ -389,6 +386,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
       // Additional cleanup actions
       setTeamNameDialogOpen(false);
       fetchTeams();
+      filterFetchTeams();
       toast({
         title: "Undo Successful",
         description: "The deleted team has been restored.",
@@ -433,6 +431,7 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
         // if (data) {
         console.log("Team name updated successfully:", data);
         fetchTeams();
+        filterFetchTeams();
         setTeamNameSheetOpen(false);
         setTeamNameError(false);
         toast({
@@ -553,7 +552,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
       console.log(fetchError);
     }
     setUpdateTaskId({ teamId, taskId });
-    fetchTasks();
+    // fetchTasks();
+    filterFetchTasks();
   };
 
   useEffect(() => {
@@ -578,79 +578,17 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
     setUpdateTaskId({ teamId: 0, taskId: 0 });
   };
 
-  const handleFilterTasksAndTeams = async () => {
-    try {
-      // If no filters are selected, fetch all teams and tasks
-      if (!teamFilterValue && !taskStatusFilterValue && !dateFilterValue) {
-        await fetchTeams();
-        await fetchTasks();
-      } else {
-        let filteredTeams = [];
-        let filteredTasks = [];
-  
-        // Apply filters if teamFilterValue is selected
-        if (teamFilterValue) {
-          filteredTeams = teams.filter(team =>
-            team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
-          );
-        } else {
-          filteredTeams = teams; // No team filter, return all teams
-        }
-  
-        // Apply task filters based on selected values
-        filteredTasks = allTasks.filter((task : any) => {
-          const matchesTeam =
-            teamFilterValue
-              ? teams.some(
-                  team =>
-                    team.id === task.team_id &&
-                    team.team_name.toLowerCase().includes(teamFilterValue.toLowerCase())
-                )
-              : true;
-  
-          const matchesStatus =
-            taskStatusFilterValue
-              ? task.task_status.toLowerCase().includes(taskStatusFilterValue.toLowerCase())
-              : true;
-  
-          const matchesDate =
-            dateFilterValue ? task.due_date.includes(dateFilterValue) : true;
-
-            console.log(matchesTeam, matchesStatus, matchesDate);
-  
-          // Logic for combining filters: match any one, any two, or all values
-          if (teamFilterValue && taskStatusFilterValue && dateFilterValue) {
-            return matchesTeam && matchesStatus && matchesDate; // All values selected
-          } else if (teamFilterValue && taskStatusFilterValue) {
-            return matchesTeam && matchesStatus; // Two values selected
-          } else if (teamFilterValue && dateFilterValue) {
-            return matchesTeam && matchesDate; // Two values selected
-          } else if (taskStatusFilterValue && dateFilterValue) {
-            return matchesStatus && matchesDate; // Two values selected
-          } else {
-            return matchesTeam || matchesStatus || matchesDate; // Any one value selected
-          }
-        });
-  
-        // Update the UI with filtered data
-        setTeams(filteredTeams);
-        setAllTasks(filteredTasks);
-      }
-    } catch (error) {
-      console.error("Error filtering tasks and teams:", error);
-    }
-  };
-  
-  
-  
-
-  // setFilterFn(handleFilterTasksAndTeams);
-
   useEffect(() => {
     fetchTeams();
-    fetchTasks();
+    // filterFetchTeams();
+    // fetchTasks();
     recoverTask();
   }, [spaceId, teamData, setTeamData]);
+
+  useEffect(() => {
+    filterFetchTeams();
+    filterFetchTasks();
+  }, []);
 
   useEffect(() => {
     const getUser = async () => {
@@ -697,19 +635,12 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
     });
   };
 
-  // const parseDateTime = (dateTimeString: string) => {
-  //   const [datePart, timePart] = dateTimeString.split(",");
-  //   const [day, month, year] = datePart.split(".");
-  //   return new Date(`${year}-${month}-${day}T${timePart}`);
-  // };
-
   const filteredTasks = filterBySearchValue(allTasks, searchValue as string);
     
-
   const handleAddTask = async (teamId: any, spaceId: number) => {
     console.log(loggedUserData?.username, " loggedUserData id");
-    setTeams((prevTeams) =>
-      prevTeams.map((team) =>
+    setFilterTeams((prevTeams : any) =>
+      prevTeams.map((team : any) =>
         team.id === teamId
           ? {
               ...team,
@@ -721,7 +652,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
           : team
       )
     );
-    fetchTasks();
+    // fetchTasks();
+    filterFetchTasks();
 
     // Insert the new task into the database
     try {
@@ -771,7 +703,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
 
       if (fetchedTasks) {
         console.log(fetchedTasks, "team data");
-        fetchTasks();
+        // fetchTasks();
+        filterFetchTasks();
       }
     } catch (error) {
       console.error("Error adding or fetching tasks:", error);
@@ -780,15 +713,14 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
 
   return (
     <div className="w-full h-[calc(100vh-142px)]">
-      <Button onClick={handleFilterTasksAndTeams}>Check</Button>
-      {teams.length > 0 ? (
+      {filterTeams.length > 0 ? (
         <div className="w-full h-full pb-4 px-0">
           <Carousel1 opts={{ align: "start" }} className="w-full max-w-full">
             {
               loggedUserData?.role === "owner" ? (
                 <CarouselContent1 className="flex space-x-1">
               {
-              teams.map((team, index) => (
+              filterTeams.map((team : any, index : number) => (
                 <CarouselItem1
                   key={team.id}
                   className="max-w-[340px] h-[calc(100vh-142px)] basis-[30%] overflow-y-auto relative playlist-scroll"
@@ -1311,7 +1243,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                                               //   `Task status updated to "${value}"`,
                                               //   true
                                               // );
-                                              fetchTasks();
+                                              // fetchTasks();
+                                              filterFetchTasks();
                                             }}
                                           >
                                             <SelectTrigger
@@ -1523,7 +1456,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                                             );
                                           }
                                           setTaskStatus(value);
-                                          fetchTasks();
+                                          // fetchTasks();
+                                          filterFetchTasks();
                                         }}
                                       >
                                         <SelectTrigger
@@ -1578,9 +1512,9 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
               ) : (
 <CarouselContent1 className="flex space-x-1">
               {
-              teams.filter((team, index) => (
+              filterTeams.filter((team : any, index : any) => (
                 team.members.some((member: any) => member.id === loggedUserData?.id)
-              )).map((team, index) => (
+              )).map((team : any, index : any) => (
                 <CarouselItem1
                   key={team.id}
                   className="max-w-[340px] basis-[30%] h-[calc(100vh-142px)] overflow-y-auto relative playlist-scroll"
@@ -2103,7 +2037,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                                               //   `Task status updated to "${value}"`,
                                               //   true
                                               // );
-                                              fetchTasks();
+                                              // fetchTasks();
+                                              filterFetchTasks();
                                             }}
                                           >
                                             <SelectTrigger
@@ -2315,7 +2250,8 @@ const [searchInput, setSearchInput] = useState(""); // Search input state
                                             );
                                           }
                                           setTaskStatus(value);
-                                          fetchTasks();
+                                          // fetchTasks();
+                                          filterFetchTasks();
                                         }}
                                       >
                                         <SelectTrigger

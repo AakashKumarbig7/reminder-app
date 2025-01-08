@@ -420,6 +420,9 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
         setTaskStatusFilterValue=""
         setDateFilterValue=""
         filterFn=""
+        filterDialogOpen={''}
+        setFilterDialogOpen={''}
+        teamResetFn = {() => {}}
       />
       
       {/* <Toaster /> */}
@@ -584,7 +587,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
                         sendDataToParent={fetchTeams as any}
                       />
                       </div>
-            <Carousel opts={{ align: "start" }} className="w-full max-w-full  ">
+            <Carousel opts={{ align: "start" }} className="w-[calc(100%-190px)] max-w-full">
               <CarouselContent className="flex  ">
                 {/* <CarouselItem className="basis-[28%] ">
                   <Card className="border border-gray-300 w-[339px] h-[65px] rounded-[12px] items-center">

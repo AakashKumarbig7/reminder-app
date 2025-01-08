@@ -268,6 +268,9 @@ const UserProfile = () => {
         setTaskStatusFilterValue=""
         setDateFilterValue=""
         filterFn=""
+        filterDialogOpen={''}
+        setFilterDialogOpen={''}
+        teamResetFn = {() => {}}
       />
       <div className="hidden">
         <span>{modalPassword}</span>

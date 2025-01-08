@@ -245,6 +245,9 @@ const EditMember = (props: Props) => {
        setTaskStatusFilterValue=''
        setDateFilterValue=''
        filterFn=''
+       filterDialogOpen={''}
+        setFilterDialogOpen={''}
+        teamResetFn = {() => {}}
         />
         <div className="hidden">
           <span>{modalPassword}</span>
