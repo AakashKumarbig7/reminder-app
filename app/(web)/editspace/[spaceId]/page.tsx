@@ -114,11 +114,17 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
 
       // notify(" Teams updated successfully!", true);
       fetchTeams(); // Refresh teams to sync with the database
-    } catch (error) {
+    } 
+  
+    catch (error) {
       console.error("Error saving changes:", error);
       // notify("An error occurred. Please try again.", false);
       setSaveLoader(false);
     }
+    toast({
+      title: "Team updated successfully!",
+      description: "Team have been updated successfully!",
+    });
   };
 
   const handleDelete = async (spaceId: any) => {
@@ -417,7 +423,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
       />
       
       {/* <Toaster /> */}
-      <div className="px-3 h-full pb-3  space-y-[18px]">
+      <div className="px-3  pb-3  space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
           <div className="px-3 flex w-full items-center justify-between">
             {/* Title Section */}

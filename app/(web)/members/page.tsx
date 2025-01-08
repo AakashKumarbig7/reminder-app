@@ -389,10 +389,10 @@ const Members = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Button className="w-[149px] h-[41px] space-x-2 px-5 py-[2.5px] border bg-[#E5ECF6] border-gray-300 text-sm text-gray-800 rounded-lg font-inter font-normal gap-[10px] flex items-center hover:bg-gray-200  ">
+            {/* <Button className="w-[149px] h-[41px] space-x-2 px-5 py-[2.5px] border bg-[#E5ECF6] border-gray-300 text-sm text-gray-800 rounded-lg font-inter font-normal gap-[10px] flex items-center hover:bg-gray-200  ">
               <Upload className="h-5 w-5 text-gray-900" />
               Upload CSV
-            </Button>
+            </Button> */}
             <Button
               className="rounded-lg text-sm font-medium font-inter  text-white border flex items-center max-w-[142px] w-[165px] h-[41px] bg-primaryColor-700 space-x-2  px-5 py-[2.5px]  hover:bg-blue-600 cursor-pointer"
               onClick={() => {

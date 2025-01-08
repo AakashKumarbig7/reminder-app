@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { CarouselItem } from "@/components/ui/carousel";
 import { Trash2 } from "lucide-react";
@@ -51,6 +52,7 @@ const TeamCard: React.FC<{
 }> = ({ team, spaceId, sendDataToParent }) => {
   // const [teamName, setTeamName] = useState(team.team_name);
   // const [teamNameError, setTeamNameError] = useState(false);
+  const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
   const [emailInput, setEmailInput] = useState("");
   const [matchingUsers, setMatchingUsers] = useState<any[]>([]);
@@ -79,11 +81,11 @@ const TeamCard: React.FC<{
     }
 
     if (data) {
-      // const teamData = data.map((team: any) => ({
-      //   ...team,
-      //   tasks: [],
-      // }));
-      setTeams(data || []);
+      const teamData = data.map((team: any) => ({
+        ...team,
+        tasks: [],
+      }));
+       setTeams(teamData as Team[]);
     }
   };
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,13 +191,13 @@ const TeamCard: React.FC<{
     );
   };
 
-  const handleDeleteTeam = async (id: number) => {
+  const handleDeleteTeam = async (teamId: number) => {
     try {
       // Delete tasks associated with the team first
       const { error: taskError } = await supabase
         .from("tasks")
         .update({ is_deleted: true })
-        .eq("team_id", id);
+        .eq("team_id", teamId);
 
       if (taskError) {
         console.error("Error deleting tasks:", taskError);
@@ -208,8 +210,7 @@ const TeamCard: React.FC<{
       const { error: teamError } = await supabase
         .from("teams")
         .update({ is_deleted: true })
-
-        .eq("id", id);
+        .eq("id", teamId);
 
       if (teamError) {
         console.error("Error deleting team:", teamError);
@@ -220,13 +221,15 @@ const TeamCard: React.FC<{
 
       // Additional cleanup actions
       setIsOpen(false);
+      router.refresh()
       fetchTeams();
-
+      console.log("Delete after refresh checking"); 
+      router.refresh()
       toast({
         title: "Deleted Successfully!",
         description: "Team deleted successfully!",
         action: (
-          <ToastAction altText="Undo" onClick={() => handleTeamUndo(id)}>
+          <ToastAction altText="Undo" onClick={() => handleTeamUndo(teamId)}>
             Undo
           </ToastAction>
         ),
@@ -235,9 +238,10 @@ const TeamCard: React.FC<{
       console.error("Unexpected error during deletion:", error);
     }
   };
+
   const handleTeamUndo = async (teamId: number) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("tasks")
         .update({ is_deleted: false })
         .eq("team_id", teamId);
@@ -259,7 +263,7 @@ const TeamCard: React.FC<{
       }
 
       // Additional cleanup actions
-      // setTeamNameDialogOpen(false);
+      setIsOpen(false);
       fetchTeams();
       toast({
         title: "Undo Successful",
@@ -267,7 +271,6 @@ const TeamCard: React.FC<{
         duration: 5000,
       });
     } catch (error) {
-      console.log(error);
       toast({
         title: "Error",
         description: "Failed to restore the deleted team. Please try again.",
@@ -379,7 +382,7 @@ const TeamCard: React.FC<{
   return (
     <CarouselItem
       key={team.id}
-      className="max-w-[250vw] basis-[28%] "
+      className="max-w-[270vw] basis-[28%] "
     >
       <>
         <div className="hidden">
@@ -431,7 +434,7 @@ const TeamCard: React.FC<{
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="py-2">
+            <div className="py-1">
               <label
                 htmlFor="name"
                 className="text-sm text-gray-900 font-inter font-medium"
@@ -445,7 +448,7 @@ const TeamCard: React.FC<{
                 className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
               />
 
-              <div className="mt-8 relative">
+              <div className="mt-4 relative">
                 {matchingUsers.length > 0 &&
                   emailInput.length > 0 &&
                   !noUserFound && (
@@ -484,7 +487,7 @@ const TeamCard: React.FC<{
               <div>
                 <label
                   htmlFor="members"
-                  className="text-sm text-gray-900 font-inter font-medium"
+                  className="text-sm text-gray-900 mb-2 font-inter font-medium"
                 >
                   Members
                 </label>
@@ -531,8 +534,8 @@ const TeamCard: React.FC<{
                               : "text-gray-500"
                           }`}
                         >
-                          {member.designation?.length > 9
-                            ? `${member.designation?.slice(0, 8)}...`
+                          {member.designation?.length > 10
+                            ? `${member.designation?.slice(0, 7)}...`
                             : member.designation}
                         </span>
                         <button
