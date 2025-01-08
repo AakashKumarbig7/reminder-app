@@ -29,8 +29,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import Lottie from "lottie-react";
-import LottielabLogin1 from "../../../public/images/login_animation.json";
+// import Lottie from "lottie-react";
+// import LottielabLogin1 from "../../../public/images/login_animation.json";
 import "./style.css";
 
 interface SupabaseError {
@@ -171,7 +171,7 @@ const SignIn = () => {
   return (
     <div className="md:flex sm:block justify-end min-h-screen font-inter">
       <Toaster />
-      {/* <div className="md:w-1/2 sm:w-full h-screen flex flex-col justify-center relative">
+      <div className="md:w-1/2 sm:w-full h-screen flex flex-col justify-center relative">
         <div className="lg:w-[515px] p-10 md:w-full w-full md:p-12 lg:p-0 m-auto lg_start_width">
           <div className="absolute top-4 left-4"></div>
           <h1 className="text-3xl font-bold mb-7">Sign In</h1>
@@ -329,8 +329,8 @@ const SignIn = () => {
             </form>
           </Form>
         </div>
-      </div> */}
-      <div className="w-1/2 lottie_img sm:none md:block flex justify-center items-center h-screen">
+      </div>
+      {/* <div className="w-1/2 lottie_img sm:none md:block flex justify-center items-center h-screen">
         <div className="w-full h-full relative flex justify-center items-center">
           <Lottie
             animationData={LottielabLogin1}
@@ -340,7 +340,7 @@ const SignIn = () => {
           />
           <div className="w-[200px] h-[100px] bg-white absolute md:bottom-[0px] lg:bottom-[25px] right-20 lottie_hide"></div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
