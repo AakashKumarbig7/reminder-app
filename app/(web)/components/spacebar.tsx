@@ -100,6 +100,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   const {setSelectedActiveTab} = useGlobalContext();
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [adminSpaceLength, setAdminSpaceLength] = useState<number>(0);
 
   useEffect(() => {
     fetchSpaces();
@@ -205,6 +206,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       setTabs(data);
       setUserTab(data);
       if (data.length > 0) {
+        setAdminSpaceLength(data.length)
         setActiveTab(data[0].id); // Set the first tab as active initially
         setUserActiveTab(data[0].id);
         setActiveTabName(data[0].space_name);
@@ -1326,11 +1328,13 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
               )
             }
             
-          {((loggedUserData?.role === "owner" && (spaceLength > 0) ) ||
+          {(
+            (loggedUserData?.role === "owner" && (adminSpaceLength > 0 || adminSpaceLength === 1)) ||
             (loggedUserData?.role === "User" &&
               ((loggedUserData?.access?.team !== true &&
                 loggedUserData?.access?.all === true) ||
-                loggedUserData?.access?.team === true) && (spaceLength > 0 || spaceLength === 1))) && (
+                loggedUserData?.access?.team === true) && (spaceLength > 0 || spaceLength === 1))
+              ) && (
             <div className="flex gap-2 text-sm text-gray-400">
               <Sheet
                 open={memberAddDialogOpen}
