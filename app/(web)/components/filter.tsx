@@ -48,6 +48,21 @@ const taskStatusOptions = [
     value: "feedback",
     label: "feedback",
   },
+];
+
+const adminTaskStatusOptions = [
+  {
+    value: "todo",
+    label: "todo",
+  },
+  {
+    value: "In progress",
+    label: "In progress",
+  },
+  {
+    value: "feedback",
+    label: "feedback",
+  },
   {
     value: "Completed",
     label: "Completed",
@@ -73,6 +88,7 @@ const FilterComponent: React.FC<FilterProps> = ({
   // const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 
   const { selectedActiveTab } = useGlobalContext();
+  const {userId} = useGlobalContext();
 
   const formatDate = (date: Date): string => {
     const options: Intl.DateTimeFormatOptions = {
@@ -186,7 +202,7 @@ const FilterComponent: React.FC<FilterProps> = ({
                 </Label>
                 <Select
                   className="w-full mt-1 text-sm"
-                  options={taskStatusOptions}
+                  options={userId?.role === "owner" ? adminTaskStatusOptions : taskStatusOptions}
                   onChange={handleSelectStatus} // Log selected team to console
                   value={selectedTaskStatus} // Controlled value
                   isClearable

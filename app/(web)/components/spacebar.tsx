@@ -187,7 +187,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       .from("spaces")
       .select("*")
       .eq("is_deleted", false)
-      .order("created_at", { ascending: true });
+      // .order("created_at", { ascending: true });
     if (error) {
       console.error("Error fetching spaces:", error);
       return;
@@ -909,14 +909,14 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         <span>{loading}</span>
       </div>
       <div className="px-3 flex justify-start items-center gap-3 h-[calc(100vh-70px)]">
-        <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[170px] max-w-[200px] h-full pt-0 pb-0 playlist-scroll">
+        <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[170px] max-w-[200px] h-full pt-3 pb-3 playlist-scroll">
               <div className="text-sm text-gray-400 flex flex-col gap-2.5">
           {(loggedUserData?.role === "owner" ||
               (loggedUserData?.role === "User" &&
                 ((loggedUserData?.access?.space !== true &&
                   loggedUserData?.access?.all === true) ||
                   loggedUserData?.access?.space === true))) && (
-                    <div className="pt-5 sticky top-0 z-50 bg-white">
+                    <div className="pt-0 sticky top-0 z-50 bg-white">
               <button
                 onClick={addNewTab}
                 className=" rounded-lg border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10 min-w-fit text-gray-800 justify-center w-full"
