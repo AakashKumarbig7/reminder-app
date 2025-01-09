@@ -721,7 +721,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                         className={`p-[18px] pb-3 sticky top-0 bg-white z-50 rounded-xl`}
                       >
                         <div className="flex justify-between items-center relative">
-                          <p className="text-lg font-semibold text-black font-geist">
+                          <p className="text-lg font-semibold text-black font-inter">
                             {team.team_name.length > 20
                               ? team.team_name.slice(0, 20) + "..."
                               : team.team_name}
