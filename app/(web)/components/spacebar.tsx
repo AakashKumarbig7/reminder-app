@@ -1326,7 +1326,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
               )
             }
             
-          {((loggedUserData?.role === "owner" && (spaceLength > 0 || spaceLength === 1) ) ||
+          {((loggedUserData?.role === "owner" && (spaceLength > 0) ) ||
             (loggedUserData?.role === "User" &&
               ((loggedUserData?.access?.team !== true &&
                 loggedUserData?.access?.all === true) ||
