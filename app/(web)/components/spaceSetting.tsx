@@ -52,7 +52,7 @@ export default function SpaceSetting({}) {
   const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
   const [saveLoaderMember, setSaveLoaderMember] = useState(false);
   const[saveLoaderAccess,setSaveLoaderAccess]=useState(false);
-
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const isDeleting = false;
 
@@ -82,6 +82,11 @@ export default function SpaceSetting({}) {
   // Add a new space
   const addSpace = async () => {
     if (newSpaceName.trim() !== "") {
+      if (newSpaceName.trim() === "") {
+        setErrorMessage("Please enter the space name.");
+        return;
+      }
+      setErrorMessage("");
       try {
         const { error } = await supabase
           .from("spaces")
@@ -494,9 +499,13 @@ export default function SpaceSetting({}) {
                   id="name"
                   placeholder="Space Name"
                   value={newSpaceName}
-                  onChange={(e) => setNewSpaceName(e.target.value)}
+                  onChange={(e) => setNewSpaceName(e.target.value)
+                  }
+                 
                   className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
+                 
                 />
+                 {errorMessage && <p className="text-red-500 mt-1">{errorMessage}</p>}
               </div>
 
               <DialogFooter className="flex justify-between ">

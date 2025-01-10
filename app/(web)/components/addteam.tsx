@@ -9,23 +9,22 @@ import {
   SheetTrigger,
   SheetFooter,
 } from "@/components/ui/sheet";
-
+import { toast } from "@/hooks/use-toast";
 import { Trash2, CirclePlus } from "lucide-react";
 import Image from "next/image";
-import toast from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import { supabase } from "@/utils/supabase/supabaseClient";
-const notify = (message: string, success: boolean) =>
-  toast[success ? "success" : "error"](message, {
-    style: {
-      borderRadius: "10px",
-      background: "#fff",
-      color: "#000",
-    },
-    position: "top-right",
-    duration: 3000,
-  });
+// const notify = (message: string, success: boolean) =>
+//   toast[success ? "success" : "error"](message, {
+//     style: {
+//       borderRadius: "10px",
+//       background: "#fff",
+//       color: "#000",
+//     },
+//     position: "top-right",
+//     duration: 3000,
+//   });
 interface Team {
   id: number;
   team_name: string;
@@ -142,7 +141,10 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
 
       if (existingTeam && existingTeam.length > 0) {
         console.log("Team already exists in this space:", existingTeam);
-        notify("Team already exists With these members", false);
+        toast({
+          title: "Team already exists with these members",
+          description: "Please choose a different team name.",
+        });
         return;
       }
       try {
@@ -172,7 +174,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
         setTeamMemberError(false);
         setMemberAddDialogOpen(false);
 
-        notify("Team And Members saved successfully", true);
+        // notify("Team And Members saved successfully", true);
         sendDataToParent();
       } catch (err) {
         console.error("Unexpected error:", err);

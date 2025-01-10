@@ -10,7 +10,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -139,7 +138,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       console.log(error);
       return;
     }
-
+console.log("fetching team");
     if (data) {
       const teamData = data.map((team) => ({
         ...team,
@@ -386,7 +385,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       // Additional cleanup actions
       setTeamNameDialogOpen(false);
       fetchTeams();
-      filterFetchTeams();
+      filterFetchTeams(); 
       toast({
         title: "Undo Successful",
         description: "The deleted team has been restored.",

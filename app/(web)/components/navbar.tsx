@@ -60,6 +60,8 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
   const [inprogressTasks, setInProgressTasks] = useState<number>(0);
   const [feedbackTasks, setFeedbackTasks] = useState<number>(0);
   const [taskDetails, setTaskDetails] = useState<any[]>([]);
+  const[settingsLoader, setSettingsLoader] = useState(false);
+  const[profileLoader, setProfileLoader] = useState(false);
   const entityName = loggedUserData?.entity_name || "Unknown Entity";
 
   const handleLogout = async (event: React.FormEvent) => {
@@ -250,22 +252,79 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
               </div>
               <div className="py-3 my-3 text-gray-700 border-t border-b border-gray-200 px-3 cursor-pointer">
                 <p
-                  onClick={() => route.push("/user-profile")}
+                  onClick={() => {
+                    setProfileLoader(true);
+                    setTimeout(() => {
+                      route.push("/user-profile");
+                      setProfileLoader(false);
+                    }, 1000);
+                  }}
                   className={`text-sm font-normal ${
                     loggedUserData?.role === "owner" ? "pb-3" : "pb-0"
                   }`}
                 >
-                  Your Profile
+                  {profileLoader ? (
+                <svg
+                className="animate-spin h-5 w-5 m-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#1A56DB"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-100"
+                  fill="#1A56DB"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              ) : (
+                "Your Profile"
+              )}
                 </p>
                 {loggedUserData?.role === "owner" && (
                   <p
                     className="text-sm font-normal"
                     onClick={() => {
-                      route.push("/spaceSetting");
-                      setSelectOpen(false);
+                      setSettingsLoader(true);
+                      setTimeout(() => {
+                        route.push("/spaceSetting");
+                        setSettingsLoader(false);
+                        setSelectOpen(false);
+                      }, 1000);
                     }}
+                    // disabled={settingsLoader}
                   >
-                    Settings
+                    {settingsLoader ? (
+                <svg
+                className="animate-spin h-5 w-5 m-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#1A56DB"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-100"
+                  fill="#1A56DB"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              ) : (
+                "Settings"
+              )}
                   </p>
                 )}
               </div>

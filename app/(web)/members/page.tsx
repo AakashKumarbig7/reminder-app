@@ -89,7 +89,7 @@ const Members = () => {
   const [searchValue, setSearchValue] = useState("");
   const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
   const [saveLoaderAccess, setSaveLoaderAccess] = useState(false);
-  const[saveLoaderSpaceSetting, setSaveLoaderSpaceSetting] = useState(false);
+  const [saveLoaderSpaceSetting, setSaveLoaderSpaceSetting] = useState(false);
 
   // Fetch members from Supabase
   const fetchMembers = async () => {
@@ -181,6 +181,7 @@ const Members = () => {
       setMembers((prevMembers) =>
         prevMembers.filter((member) => member.id !== memberId)
       );
+      setIsDeleteDialogOpen(false);
       toast({
         title: "Deleted Successfully!",
         description: "Member deleted successfully!",
@@ -277,65 +278,65 @@ const Members = () => {
   return (
     <>
       <WebNavbar
-       loggedUserData={userId as any}
-       navbarItems={false}
-       searchValue=''
-       setSearchValue=''
-      //  teamFilterValue=''
-       setTeamFilterValue=''
-      //  taskStatusFilterValue=''
-       setTaskStatusFilterValue=''
-       setDateFilterValue=''
-       filterFn=''
-       filterDialogOpen={''}
-       setFilterDialogOpen={''}
-       teamResetFn = {() => {}}
-        />
+        loggedUserData={userId as any}
+        navbarItems={false}
+        searchValue=""
+        setSearchValue=""
+        //  teamFilterValue=''
+        setTeamFilterValue=""
+        //  taskStatusFilterValue=''
+        setTaskStatusFilterValue=""
+        setDateFilterValue=""
+        filterFn=""
+        filterDialogOpen={""}
+        setFilterDialogOpen={""}
+        teamResetFn={() => {}}
+      />
       <div className="px-3">
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">
           <div className="flex justify-between w-full">
             <div className="flex space-x-[10px]">
               <button
-               onClick={() => {
-                setSaveLoaderSpaceSetting(true);
-                setTimeout(() => {
-                  router.push("/spaceSetting");
-                  setSaveLoaderSpaceSetting(false);
-                }, 1000);
-              }}
-              disabled={saveLoaderSpaceSetting}
-              className="rounded-lg font-inter font-medium text-sm border w-[134px] h-[41px] text-gray-400"
-            >
-              {saveLoaderSpaceSetting ? (
-                <svg
-                className="animate-spin h-5 w-5 m-auto"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
+                onClick={() => {
+                  setSaveLoaderSpaceSetting(true);
+                  setTimeout(() => {
+                    router.push("/spaceSetting");
+                    setSaveLoaderSpaceSetting(false);
+                  }, 1000);
+                }}
+                disabled={saveLoaderSpaceSetting}
+                className="rounded-lg font-inter font-medium text-sm border w-[134px] h-[41px] text-gray-400"
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="#1A56DB"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-100"
-                  fill="#1A56DB"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              ) : (
-                "Space Settings"
-              )}
-            </button>
+                {saveLoaderSpaceSetting ? (
+                  <svg
+                    className="animate-spin h-5 w-5 m-auto"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="#1A56DB"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-100"
+                      fill="#1A56DB"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  "Space Settings"
+                )}
+              </button>
               <button className="rounded-lg text-sm font-inter font-medium border w-[104px] h-[41px] text-white hover:bg-blue-600 hover:text-white bg-primaryColor-700">
                 Members
               </button>
               <button
-                 onClick={() => {
+                onClick={() => {
                   setSaveLoaderAccess(true);
                   setTimeout(() => {
                     router.push("/access");
@@ -345,27 +346,27 @@ const Members = () => {
                 disabled={saveLoaderAccess}
                 className="rounded-lg font-inter font-medium text-sm border w-[89px] h-[41px] text-gray-400"
               >
-               {saveLoaderAccess ? (
+                {saveLoaderAccess ? (
                   <svg
-                  className="animate-spin h-5 w-5 m-auto"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="#1A56DB"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-100"
-                    fill="#1A56DB"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
+                    className="animate-spin h-5 w-5 m-auto"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="#1A56DB"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-100"
+                      fill="#1A56DB"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
                 ) : (
                   "Access"
                 )}
@@ -569,22 +570,26 @@ const Members = () => {
                                           setMemberToDelete(member.id);
                                           setIsDeleteDialogOpen(true);
                                         }}
-                                        disabled={currentEditingId === member.id}
+                                        disabled={
+                                          currentEditingId === member.id
+                                        }
                                       >
                                         <Trash2 className="h-5 w-5" />
                                       </button>
                                     </DialogTrigger>
-                                   
+
                                     <DialogContent className="sm:max-w-[425px]">
                                       <DialogHeader>
                                         <DialogTitle>Delete Space</DialogTitle>
                                         <DialogDescription>
-        Do you want to delete{" "}
-        <span className="font-bold">
-          {currentEditingId === member.id ? member.username : "this member"}
-        </span>
-        ?
-      </DialogDescription>
+                                          Do you want to delete{" "}
+                                          <span className="font-bold">
+                                            {currentEditingId === member.id
+                                              ? member.username
+                                              : "this member"}
+                                          </span>
+                                          ?
+                                        </DialogDescription>
                                       </DialogHeader>
                                       <div className="flex justify-center items-center w-full gap-4 mt-4">
                                         <Button
@@ -603,7 +608,6 @@ const Members = () => {
                                               handleDelete(memberToDelete);
                                             }
                                           }}
-                                         
                                         >
                                           Delete
                                         </Button>
