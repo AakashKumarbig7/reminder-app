@@ -1,5 +1,5 @@
 
-import Footer from "@/app/(mob)/footer/footer";
+// import Footer from "@/app/(mob)/footer/footer";
 
 export default function Layout({
   children,
@@ -10,7 +10,7 @@ export default function Layout({
     // <ProtectedRoute allowedRoles={['admin']}>
     <div>
       {children}
-      <Footer />
+      {/* <Footer /> */}
     </div>
     //  </ProtectedRoute>
   );

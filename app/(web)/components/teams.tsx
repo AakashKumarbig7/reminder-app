@@ -218,8 +218,6 @@ console.log("fetching team");
       const mentions = text.match(/@\w+/g) || []; // Extract mentions
       const content = text.replace(/@\w+/g, "").trim(); // Remove mentions and trim content
 
-      console.log(taskId, "taskId");
-
       // Fetch the current task by ID and Team ID
       const { data: taskData, error: fetchError } = await supabase
         .from("tasks")
@@ -234,20 +232,14 @@ console.log("fetching team");
       }
 
       if (taskData) {
-        console.log(taskData.task_content, "task data");
-        console.log(taskData, "current task data");
-
         // Validate if both content and mentions are empty
-        if (!content && mentions.length === 0) {
+        if (!content || mentions.length === 0) {
           setTaskErrorMessage({ status: true, errorId: taskId });
-          console.warn("Please enter both content and mentions.");
           return;
         }
-
         // Reset the error message state if validation passes
         setTaskErrorMessage({ status: false, errorId: taskId });
 
-        console.log(mentions, content, "parsed text");
 
         // Update the task in the database
         const { data: updatedTask, error: updateError } = await supabase
@@ -267,7 +259,6 @@ console.log("fetching team");
         }
 
         resetInputAndFetchUpdates();
-        // notify("Task created successfully", true);
       }
     } catch (error) {
       console.error("Error in handleUpdateTask:", error);
@@ -285,7 +276,6 @@ console.log("fetching team");
     const styledInput = styledInputRef.current;
     if (styledInput) {
       styledInput.innerText = ""; // Clear styled input
-      console.log("Styled input cleared.");
     }
   };
 
@@ -730,7 +720,7 @@ console.log("fetching team");
                         className={`p-[18px] pb-3 sticky top-0 bg-white z-50 rounded-xl`}
                       >
                         <div className="flex justify-between items-center relative">
-                          <p className="text-lg font-semibold text-black font-geist">
+                          <p className="text-lg font-semibold text-black font-inter">
                             {team.team_name.length > 20
                               ? team.team_name.slice(0, 20) + "..."
                               : team.team_name}

@@ -1,13 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import WebNavbar from "@/app/(web)/components/navbar";
-import { Trash2, CirclePlus, Plus } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
 import AddTeam from "@/app/(web)/components/addteam";
-import { Toast, ToastAction } from "@/components/ui/toast";
+import { ToastAction } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,
@@ -18,23 +17,18 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Carousel,
   CarouselContent,
-  CarouselItem,
 } from "@/components/ui/carousel";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button"; // Ensure this exists in your project
 import TeamCard from "../../components/teamCard";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
-import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { useGlobalContext } from "@/context/store";
-
 
 // const notify = (message: string, success: boolean) =>
 //   toast[success ? "success" : "error"](message, {
@@ -66,7 +60,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   const [selectedSpace, setSelectedSpace] = useState<string | undefined>(
     undefined
   );
- const {userId} = useGlobalContext();
+  const { userId } = useGlobalContext();
   // const [selectedTeam, setSelectedTeam] = useState<any>(null); // Store the selected team data
   // const [isSaving, setIsSaving] = useState(false); // For handling the save state (loading)
   // Team-related states
@@ -115,9 +109,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
 
       // notify(" Teams updated successfully!", true);
       fetchTeams(); // Refresh teams to sync with the database
-    } 
-  
-    catch (error) {
+    } catch (error) {
       console.error("Error saving changes:", error);
       // notify("An error occurred. Please try again.", false);
       setSaveLoader(false);
@@ -437,11 +429,11 @@ const fetchTeamData = async () => {
         setTaskStatusFilterValue=""
         setDateFilterValue=""
         filterFn=""
-        filterDialogOpen={''}
-        setFilterDialogOpen={''}
-        teamResetFn = {() => {}}
+        filterDialogOpen={""}
+        setFilterDialogOpen={""}
+        teamResetFn={() => {}}
       />
-      
+
       {/* <Toaster /> */}
       <div className="px-3  pb-3  space-y-[18px]">
         <div className="bg-white w-full h-[65px] rounded-[12px] flex items-center shadow-md">
@@ -468,9 +460,11 @@ const fetchTeamData = async () => {
 
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
-                    <DialogTitle className="font-bold">Delete Space</DialogTitle>
+                    <DialogTitle className="font-bold">
+                      Delete Space
+                    </DialogTitle>
                     <DialogDescription>
-                      Do you want to delete  {" "}
+                      Do you want to delete{" "}
                       <span className="font-bold">{selectedSpace}</span>?
                     </DialogDescription>
                   </DialogHeader>
@@ -598,13 +592,15 @@ const fetchTeamData = async () => {
 
           <div className="px-3 flex gap-[18px]">
             <div className="">
-
-          <AddTeam
-                        spaceId={spaceId as number}
-                        sendDataToParent={fetchTeams as any}
-                      />
-                      </div>
-            <Carousel opts={{ align: "start" }} className="w-[calc(100%-190px)] max-w-full">
+              <AddTeam
+                spaceId={spaceId as number}
+                sendDataToParent={fetchTeams as any}
+              />
+            </div>
+            <Carousel
+              opts={{ align: "start" }}
+              className="w-[calc(100%-190px)] max-w-full"
+            >
               <CarouselContent className="flex  ">
                 {/* <CarouselItem className="basis-[28%] ">
                   <Card className="border border-gray-300 w-[339px] h-[65px] rounded-[12px] items-center">

@@ -64,6 +64,9 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const route = useRouter();
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<number | null>(null);
+  const [userTab, setUserTab] = useState<Tab[]>([]);
+  const [userActiveTab, setUserActiveTab] = useState<number | null>(null);
+  const [userTabActive, setUserTabActive] = useState(true);
   const [emailInput, setEmailInput] = useState<string>("");
   const [matchingUsers, setMatchingUsers] = useState<Tab[]>([]);
   const [noUserFound, setNoUserFound] = useState<boolean>(false);
@@ -93,9 +96,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [spaceLength, setSpaceLength] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [activeTabName, setActiveTabName] = useState();
+  const [activeTabNameUser, setActiveTabNameUser] = useState('');
 
   const {setSelectedActiveTab} = useGlobalContext();
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [adminSpaceLength, setAdminSpaceLength] = useState<number>(0);
 
   useEffect(() => {
     fetchSpaces();
@@ -150,12 +155,16 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       fetchTeamData();
       setSpaceEditDialogOpen(false);
       const newTabs = tabs.filter((tab) => tab.id !== id);
+      const newTabs1 = userTab.filter((tab) => tab.id !== id);
       setTabs(newTabs);
-      if (newTabs.length > 0) {
+      setUserTab(newTabs1);
+      if (newTabs.length > 0 || newTabs1.length > 0) {
         setActiveTab(newTabs[0].id);
+        setUserActiveTab(newTabs1[0].id);
          // Set first tab as active if any left
       } else {
         setActiveTab(null);
+        setUserActiveTab(null);
       }
 
       // Optional: Refresh spaces list if needed
@@ -187,7 +196,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       .from("spaces")
       .select("*")
       .eq("is_deleted", false)
-      .order("created_at", { ascending: true });
+      // .order("created_at", { ascending: true });
     if (error) {
       console.error("Error fetching spaces:", error);
       return;
@@ -195,8 +204,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
     if (data) {
       setTabs(data);
+      setUserTab(data);
       if (data.length > 0) {
+        setAdminSpaceLength(data.length)
         setActiveTab(data[0].id); // Set the first tab as active initially
+        setUserActiveTab(data[0].id);
         setActiveTabName(data[0].space_name);
         setSelectedActiveTab(data[0].id);
       }
@@ -235,8 +247,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         setSpaceDetails(spaceId);
       }
     }
+    setUserTabActive(false);
     setActiveTab(id);
+    setUserActiveTab(id);
     setActiveTabName(data?.space_name);
+    setActiveTabNameUser(data?.space_name);
     setSelectedActiveTab(id)
   };
 
@@ -254,9 +269,12 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
     if (data && data[0]) {
       const newTab = data[0];
+      const newTab1 = data[0];
       setTabs((prevTabs) => [...prevTabs, newTab]);
+      setUserTab((prevTabs) => [...prevTabs, newTab1]);
       // setLoggedSpaceId((prevId) => [...prevId, newTab]);
       setActiveTab(newTab.id);
+      setUserActiveTab(newTab1.id);
     }
   };
 
@@ -345,14 +363,16 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     fetchTeamData();
 
     const newTabs = tabs.filter((tab) => tab.id !== id);
+    const newTabs1 = userTab.filter((tab) => tab.id !== id);
     setTabs(newTabs);
-    if (newTabs.length > 0) {
+    setUserTab(newTabs1);
+    if (newTabs.length > 0 || newTabs1.length > 0) {
       setActiveTab(newTabs[0].id);
+      setUserActiveTab(newTabs1[0].id);
        // Set first tab as active if any left
-       
-     
     } else {
       setActiveTab(null);
+      setUserActiveTab(null);
     }
 
     toast({
@@ -427,11 +447,15 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     fetchTeamData();
     route.refresh();
     const newTabs = tabs.filter((tab) => tab.id !== backupData.space.id);
+    const newTabs1 = userTab.filter((tab) => tab.id !== backupData.space.id);
     setTabs(newTabs);
-    if (newTabs.length > 0) {
+    setUserTab(newTabs1);
+    if (newTabs.length > 0 || newTabs1.length > 0) {
       setActiveTab(newTabs[0].id); // Set first tab as active if any left
+      setUserActiveTab(newTabs1[0].id); // Set first tab as active if any left
     } else {
       setActiveTab(null);
+      setUserActiveTab(null);
     }
     toast({
       title: "Undo Successful!",
@@ -516,10 +540,11 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   const defaultSpaceData = async () => {
     if (!activeTab) return;
+    if (!userActiveTab) return;
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
-      .eq("id", activeTab)
+      .eq("id", activeTab || userActiveTab)
       .single();
 
     if (error) {
@@ -877,12 +902,23 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     defaultSpaceData();
     setTeamData(fetchTeamData());
     fetchTeams();
-  }, [activeTab]);
+  }, [activeTab, userActiveTab]);
 
   useEffect(() => {
     fetchTasks();
     filterFetchTeams();
-  }, [loggedUserData, activeTab, teamFilterValue, taskStatusFilterValue, dateFilterValue]);
+  }, [loggedUserData, activeTab, userActiveTab, teamFilterValue, taskStatusFilterValue, dateFilterValue]);
+
+  // Filter the tabs based on the logged space ID
+  const filteredTabs = userTab.filter((tab) => loggedSpaceId.includes(tab.id));
+
+  // Set the first tab as active after filtering
+  useEffect(() => {
+    if (filteredTabs.length > 0 && userTabActive) {
+      setUserActiveTab(filteredTabs[0].id);
+      setActiveTabNameUser(filteredTabs[0].space_name);
+    }
+  }, [filteredTabs]);
 
   return (
     <>
@@ -910,14 +946,14 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         <span>{loading}</span>
       </div>
       <div className="px-3 flex justify-start items-center gap-3 h-[calc(100vh-70px)]">
-        <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[170px] max-w-[200px] h-full pt-0 pb-0 playlist-scroll">
+        <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[170px] max-w-[200px] h-full pt-3 pb-3 playlist-scroll">
               <div className="text-sm text-gray-400 flex flex-col gap-2.5">
           {(loggedUserData?.role === "owner" ||
               (loggedUserData?.role === "User" &&
                 ((loggedUserData?.access?.space !== true &&
                   loggedUserData?.access?.all === true) ||
                   loggedUserData?.access?.space === true))) && (
-                    <div className="pt-5 sticky top-0 z-50 bg-white">
+                    <div className="pt-0 sticky top-0 z-50 bg-white">
               <button
                 onClick={addNewTab}
                 className=" rounded-lg border border-gray-300 px-2 py-0.5 flex items-center gap-2 h-10 min-w-fit text-gray-800 justify-center w-full"
@@ -1109,14 +1145,13 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                 ))
               :
                 // Filter and map tabs based on loggedSpaceId
-                tabs
-                  .filter((tab) => loggedSpaceId.includes(tab.id))
+                filteredTabs
                   .map((tab) => (
                     <div
                       key={tab.id}
                       onClick={() => handleTabClick(tab.id)}
                       className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded-[8px] border pl-3 py-1 pr-8 cursor-pointer h-10 ${
-                        activeTab === tab.id
+                        userActiveTab === tab.id
                           ? "bg-[#1A56DB] text-white border-none"
                           : "bg-white border-gray-300"
                       }`}
@@ -1132,7 +1167,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                           <SheetTrigger asChild>
                             <EllipsisVertical
                               className={`absolute right-2 focus:outline-none space_delete_button ${
-                                activeTab === tab.id
+                                userActiveTab === tab.id
                                   ? "text-white border-none"
                                   : "bg-white border-gray-300 text-gray-400"
                               }`}
@@ -1282,19 +1317,25 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                       )}
                     </div>
                   ))}
-            
           </div>
-          
-          
         </div>
         <div className="w-[calc(100%-170px)] flex flex-col gap-3 h-[calc(100vh-70px)]">
           <div className="w-full h-[60px] flex justify-between items-center bg-white rounded-[10px] p-4">
-            <p className="text-xl font-semibold font-inter">{activeTabName || spaceName}</p>
-          {(loggedUserData?.role === "owner" ||
+            {
+              loggedUserData?.role === "owner" ? (
+                <p className="text-xl font-semibold font-inter">{activeTabName || spaceName}</p>
+              ) : (
+                  <p className="text-xl font-semibold font-inter">{activeTabNameUser || spaceName}</p>
+              )
+            }
+            
+          {(
+            (loggedUserData?.role === "owner" && (adminSpaceLength > 0 || adminSpaceLength === 1)) ||
             (loggedUserData?.role === "User" &&
               ((loggedUserData?.access?.team !== true &&
                 loggedUserData?.access?.all === true) ||
-                loggedUserData?.access?.team === true) && (spaceLength > 0 || spaceLength === 1))) && (
+                loggedUserData?.access?.team === true) && (spaceLength > 0 || spaceLength === 1))
+              ) && (
             <div className="flex gap-2 text-sm text-gray-400">
               <Sheet
                 open={memberAddDialogOpen}
