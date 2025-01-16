@@ -7,6 +7,7 @@ import { getLoggedInUserData } from '@/app/(signin-setup)/sign-in/action';
 import { supabase } from '@/utils/supabase/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
+import "./style.css";
 
 // export default function SettingPage()
 // {

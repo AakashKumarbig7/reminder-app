@@ -275,6 +275,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       // setLoggedSpaceId((prevId) => [...prevId, newTab]);
       setActiveTab(newTab.id);
       setUserActiveTab(newTab1.id);
+      fetchTeams();
+      fetchSpaces();
     }
   };
 
@@ -1364,7 +1366,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                     </label>
                     <Input
                       id="name"
-                      placeholder="Development Name"
+                      placeholder="Team Name"
                       className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                       onChange={(e: any) => {
                         setTeamName(e.target.value);
@@ -1424,7 +1426,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                       <Input
                         id="members"
                         autoComplete="off"
-                        placeholder="Add guest email"
+                        placeholder="Add email"
                         className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                         onChange={getUserData}
                       />

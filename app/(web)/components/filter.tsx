@@ -117,7 +117,8 @@ const FilterComponent: React.FC<FilterProps> = ({
       }
 
       if (data) {
-        setTeamData(data);
+        const filteredTeamName = data.filter((team: any) => team.members.some((member: any) => member.id === userId?.id));
+        setTeamData(filteredTeamName);
       }
     } catch (error) {
       console.error("Error fetching team data:", error);

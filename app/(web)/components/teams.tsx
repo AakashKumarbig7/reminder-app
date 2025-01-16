@@ -754,7 +754,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                       </Button>
                                     </SheetTrigger>
                                     <SheetContent
-                                      className="min-h-screen overflow-y-scroll"
+                                      className=""
                                       style={{ maxWidth: "500px" }}
                                     >
                                       <SheetHeader>
@@ -838,7 +838,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                           />
                                         </div>
                                         {addedMembers.length > 0 && (
-                                          <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
+                                          <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md min-h-[300px] h-[300px] max-h-screen overflow-y-auto playlist-scroll">
                                             {addedMembers.map(
                                               (member, index) => (
                                                 <div
@@ -1499,7 +1499,8 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                 
               }
             </CarouselContent1>
-              ) : (
+              ) 
+              : (
 <CarouselContent1 className="flex space-x-1">
               {
               filterTeams.filter((team : any, index : any) => (
@@ -1548,7 +1549,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                       </Button>
                                     </SheetTrigger>
                                     <SheetContent
-                                      className="min-h-screen overflow-y-scroll"
+                                      className=""
                                       style={{ maxWidth: "500px" }}
                                     >
                                       <SheetHeader>
@@ -1632,7 +1633,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                           />
                                         </div>
                                         {addedMembers.length > 0 && (
-                                          <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md">
+                                          <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md min-h-[300px] h-[300px] max-h-screen overflow-y-auto playlist-scroll">
                                             {addedMembers.map(
                                               (member, index) => (
                                                 <div
@@ -2299,7 +2300,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
           </Carousel1>
         </div>
       ) : (
-        <div className="w-full min-h-[80vh] flex justify-center items-center text-[#9A9A9A]">
+        <div className="w-full min-h-[78vh] flex justify-center items-center text-[#9A9A9A]">
           <p className="text-lg font-semibold">No teams found</p>
         </div>
       )}
