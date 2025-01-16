@@ -466,7 +466,9 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   };
 
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmailInput(e.target.value);
+    const inputValue= e.target.value;
+    setEmailInput(inputValue);
+    console.log("Input Value:", inputValue);
 
     try {
       // Fetch all users from the database
@@ -507,7 +509,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       // Add the new user if they don't exist
       return [...prevMembers, user];
     });
-
+    console.log("User added:", user);
     setEmailInput("");
     setHighlightedIndex(-1);
   };
@@ -1395,7 +1397,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                                         ? "bg-gray-200"
                                         : "hover:bg-gray-100"
                                     }`}
-                                    onClick={() => handleUserSelect(user)}
+                                    onClick={() => {handleUserSelect(user)}}
                                     onMouseEnter={() =>
                                       setHighlightedIndex(index)
                                     }
@@ -1431,6 +1433,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                         placeholder="Add email"
                         className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                         onChange={getUserData}
+                        value={emailInput}
+                        // onKeyDown={handleKeyDown}
                       />
 
                       {/* <Button className="absolute right-[30px] bottom-[38px] rounded-[10px] border border-zinc-300 bg-primaryColor-700 text-white text-xs font-medium hover:bg-primaryColor-700">
