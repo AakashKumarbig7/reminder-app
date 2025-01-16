@@ -980,7 +980,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                         : "bg-white border-gray-300"
                     }`}
                   >
-                    <span>{tab.space_name.length > 13 ? `${tab.space_name.slice(0, 13)}...` : tab.space_name}</span>
+                    <span>{tab.space_name.length > 12 ? `${tab.space_name.slice(0, 12)}...` : tab.space_name}</span>
 
                     {(loggedUserData?.role === "owner" ||
                       (loggedUserData?.role === "User" &&
@@ -1161,7 +1161,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                           : "bg-white border-gray-300"
                       }`}
                     >
-                      <span>{tab.space_name.length > 13 ? `${tab.space_name.slice(0, 13)}...` : tab.space_name}</span>
+                      <span>{tab.space_name.length > 12 ? `${tab.space_name.slice(0, 12)}...` : tab.space_name}</span>
 
                       {(loggedUserData?.role === "owner" ||
                         (loggedUserData?.role === "User" &&

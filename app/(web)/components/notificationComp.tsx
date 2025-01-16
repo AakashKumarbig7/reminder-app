@@ -21,10 +21,11 @@ import {
 
 const Notification = () => {
   const { userId } = useGlobalContext();
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unNotifiedTask, setUnNotifiedTask] = useState<any[]>([]);
+  const [adminTaskNotify, setAdminTaskNotify] = useState<any[]>([]);
   const [isRemoving, setIsRemoving] = useState<Record<number, boolean>>({});
 
-  const getNotifications = async () => {
+  const getUnnotifiedTasks = async () => {
     try {
       const { data, error } = await supabase
         .from("tasks")
@@ -38,19 +39,16 @@ const Notification = () => {
       }
 
       if (data) {
-        const filteredNotifications = data.filter((item: any) => {
-          if (userId?.role === "owner") {
-            return true; // Owner sees all notifications
-          }
-          return (
+        const filteredTasks = data.filter(
+          (item: any) =>
             Array.isArray(item.mentions) &&
             item.mentions.some((mention: string) =>
               mention.includes(`@${userId?.entity_name}`)
             )
-          );
-        });
+        );
 
-        setNotifications(filteredNotifications);
+        setAdminTaskNotify(data.filter((item: any) => Array.isArray(item.mentions)));
+        setUnNotifiedTask(filteredTasks);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -72,7 +70,8 @@ const Notification = () => {
           return;
         }
 
-        setNotifications((prev) => prev.filter((task) => task.id !== id));
+        setUnNotifiedTask((prev) => prev.filter((task) => task.id !== id));
+        setAdminTaskNotify((prev) => prev.filter((task) => task.id !== id));
         setIsRemoving((prev) => {
           const updated = { ...prev };
           delete updated[id];
@@ -85,28 +84,41 @@ const Notification = () => {
   };
 
   const handleClearNotification = async () => {
-    const notificationIds = notifications.map((task) => task.id);
+    setUnNotifiedTask((prev) => {
+      const updatedState = { ...isRemoving };
+      prev.forEach((task) => {
+        updatedState[task.id] = true;
+      });
+      setIsRemoving(updatedState);
+      return prev;
+    });
 
-    const updatedState = notificationIds.reduce((acc, id) => {
-      acc[id] = true;
-      return acc;
-    }, {});
-
-    setIsRemoving(updatedState);
+    setAdminTaskNotify((prev) => {
+      const updatedState = { ...isRemoving };
+      prev.forEach((task) => {
+        updatedState[task.id] = true;
+      });
+      setIsRemoving(updatedState);
+      return prev;
+    });
 
     setTimeout(async () => {
       try {
         const { error } = await supabase
           .from("tasks")
           .update({ notify_read: true })
-          .in("id", notificationIds);
+          .in(
+            "id",
+            unNotifiedTask.map((task) => task.id)
+          );
 
         if (error) {
           console.error("Error updating notify_read:", error);
           return;
         }
 
-        setNotifications([]);
+        setUnNotifiedTask([]);
+        setAdminTaskNotify([]);
       } catch (err) {
         console.error("Unexpected error:", err);
       }
@@ -114,7 +126,7 @@ const Notification = () => {
   };
 
   useEffect(() => {
-    getNotifications();
+    getUnnotifiedTasks();
   }, [userId]);
 
   return (
@@ -124,9 +136,11 @@ const Notification = () => {
           variant="outline"
           className="w-[40px] rounded-[10px] h-[42px] relative"
         >
-          <BellDot className="w-6 h-6" />
+          <BellDot className="w-6 h-6" />{" "}
           <span className="absolute -top-1 -right-0.5 bg-red-500 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[10px] text-white">
-            {notifications.length}
+            {userId?.role === "owner"
+              ? adminTaskNotify.length
+              : unNotifiedTask.length}
           </span>
         </Button>
       </SheetTrigger>
@@ -138,58 +152,61 @@ const Notification = () => {
         </SheetHeader>
         <div className="w-full h-full pt-3">
           <div className="w-full max-h-[88vh] flex flex-col justify-between items-center overflow-y-scroll playlist-scroll">
-            {notifications.length > 0 ? (
-              notifications.map((item: any) => (
-                <div
-                  key={item.id}
-                  className={`w-full flex justify-between items-center mb-2 border-b border-gray-200 pb-2 transition-all duration-300 ${
-                    isRemoving[item.id] ? "opacity-0 -translate-x-10" : ""
-                  }`}
-                >
-                  <div className="w-[80%]">
-                    <p className="pt-2 text-sm">
-                      <span className="text-base font-semibold">
-                        {item.created_by}
-                      </span>{" "}
-                      assigned task to
-                      <span className="font-bold text-sm">
-                        {item.mentions
-                          .map((mention: string) =>
-                            mention.split("@").join(" ")
-                          )
-                          .join(", ")}
-                      </span>{" "}
-                    </p>
-                    <p className="text-sm text-[#A6A6A7] font-inter">
-                      {format(
-                        new Date(item.created_at),
-                        "EEEE, MMMM dd, yyyy 'at' hh:mm a"
-                      )}
-                    </p>
+            {(userId?.role === "owner" ? adminTaskNotify : unNotifiedTask)
+              .length > 0 ? (
+              (userId?.role === "owner" ? adminTaskNotify : unNotifiedTask).map(
+                (item: any) => (
+                  <div
+                    key={item.id}
+                    className={`w-full flex justify-between items-center mb-2 border-b border-gray-200 pb-2 transition-all duration-300 ${
+                      isRemoving[item.id] ? "opacity-0 -translate-x-10" : ""
+                    }`}
+                  >
+                    <div className="w-[80%]">
+                      <p className="pt-2 text-sm">
+                        <span className="text-base font-semibold">
+                          {item.created_by}
+                        </span>{" "}
+                        assigned task to
+                        <span className="font-bold text-sm">
+                          {item.mentions
+                            .map((mention: string) =>
+                              mention.split("@").join(" ")
+                            )
+                            .join(", ")}
+                        </span>{" "}
+                      </p>
+                      <p className="text-sm text-[#A6A6A7] font-inter">
+                        {format(
+                          new Date(item.created_at),
+                          "EEEE, MMMM dd, yyyy 'at' hh:mm a"
+                        )}
+                      </p>
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <X
+                            size={16}
+                            className="cursor-pointer"
+                            onClick={() => handleCheckNotification(item.id)}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Mark as read</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <X
-                          size={16}
-                          className="cursor-pointer"
-                          onClick={() => handleCheckNotification(item.id)}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Mark as read</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              ))
+                )
+              )
             ) : (
               <p className="py-2 text-base text-gray-500 h-[90vh] flex justify-center items-center">
                 No notifications found.
               </p>
             )}
           </div>
-          {notifications.length > 0 && (
+          {unNotifiedTask.length > 0 && (
             <SheetFooter className="w-full flex gap-2 pb-4">
               <TooltipProvider>
                 <Tooltip>
@@ -202,7 +219,7 @@ const Notification = () => {
                     </p>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Mark all as read</p>
+                    <p>Mark as read</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
