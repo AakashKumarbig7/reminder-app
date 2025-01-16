@@ -625,7 +625,7 @@ const fetchTeamData = async () => {
                     />
                   ))
                 ) : (
-                  <div className="w-full min-h-[80vh] flex justify-center items-center">
+                  <div className="w-full min-h-[78vh] flex justify-center items-center">
                     <p className="text-lg font-semibold">No teams found</p>
                   </div>
                 )}

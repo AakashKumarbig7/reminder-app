@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect, use } from "react";
-import { Search, Upload, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
 import WebNavbar from "@/app/(web)/components/navbar";
 import {
   Tooltip,
@@ -30,6 +30,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { updateMetadata } from "./action";
 import Link from "next/link";
 import Image from "next/image";
+import "./style.css";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useGlobalContext } from "@/context/store";
@@ -439,7 +440,7 @@ const Members = () => {
           </div>
         </div>
         <div className="pt-[18px] pb-[18px]">
-          <Table className=" block w-[98vw] max-h-[500px] overflow-y-auto playlist-scroll bg-white  rounded-[10px]  font-inter">
+          <Table className=" block w-[97vw] h-[calc(100vh-226px)] overflow-y-auto playlist-scroll bg-white rounded-[10px] font-inter">
             <TableHeader className="sticky top-0 bg-white z-0 ">
               <TableRow>
                 <TableHead className="w-[28%] px-4 py-4 text-sm font-inter font-semibold text-gray-500">

@@ -275,6 +275,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       // setLoggedSpaceId((prevId) => [...prevId, newTab]);
       setActiveTab(newTab.id);
       setUserActiveTab(newTab1.id);
+      fetchTeams();
+      fetchSpaces();
     }
   };
 
@@ -949,7 +951,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       </div>
       <div className="px-3 flex justify-start items-center gap-3 h-[calc(100vh-70px)]">
         <div className="flex flex-col justify-between items-center text-center bg-white px-3 border-none rounded-[12px] overflow-x-auto w-[170px] max-w-[200px] h-full pt-3 pb-3 playlist-scroll">
-              <div className="text-sm text-gray-400 flex flex-col gap-2.5">
+              <div className="text-sm text-gray-400 flex flex-col gap-2.5 w-full">
           {(loggedUserData?.role === "owner" ||
               (loggedUserData?.role === "User" &&
                 ((loggedUserData?.access?.space !== true &&
@@ -978,7 +980,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                         : "bg-white border-gray-300"
                     }`}
                   >
-                    <span>{tab.space_name.length > 10 ? `${tab.space_name.slice(0, 10)}...` : tab.space_name}</span>
+                    <span>{tab.space_name.length > 13 ? `${tab.space_name.slice(0, 13)}...` : tab.space_name}</span>
 
                     {(loggedUserData?.role === "owner" ||
                       (loggedUserData?.role === "User" &&
@@ -1116,6 +1118,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteTab(tab.id);
+                                setAdminSpaceLength(adminSpaceLength - 1);
                               }}
                             >
                               Delete Space
@@ -1158,7 +1161,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                           : "bg-white border-gray-300"
                       }`}
                     >
-                      <span>{tab.space_name.length > 10 ? `${tab.space_name.slice(0, 10)}...` : tab.space_name}</span>
+                      <span>{tab.space_name.length > 13 ? `${tab.space_name.slice(0, 13)}...` : tab.space_name}</span>
 
                       {(loggedUserData?.role === "owner" ||
                         (loggedUserData?.role === "User" &&
@@ -1367,7 +1370,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                     </label>
                     <Input
                       id="name"
-                      placeholder="Development Name"
+                      placeholder="Team Name"
                       className="text-gray-500 mt-1.5 py-3 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                       onChange={(e: any) => {
                         setTeamName(e.target.value);
@@ -1427,7 +1430,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                       <Input
                         id="members"
                         autoComplete="off"
-                        placeholder="Add guest email"
+                        placeholder="Add email"
                         className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                         onChange={getUserData}
                         value={emailInput}
