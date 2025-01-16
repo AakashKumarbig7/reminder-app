@@ -1431,7 +1431,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                         className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                         onChange={getUserData}
                         value={emailInput}
-                        // onKeyDown={handleKeyDown}
+                        
                       />
 
                       {/* <Button className="absolute right-[30px] bottom-[38px] rounded-[10px] border border-zinc-300 bg-primaryColor-700 text-white text-xs font-medium hover:bg-primaryColor-700">

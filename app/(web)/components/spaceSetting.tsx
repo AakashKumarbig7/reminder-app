@@ -601,8 +601,8 @@ export default function SpaceSetting({}) {
                                   key={index}
                                   src={member.profile_image}
                                   alt={member.name}
-                                  width={32}
-                                  height={32}
+                                  width={30}
+                                  height={30}
                                   className={`w-8 h-8 rounded-full ${
                                     teamData.length > 1 ? "-mr-2.5" : "mr-2.5"
                                   } border-2 border-white`}
