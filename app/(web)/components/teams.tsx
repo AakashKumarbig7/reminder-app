@@ -44,6 +44,7 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import SpaceBar from "./spacebar";
+import { set } from "date-fns";
 
 interface SearchBarProps {
   spaceId: number;
@@ -500,11 +501,15 @@ console.log("fetching team");
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
       // Select highlighted user on Enter
       handleUserSelect(matchingUsers[highlightedIndex]);
+      
     }
+    
   };
 
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   
     setEmailInput(e.target.value);
+    console.log("Input Changed:",setEmailInput);
 
     try {
       // Fetch all users from the database
@@ -792,11 +797,12 @@ console.log("fetching team");
                                                               ? "bg-gray-200"
                                                               : "hover:bg-gray-100"
                                                           }`}
-                                                          onClick={() =>
+                                                          onClick={() =>{
+                                                            console.log("User Selected:", user);
                                                             handleUserSelect(
                                                               user
                                                             )
-                                                          }
+                                                          }}
                                                           onMouseEnter={() =>
                                                             setHighlightedIndex(
                                                               index
@@ -834,6 +840,7 @@ console.log("fetching team");
                                             placeholder="Add guest email"
                                             className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                                             onChange={getUserData}
+                                            value={emailInput}
                                           />
                                         </div>
                                         {addedMembers.length > 0 && (
@@ -1566,6 +1573,7 @@ console.log("fetching team");
                                           placeholder="Team Name"
                                           defaultValue={team.team_name}
                                           onChange={(e) => {
+                                           
                                             setTeamName(e.target.value);
                                           }}
                                         />
