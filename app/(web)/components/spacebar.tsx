@@ -566,6 +566,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       .select("*")
       .eq("is_deleted", false)
       .eq("space_id", spaceId);
+      console.log("Fetching Team data")
 
     if (error) {
       console.log(error);

@@ -82,6 +82,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   // const [datafromChild, setdatafromchild] = useState("");
   // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
   const router = useRouter();
+  const [teamData, setTeamData] = useState(() => ({}));
   const { spaceId } = params;
 
   // const handleDataFromChild = (data: any) => {
@@ -283,29 +284,39 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
       description: "Space, tasks, and teams have been restored.",
     });
   };
-
-  const fetchTeams = async () => {
-    const { data, error } = await supabase
+const fetchTeamData = async () => {
+    if (!spaceId) return;
+    const { error } = await supabase
       .from("teams")
       .select("*")
       .eq("is_deleted", false)
       .eq("space_id", spaceId);
+      console.log("fetching team data")
 
     if (error) {
-      console.error("Error fetching teams:", error);
+      console.log(error);
       return;
     }
-
-    if (data) {
-      setTeams(
-        data.map((team: any) => ({
-          ...team,
-          tasks: [],
-          members: team.members || [], // Ensure members array is not null
-        }))
-      );
-    }
   };
+   const fetchTeams = async () => {
+      const { data, error } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("space_id", spaceId)
+        .eq("is_deleted", false);
+  
+      if (error) {
+        console.log(error);
+        return;
+      }
+  
+      if (data) {
+        const teamData = data.map((team) => ({
+          ...team,
+        }));
+        setTeams(teamData);
+      }
+    };
 
   // Fetch all spaces from Supabase
   const fetchSpace = async () => {
@@ -380,6 +391,12 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
     fetchSelectedSpace();
     fetchTeams();
   }, [spaceId]);
+  
+  useEffect(() => {
+    setTeamData(fetchTeamData());
+     // Fetch team data
+     
+  },[spaceId]);
   const onAllTeamMembersSavebutton = () => {
     // console.log(teams);
   };
@@ -603,6 +620,8 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
                       team={team}
                       spaceId={spaceId}
                       sendDataToParent={onTeamDataTrigger}
+                      setTeamData={fetchTeamData}
+                      teamData={teamData}
                     />
                   ))
                 ) : (
