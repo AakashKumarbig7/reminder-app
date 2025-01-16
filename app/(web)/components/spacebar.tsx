@@ -101,6 +101,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const {setSelectedActiveTab} = useGlobalContext();
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [adminSpaceLength, setAdminSpaceLength] = useState<number>(0);
+  const [notificationTrigger, setNotificationTrigger] = useState(false);
 
   useEffect(() => {
     fetchSpaces();
@@ -942,6 +943,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         filterDialogOpen={filterDialogOpen}
         setFilterDialogOpen={setFilterDialogOpen}
         teamResetFn = {() => {filterFetchTeams(); fetchTasks();}}
+        notificationTrigger={notificationTrigger}
+        setNotificationTrigger={setNotificationTrigger}
       />
       <div className="hidden">
         <span>{spaceEditDialogOpen}</span>
@@ -1530,6 +1533,8 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           // setAllTasks={setAllTasks as any}
           filterFetchTeams={filterFetchTeams as any}
           filterFetchTasks={fetchTasks as any}
+          notificationTrigger={notificationTrigger}
+          setNotificationTrigger={setNotificationTrigger}
         />
         </div>
       </div>

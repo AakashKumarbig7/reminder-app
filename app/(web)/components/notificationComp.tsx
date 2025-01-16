@@ -19,7 +19,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const Notification = () => {
+interface NotificationProps {
+  notificationTrigger: any;
+}
+
+const Notification : React.FC<NotificationProps> = ({
+  notificationTrigger,
+}) => {
   const { userId } = useGlobalContext();
   const [unNotifiedTask, setUnNotifiedTask] = useState<any[]>([]);
   const [adminTaskNotify, setAdminTaskNotify] = useState<any[]>([]);
@@ -127,7 +133,7 @@ const Notification = () => {
 
   useEffect(() => {
     getUnnotifiedTasks();
-  }, [userId]);
+  }, [userId, notificationTrigger]);
 
   return (
     <Sheet>

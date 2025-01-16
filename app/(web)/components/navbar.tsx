@@ -36,6 +36,8 @@ interface loggedUserDataProps {
   filterDialogOpen: any;
   setFilterDialogOpen: any;
   teamResetFn: any;
+  notificationTrigger:any
+  setNotificationTrigger:any
 }
 
 const WebNavbar: React.FC<loggedUserDataProps> = ({
@@ -51,7 +53,9 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
   filterFn,
   filterDialogOpen,
   setFilterDialogOpen,
-  teamResetFn
+  teamResetFn,
+  notificationTrigger,
+  setNotificationTrigger
 }) => {
   const route = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
@@ -103,7 +107,7 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
 
   useEffect(() => {
     taskData();
-  }, [totalTasks, inprogressTasks, feedbackTasks, entityName]);
+  }, [totalTasks, inprogressTasks, feedbackTasks, entityName, notificationTrigger]);
 
   return (
     <>
@@ -199,7 +203,9 @@ const WebNavbar: React.FC<loggedUserDataProps> = ({
                   )}
                 </div>
               </div>
-              <Notification />
+              <Notification
+              notificationTrigger={notificationTrigger}
+               />
             </>
           )}
 
