@@ -838,7 +838,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                             <Input
                                               autoComplete="off"
                                               id="members"
-                                              placeholder="Add guest email"
+                                              placeholder="add email"
                                               className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                                               onChange={getUserData}
                                               value={emailInput}
@@ -850,7 +850,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                                 (member, index) => (
                                                   <div
                                                     key={member.id}
-                                                    className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
+                                                    className="flex justify-between items-center gap-2 my-2 py-1 px-2 w-full text-sm text-gray-500"
                                                   >
                                                     <div className="flex items-center gap-1">
                                                       <Image
@@ -1657,7 +1657,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                               <Input
                                                 autoComplete="off"
                                                 id="members"
-                                                placeholder="Add guest email"
+                                                placeholder="add email"
                                                 className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                                                 onChange={getUserData}
                                                 value={emailInput}
