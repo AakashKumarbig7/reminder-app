@@ -271,6 +271,8 @@ const UserProfile = () => {
         filterDialogOpen={''}
         setFilterDialogOpen={''}
         teamResetFn = {() => {}}
+        notificationTrigger=''
+        setNotificationTrigger=''
       />
       <div className="hidden">
         <span>{modalPassword}</span>

@@ -193,6 +193,8 @@ const AccessPage = () => {
         filterDialogOpen={''}
         setFilterDialogOpen={''}
         teamResetFn = {() => {}}
+        notificationTrigger=''
+        setNotificationTrigger=''
       />
       <div className="px-3">
         <div className="px-3 w-full h-[65px] flex bg-white rounded-[12px] border-none items-center max-w-full">

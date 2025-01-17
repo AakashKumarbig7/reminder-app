@@ -105,6 +105,8 @@ const SettingsPage = () => {
        filterDialogOpen={''}
         setFilterDialogOpen={''}
         teamResetFn = {() => {}}
+        notificationTrigger=''
+        setNotificationTrigger=''
         />
       <SpaceSetting/> 
     </>

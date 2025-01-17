@@ -283,6 +283,8 @@ const AddMember = () => {
        filterDialogOpen={''}
         setFilterDialogOpen={''}
         teamResetFn = {() => {}}
+        notificationTrigger=''
+        setNotificationTrigger=''
         />
       <div
         className="w-full relative"

@@ -102,6 +102,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [adminSpaceLength, setAdminSpaceLength] = useState<number>(0);
   const [notificationTrigger, setNotificationTrigger] = useState(false);
+  const [newTabTeamTrigger, setNewTabTeamTrigger] = useState(false);
 
   useEffect(() => {
     fetchSpaces();
@@ -258,28 +259,80 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
 
   // Add a new tab in database and UI
   const addNewTab = async () => {
-    const { data, error } = await supabase
-      .from("spaces")
-      .insert({ space_name: "New Space", is_deleted: false })
-      .select();
+    try {
+        // Insert a new space and retrieve the data
+        const { data, error } = await supabase
+            .from("spaces")
+            .insert({ space_name: "New Space", is_deleted: false })
+            .select();
 
-    if (error) {
-      console.error("Error adding new space:", error);
-      return;
-    }
+        // Handle errors from the insertion
+        if (error) {
+            console.error("Error adding new space:", error);
+            return;
+        }
 
-    if (data && data[0]) {
-      const newTab = data[0];
-      const newTab1 = data[0];
-      setTabs((prevTabs) => [...prevTabs, newTab]);
-      setUserTab((prevTabs) => [...prevTabs, newTab1]);
-      // setLoggedSpaceId((prevId) => [...prevId, newTab]);
-      setActiveTab(newTab.id);
-      setUserActiveTab(newTab1.id);
-      fetchTeams();
-      fetchSpaces();
+        // Proceed if data is successfully returned
+        if (data && data[0]) {
+            const newTab = data[0];
+
+            // Update tabs and set the last added tab as the active tab
+            setTabs((prevTabs) => {
+                const updatedTabs = [...prevTabs, newTab];
+                setActiveTab(newTab.id); // Activate the newly added tab
+                setSelectedActiveTab(newTab.id)
+                console.log(newTab.id, " newTab.id");
+                return updatedTabs;
+            });
+
+            // Update user tabs and set the last added user tab as active
+            setUserTab((prevUserTabs) => {
+                const updatedUserTabs = [...prevUserTabs, newTab];
+                setUserActiveTab(newTab.id); // Activate the newly added user tab
+                setSelectedActiveTab(newTab.id)
+                console.log(newTab.id, " user newTab.id");
+                return updatedUserTabs;
+            });
+            handleTabClick(newTab.id);
+        }
+    } catch (err) {
+        console.error("Unexpected error while adding a new tab:", err);
     }
-  };
+};
+
+const fetchTeamsForTab = async (tabId : number) => {
+  console.log(tabId, " tabId");
+  try {
+      const { data, error } = await supabase
+          .from("teams")
+          .select("*") // Fetch all columns
+          .eq("is_deleted", false)
+          .eq("space_id", tabId)
+          .single(); // Filter by space_id matching the tabId
+
+      if (error) {
+          console.error("Error fetching teams for tab:", error);
+          return;
+      }
+
+      // Handle case where no rows are returned
+      if (!data || data.length === 0) {
+        setSpaceName(data.space_name);
+          console.log(`No teams found for tab with ID: ${tabId}`);
+          // setTeams([]); // Clear teams if no data
+          fetchTeams();
+          return;
+      }
+
+      // Update the state with fetched teams
+      console.log(`Teams for tab ${tabId}:`, data); // Debugging
+      // setTeams(data); // Update state with the fetched data
+  } catch (err) {
+      console.error("Unexpected error while fetching teams:", err);
+  }
+};
+
+
 
   // Delete a tab from database and UI
   const deleteTab = async (id: number) => {
@@ -1535,6 +1588,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
           filterFetchTasks={fetchTasks as any}
           notificationTrigger={notificationTrigger}
           setNotificationTrigger={setNotificationTrigger}
+          newTabTeamTrigger={newTabTeamTrigger}
         />
         </div>
       </div>

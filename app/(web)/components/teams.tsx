@@ -43,8 +43,6 @@ import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import SpaceBar from "./spacebar";
-import { set } from "date-fns";
 
 interface SearchBarProps {
   spaceId: number;
@@ -66,6 +64,7 @@ interface SearchBarProps {
   filterFetchTasks: any;
   notificationTrigger: any;
   setNotificationTrigger: any;
+  newTabTeamTrigger: any;
 }
 
 interface Team {
@@ -106,6 +105,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   filterFetchTasks,
   notificationTrigger,
   setNotificationTrigger,
+  newTabTeamTrigger,
 }) => {
   const styledInputRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState<string>("");
@@ -845,7 +845,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                             />
                                           </div>
                                           {addedMembers.length > 0 && (
-                                            <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md min-h-[300px] h-[300px] max-h-screen overflow-y-auto playlist-scroll">
+                                            <div className="mt-2 p-2 flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md min-h-[calc(100vh-290px)] max-h-[calc(100vh-290px)] overflow-y-auto playlist-scroll">
                                               {addedMembers.map(
                                                 (member, index) => (
                                                   <div
@@ -1660,15 +1660,16 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                                 placeholder="Add guest email"
                                                 className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                                                 onChange={getUserData}
+                                                value={emailInput}
                                               />
                                             </div>
                                             {addedMembers.length > 0 && (
-                                              <div className="mt-2 p-2 flex flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md min-h-[300px] h-[300px] max-h-screen overflow-y-auto playlist-scroll">
+                                              <div className="mt-2 p-2 flex-wrap items-center gap-2 w-full border border-gray-300 rounded-md min-h-[calc(100vh-290px)] max-h-[calc(100vh-290px)] overflow-y-auto playlist-scroll">
                                                 {addedMembers.map(
                                                   (member, index) => (
                                                     <div
                                                       key={member.id}
-                                                      className="flex justify-between items-center gap-2 py-1 px-2 w-full text-sm text-gray-500"
+                                                      className="flex justify-between items-center my-2 gap-2 py-1 px-2 w-full text-sm text-gray-500"
                                                     >
                                                       <div className="flex items-center gap-1">
                                                         <Image

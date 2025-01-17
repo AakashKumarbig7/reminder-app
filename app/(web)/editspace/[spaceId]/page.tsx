@@ -432,6 +432,8 @@ const fetchTeamData = async () => {
         filterDialogOpen={""}
         setFilterDialogOpen={""}
         teamResetFn={() => {}}
+        notificationTrigger=''
+        setNotificationTrigger=''
       />
 
       {/* <Toaster /> */}
