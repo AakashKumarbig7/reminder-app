@@ -26,6 +26,7 @@ import { ToastAction } from "@/components/ui/toast";
 import WebNavbar from "./navbar";
 import { HiMiniDocumentPlus } from "react-icons/hi2";
 import { useGlobalContext } from "@/context/store";
+import DefaultSkeleton from "./skeleton-ui";
 
 interface Tab {
   id: number;
@@ -294,6 +295,22 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
                 return updatedUserTabs;
             });
             handleTabClick(newTab.id);
+
+            const { data: spaceId, error: spaceError } = await supabase
+                .from("teams")
+                .select("*")
+                .eq("is_deleted", false)
+                .eq("space_id", newTab.id);
+
+            if (spaceError) {
+                console.error("Error fetching space:", spaceError);
+                return;
+            }
+
+            if (spaceId) {
+                // setSpaceDetails(spaceId);
+                console.log(spaceId, " spaceId");
+            }
         }
     } catch (err) {
         console.error("Unexpected error while adding a new tab:", err);
@@ -1026,187 +1043,195 @@ const fetchTeamsForTab = async (tabId : number) => {
             )}
             {loggedUserData?.role === "owner"
               ? 
-              tabs.map((tab) => (
-                  <div
-                    key={tab.id}
-                    onClick={() => handleTabClick(tab.id)}
-                    className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded-[10px] border pl-3 py-1 pr-8 cursor-pointer h-10 ${
-                      activeTab === tab.id
-                        ? "bg-[#1A56DB] text-white border-none"
-                        : "bg-white border-gray-300"
-                    }`}
-                  >
-                    <span>{tab.space_name.length > 12 ? `${tab.space_name.slice(0, 12)}...` : tab.space_name}</span>
-
-                    {(loggedUserData?.role === "owner" ||
-                      (loggedUserData?.role === "User" &&
-                        ((loggedUserData?.access?.space !== true &&
-                          loggedUserData?.access?.all === true) ||
-                          loggedUserData?.access?.space === true))) && (
-                      <Sheet
-                      // open={spaceEditDialogOpen}
-                      // onOpenChange={setSpaceEditDialogOpen}
-                      >
-                        <SheetTrigger asChild>
-                          <EllipsisVertical
-                            className={`absolute right-2 focus:outline-none space_delete_button ${
-                              activeTab === tab.id
-                                ? "text-white border-none"
-                                : "bg-white border-gray-300 text-gray-400"
-                            }`}
-                            size={16}
-                          />
-                        </SheetTrigger>
-                        <SheetContent
-                          className="pt-2.5 p-3 font-inter flex flex-col justify-between"
-                          style={{ maxWidth: "415px" }}
+              // {
+                tabs.length > 0 ? (
+                  tabs.map((tab) => (
+                    <div
+                      key={tab.id}
+                      onClick={() => handleTabClick(tab.id)}
+                      className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded-[10px] border pl-3 py-1 pr-8 cursor-pointer h-10 ${
+                        activeTab === tab.id
+                          ? "bg-[#1A56DB] text-white border-none"
+                          : "bg-white border-gray-300"
+                      }`}
+                    >
+                      <span>{tab.space_name.length > 12 ? `${tab.space_name.slice(0, 12)}...` : tab.space_name}</span>
+  
+                      {(loggedUserData?.role === "owner" ||
+                        (loggedUserData?.role === "User" &&
+                          ((loggedUserData?.access?.space !== true &&
+                            loggedUserData?.access?.all === true) ||
+                            loggedUserData?.access?.space === true))) && (
+                        <Sheet
+                        // open={spaceEditDialogOpen}
+                        // onOpenChange={setSpaceEditDialogOpen}
                         >
-                          <div>
-                            <SheetHeader>
-                              <SheetTitle className="text-gray-500 uppercase text-base">
-                                space setting
-                              </SheetTitle>
-                            </SheetHeader>
-                            <div className="mt-3">
-                              <Label
-                                htmlFor="name"
-                                className="text-sm text-gray-900"
-                              >
-                                Space Name
-                              </Label>
-                              <Input
-                                id="name"
-                                defaultValue={tab.space_name}
-                                className="w-full mt-1"
-                                onChange={(e) =>
-                                  setUpdatedSpaceName(e.target.value)
-                                }
-                                autoFocus
-                              />
-                            </div>
-                            <div className="pt-2">
-                              <Label
-                                htmlFor="name"
-                                className="text-sm text-gray-900"
-                              >
-                                Teams
-                              </Label>
-                              <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[67vh] max-h-[70vh] overflow-auto playlist-scroll">
-                                {spaceDetails.length > 0 ? (
-                                  spaceDetails.map(
-                                    (team: any, index: number) => (
-                                      <div
-                                        key={index}
-                                        className="flex items-center justify-between mb-2"
-                                      >
-                                        <p className="text-gray-900 font-inter text-sm">
-                                          {team.team_name.length > 16
-                                            ? team.team_name.slice(0, 16) +
-                                              "..."
-                                            : team.team_name}
-                                        </p>
-                                        <div className="flex">
-                                          {team.members.length > 0 ? (
-                                            <>
-                                              {team.members
-                                                .slice(0, 6)
-                                                .map(
-                                                  (
-                                                    member: any,
-                                                    index: number
-                                                  ) => (
-                                                    <Image
-                                                      key={index}
-                                                      src={member.profile_image}
-                                                      alt={member.name}
-                                                      width={30}
-                                                      height={30}
-                                                      className={`w-[32px] h-[32px] rounded-full ${
-                                                        team.members.length ===
-                                                        1
-                                                          ? "mr-2.5"
-                                                          : team.members
-                                                              .length > 0
-                                                          ? "-mr-2.5"
-                                                          : ""
-                                                      } border-2 border-white`}
-                                                    />
-                                                  )
+                          <SheetTrigger asChild>
+                            <EllipsisVertical
+                              className={`absolute right-2 focus:outline-none space_delete_button ${
+                                activeTab === tab.id
+                                  ? "text-white border-none"
+                                  : "bg-white border-gray-300 text-gray-400"
+                              }`}
+                              size={16}
+                            />
+                          </SheetTrigger>
+                          <SheetContent
+                            className="pt-2.5 p-3 font-inter flex flex-col justify-between"
+                            style={{ maxWidth: "415px" }}
+                          >
+                            <div>
+                              <SheetHeader>
+                                <SheetTitle className="text-gray-500 uppercase text-base">
+                                  space setting
+                                </SheetTitle>
+                              </SheetHeader>
+                              <div className="mt-3">
+                                <Label
+                                  htmlFor="name"
+                                  className="text-sm text-gray-900"
+                                >
+                                  Space Name
+                                </Label>
+                                <Input
+                                  id="name"
+                                  defaultValue={tab.space_name}
+                                  className="w-full mt-1"
+                                  onChange={(e) =>
+                                    setUpdatedSpaceName(e.target.value)
+                                  }
+                                  autoFocus
+                                />
+                              </div>
+                              <div className="pt-2">
+                                <Label
+                                  htmlFor="name"
+                                  className="text-sm text-gray-900"
+                                >
+                                  Teams
+                                </Label>
+                                <div className="border border-gray-300 mt-1 rounded p-3 min-h-40 h-[67vh] max-h-[70vh] overflow-auto playlist-scroll">
+                                  {spaceDetails.length > 0 ? (
+                                    spaceDetails.map(
+                                      (team: any, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="flex items-center justify-between mb-2"
+                                        >
+                                          <p className="text-gray-900 font-inter text-sm">
+                                            {team.team_name.length > 16
+                                              ? team.team_name.slice(0, 16) +
+                                                "..."
+                                              : team.team_name}
+                                          </p>
+                                          <div className="flex">
+                                            {team.members.length > 0 ? (
+                                              <>
+                                                {team.members
+                                                  .slice(0, 6)
+                                                  .map(
+                                                    (
+                                                      member: any,
+                                                      index: number
+                                                    ) => (
+                                                      <Image
+                                                        key={index}
+                                                        src={member.profile_image}
+                                                        alt={member.name}
+                                                        width={30}
+                                                        height={30}
+                                                        className={`w-[32px] h-[32px] rounded-full ${
+                                                          team.members.length ===
+                                                          1
+                                                            ? "mr-2.5"
+                                                            : team.members
+                                                                .length > 0
+                                                            ? "-mr-2.5"
+                                                            : ""
+                                                        } border-2 border-white`}
+                                                      />
+                                                    )
+                                                  )}
+                                                {team.members.length > 6 && (
+                                                  <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
+                                                    +{team.members.length - 6}
+                                                  </div>
                                                 )}
-                                              {team.members.length > 6 && (
-                                                <div className="bg-gray-900 text-white rounded-full w-[32px] h-[32px] flex items-center justify-center text-xs border-2 border-white">
-                                                  +{team.members.length - 6}
-                                                </div>
-                                              )}
-                                            </>
-                                          ) : (
-                                            <p className="text-gray-900 font-inter text-sm">
-                                              No Members Found
-                                            </p>
-                                          )}
+                                              </>
+                                            ) : (
+                                              <p className="text-gray-900 font-inter text-sm">
+                                                No Members Found
+                                              </p>
+                                            )}
+                                          </div>
+  
+                                          <Trash2
+                                            size={16}
+                                            className="cursor-pointer"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              deleteTeam(team, index);
+                                            }}
+                                          />
                                         </div>
-
-                                        <Trash2
-                                          size={16}
-                                          className="cursor-pointer"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteTeam(team, index);
-                                          }}
-                                        />
-                                      </div>
+                                      )
                                     )
-                                  )
-                                ) : (
-                                  <p className="text-gray-500 text-base font-inter">
-                                    No Team Found
-                                  </p>
-                                )}
+                                  ) : (
+                                    <p className="text-gray-500 text-base font-inter">
+                                      No Team Found
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-
-                          <SheetFooter className="">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-1/3 border border-red-500 text-red-500 text-sm hover:text-red-500"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteTab(tab.id);
-                                setAdminSpaceLength(adminSpaceLength - 1);
-                              }}
-                            >
-                              Delete Space
-                            </Button>
-                            <SheetClose asChild>
+  
+                            <SheetFooter className="">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-1/3 border border-red-500 text-red-500 text-sm hover:text-red-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteTab(tab.id);
+                                  setAdminSpaceLength(adminSpaceLength - 1);
+                                }}
+                              >
+                                Delete Space
+                              </Button>
+                              <SheetClose asChild>
+                                <Button
+                                  type="submit"
+                                  variant="outline"
+                                  className="w-1/3 text-sm"
+                                >
+                                  Cancel
+                                </Button>
+                              </SheetClose>
                               <Button
                                 type="submit"
-                                variant="outline"
-                                className="w-1/3 text-sm"
+                                className="bg-primaryColor-700 text-white hover:bg-primaryColor-700 text-sm w-1/3"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateSpaceTab(tab.id);
+                                }}
                               >
-                                Cancel
+                                Update
                               </Button>
-                            </SheetClose>
-                            <Button
-                              type="submit"
-                              className="bg-primaryColor-700 text-white hover:bg-primaryColor-700 text-sm w-1/3"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSpaceTab(tab.id);
-                              }}
-                            >
-                              Update
-                            </Button>
-                          </SheetFooter>
-                        </SheetContent>
-                      </Sheet>
-                    )}
-                  </div>
-                ))
+                            </SheetFooter>
+                          </SheetContent>
+                        </Sheet>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <DefaultSkeleton />
+                )
+              // }
+              
               :
                 // Filter and map tabs based on loggedSpaceId
-                filteredTabs
+                filteredTabs.length > 0 ? (
+                  filteredTabs
                   .map((tab) => (
                     <div
                       key={tab.id}
@@ -1377,7 +1402,11 @@ const fetchTeamsForTab = async (tabId : number) => {
                         </Sheet>
                       )}
                     </div>
-                  ))}
+                  ))
+                ) : (
+                  <DefaultSkeleton />
+                )
+                }
           </div>
         </div>
         <div className="w-[calc(100%-170px)] flex flex-col gap-3 h-[calc(100vh-70px)]">
