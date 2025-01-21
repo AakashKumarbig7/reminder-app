@@ -90,45 +90,36 @@ const Notification : React.FC<NotificationProps> = ({
   };
 
   const handleClearNotification = async () => {
-    setUnNotifiedTask((prev) => {
-      const updatedState = { ...isRemoving };
-      prev.forEach((task) => {
-        updatedState[task.id] = true;
-      });
-      setIsRemoving(updatedState);
-      return prev;
-    });
+    const notificationIds = [
+      ...adminTaskNotify.map((task: any) => task.id),
+      ...unNotifiedTask.map((task: any) => task.id),
+    ];
 
-    setAdminTaskNotify((prev) => {
-      const updatedState = { ...isRemoving };
-      prev.forEach((task) => {
-        updatedState[task.id] = true;
-      });
-      setIsRemoving(updatedState);
-      return prev;
-    });
+    const updatedState = notificationIds.reduce((acc: any, id: any) => {
+      acc[id] = true;
+      return acc;
+    }, {});
+
+    setIsRemoving(updatedState);
 
     setTimeout(async () => {
       try {
         const { error } = await supabase
           .from("tasks")
           .update({ notify_read: true })
-          .in(
-            "id",
-            unNotifiedTask.map((task) => task.id)
-          );
+          .in("id", notificationIds);
 
         if (error) {
           console.error("Error updating notify_read:", error);
           return;
         }
 
-        setUnNotifiedTask([]);
         setAdminTaskNotify([]);
+        setUnNotifiedTask([]);
       } catch (err) {
         console.error("Unexpected error:", err);
       }
-    }, 300); // Duration matches the animation time
+    }, 300);
   };
 
   useEffect(() => {
@@ -212,7 +203,7 @@ const Notification : React.FC<NotificationProps> = ({
               </p>
             )}
           </div>
-          {unNotifiedTask.length > 0 && (
+          {(unNotifiedTask.length > 0 || adminTaskNotify.length > 0) && (
             <SheetFooter className="w-full flex gap-2 pb-4">
               <TooltipProvider>
                 <Tooltip>
