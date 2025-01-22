@@ -158,7 +158,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       const newTabs = tabs.filter((tab) => tab.id !== id);
       const newTabs1 = userTab.filter((tab) => tab.id !== id);
       setTabs(newTabs);
-      setUserTab(newTabs);
+      setUserTab(newTabs1);
       console.log(newTabs1,"new Tabs ");
       if (newTabs.length > 0 || newTabs1.length > 0) {
         setActiveTab(newTabs[0].id);
@@ -558,7 +558,7 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const defaultSpaceData = async () => {
     if (!activeTab) return;
     if (!userActiveTab) return;
-    const tabSpace=activeTab || userActiveTab
+    const tabSpace= userActiveTab || activeTab
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
