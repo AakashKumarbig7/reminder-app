@@ -21,7 +21,7 @@ const config: Config = {
 			greyblack: "#393939",
 			bgwhite:"#FFF",
 			teambg:"#e5f4f2",
-			navbg:"#f4f4f8",
+			mobbg:"#f4f4f8",
 			reddish:"#EE5A5A",
 			webbg:'#E5ECF6',
 			primaryColor: { 700: '#1A56DB',},

@@ -10,29 +10,29 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [loggedUserData, setLoggedUserData] = useState<any>(null);
-  useEffect(() => {
-    const getUser = async () => {
-      const user = await getLoggedInUserData();
+  // const [loggedUserData, setLoggedUserData] = useState<any>(null);
+  // useEffect(() => {
+  //   const getUser = async () => {
+  //     const user = await getLoggedInUserData();
 
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("userId", user?.id)
-        .single();
+  //     const { data, error } = await supabase
+  //       .from("users")
+  //       .select("*")
+  //       .eq("userId", user?.id)
+  //       .single();
 
-      if (error) {
-        console.log(error);
-        return;
-      }
-      // console.log(data);
-      setLoggedUserData(data);
-    };
+  //     if (error) {
+  //       console.log(error);
+  //       return;
+  //     }
+  //     // console.log(data);
+  //     setLoggedUserData(data);
+  //   };
 
-    getUser();
+  //   getUser();
 
-    localStorage.setItem("user", JSON.stringify(loggedUserData));
-  }, []);
+  //   // localStorage.setItem("user", JSON.stringify(loggedUserData));
+  // }, []);
   return (
     <div className="min-h-screen h-full w-full bg-webbg text-black font-inter">
       <main className="w-full">

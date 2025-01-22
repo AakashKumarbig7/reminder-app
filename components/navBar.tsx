@@ -2,15 +2,18 @@ import Image from "next/image";
 import logo from "@/public/images/Rectangle 14.png";
 import userimage from "@/public/images/Subtract.png";
 import activelogo from "@/public/images/Ellipse 6.png";
+import { useGlobalContext } from "@/context/store";
+import profile from "@/public/images/img-placeholder.svg"
 
 export default function NavBar() {
+  const {userId} = useGlobalContext();
   return (
     <>
       <header className="flex justify-between items-center bg-navbg p-[18px] ">
         {/* User Profile */}
         <div className="flex items-center">
           <Image
-            src={userimage}
+            src={userId?.profile_image || profile}
             width={44}
             height={44}
             alt="User Image"
@@ -18,8 +21,8 @@ export default function NavBar() {
           />
           <Image src={activelogo} alt="" className="relative right-3  top-4" />
           <div className="pr-[2px]">
-            <h3 className="text-sm  text-black font-bold font-geist">John Doe</h3>
-            <p className="text-[10px] text-black font-geist font-medium">Solution22</p>
+            <h3 className="text-sm  text-black font-bold font-geist">{userId?.username}</h3>
+            <p className="text-[10px] text-black font-geist font-medium">{userId?.email}</p>
           </div>
         </div>
         {/* Company Logo */}
