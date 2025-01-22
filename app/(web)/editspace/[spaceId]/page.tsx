@@ -82,7 +82,7 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
   // const [datafromChild, setdatafromchild] = useState("");
   // const [backupData, setBackupData] = useState({ tasks: [], teams: [], space: null });
   const router = useRouter();
-  const [teamData, setTeamData] = useState(() => ({}));
+  // const [teamData, setTeamData] = useState(() => ({}));
   const { spaceId } = params;
 
   // const handleDataFromChild = (data: any) => {
@@ -284,20 +284,20 @@ const EditSpace = ({ params }: { params: { spaceId: any } }) => {
       description: "Space, tasks, and teams have been restored.",
     });
   };
-const fetchTeamData = async () => {
-    if (!spaceId) return;
-    const { error } = await supabase
-      .from("teams")
-      .select("*")
-      .eq("is_deleted", false)
-      .eq("space_id", spaceId);
-      console.log("fetching team data")
+// const fetchTeamData = async () => {
+//     if (!spaceId) return;
+//     const { error } = await supabase
+//       .from("teams")
+//       .select("*")
+//       .eq("is_deleted", false)
+//       .eq("space_id", spaceId);
+//       console.log("fetching team data")
 
-    if (error) {
-      console.log(error);
-      return;
-    }
-  };
+//     if (error) {
+//       console.log(error);
+//       return;
+//     }
+//   };
    const fetchTeams = async () => {
       const { data, error } = await supabase
         .from("teams")
@@ -390,13 +390,9 @@ const fetchTeamData = async () => {
     fetchSpace();
     fetchSelectedSpace();
     fetchTeams();
+   
   }, [spaceId]);
   
-  useEffect(() => {
-    setTeamData(fetchTeamData());
-     // Fetch team data
-     
-  },[spaceId]);
   const onAllTeamMembersSavebutton = () => {
     // console.log(teams);
   };
@@ -620,8 +616,7 @@ const fetchTeamData = async () => {
                       team={team}
                       spaceId={spaceId}
                       sendDataToParent={onTeamDataTrigger}
-                      setTeamData={fetchTeamData}
-                      teamData={teamData}
+                      sendFetchTeamRequest={fetchTeams as any}
                     />
                   ))
                 ) : (

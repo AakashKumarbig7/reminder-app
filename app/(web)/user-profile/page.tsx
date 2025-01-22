@@ -21,6 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Eye, EyeOff, Plus } from "lucide-react";
 import { passwordReset } from "./action";
+import { Router } from "next/router";
 
 interface UserData {
     id: string;
@@ -478,7 +479,8 @@ const UserProfile = () => {
                       onClick={() => {
                         setCancelLoader(true);
                         setTimeout(() => {
-                          router.push("/dashboard");
+                          router.replace("/dashboard");
+                          router.refresh ();
                           setCancelLoader(false);
                         }, 1000);
                       }}
