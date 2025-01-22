@@ -36,7 +36,6 @@ interface SearchBarProps {
 const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
   const [teams, setTeams] = useState<any[]>([]);
   const [memberAddDialogOpen, setMemberAddDialogOpen] = useState(false);
-
   const [teamName, setTeamName] = useState("");
   const [teamNameError, setTeamNameError] = useState(false);
   const [emailInput, setEmailInput] = useState("");
@@ -45,6 +44,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [addedMembers, setAddedMembers] = useState<any[]>([]);
   const [teamMemberError, setTeamMemberError] = useState(false);
+  
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -63,6 +63,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
         ...team,
       }));
       setTeams(teamData as Team[]);
+      console.log("teamData", teamData);
     }
   };
 
@@ -149,7 +150,9 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
       }
       try {
         // Insert selected user details as array of objects into the `teams` table
-        const { error: insertError } = await supabase.from("teams").insert({
+        const { error: insertError } = await supabase
+        .from("teams")
+        .insert({
           team_name: teamName,
           members: fetchedMembers.map((member) => ({
             id: member.id,
@@ -215,6 +218,7 @@ const AddTeam: React.FC<SearchBarProps> = ({ spaceId, sendDataToParent }) => {
   };
   useEffect(() => {
     fetchTeams();
+    
   }, [spaceId]);
 
   return (

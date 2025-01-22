@@ -629,8 +629,8 @@ const Members = () => {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
-                    className="px-4 py-4 text-center font-inter font-medium  text-sm text-gray-500"
+                    colSpan={6}
+                    className="text-center font-inter font-medium  text-gray-500 text-base py-4"
                   >
                     Members not found
                   </TableCell>

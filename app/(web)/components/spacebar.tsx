@@ -63,6 +63,7 @@ interface Team {
 
 const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
   const route = useRouter();
+  const [teams,setTeams] = useState<Team[]>([]);
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<number | null>(null);
   const [userTab, setUserTab] = useState<Tab[]>([]);
@@ -161,10 +162,12 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
       const newTabs1 = userTab.filter((tab) => tab.id !== id);
       setTabs(newTabs);
       setUserTab(newTabs1);
+      console.log(newTabs1,"new Tabs ");
       if (newTabs.length > 0 || newTabs1.length > 0) {
         setActiveTab(newTabs[0].id);
         setUserActiveTab(newTabs1[0].id);
          // Set first tab as active if any left
+         fetchTeams();
       } else {
         setActiveTab(null);
         setUserActiveTab(null);
@@ -214,12 +217,15 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
         setUserActiveTab(data[0].id);
         setActiveTabName(data[0].space_name);
         setSelectedActiveTab(data[0].id);
+        fetchTeams();
+        fetchTeamData();
       }
     }
   };
 
   // Handle clicking a tab
   const handleTabClick = async (id: number) => {
+    console.log("Tab ID clicked:", id);
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
@@ -253,9 +259,12 @@ const SpaceBar: React.FC<loggedUserDataProps> = ({ loggedUserData }) => {
     setUserTabActive(false);
     setActiveTab(id);
     setUserActiveTab(id);
+    fetchTeams(); // Fetch teams for the selected space
     setActiveTabName(data?.space_name);
     setActiveTabNameUser(data?.space_name);
     setSelectedActiveTab(id)
+    // fetchTeams(); 
+    // fetchTeamData()
   };
 
   // Add a new tab in database and UI
@@ -434,6 +443,7 @@ const fetchTeamsForTab = async (tabId : number) => {
     // Update UI
     fetchSpaces();
     fetchTeamData();
+    fetchTeams();
 
     const newTabs = tabs.filter((tab) => tab.id !== id);
     const newTabs1 = userTab.filter((tab) => tab.id !== id);
@@ -441,8 +451,11 @@ const fetchTeamsForTab = async (tabId : number) => {
     setUserTab(newTabs1);
     if (newTabs.length > 0 || newTabs1.length > 0) {
       setActiveTab(newTabs[0].id);
-      setUserActiveTab(newTabs1[0].id);
-       // Set first tab as active if any left
+      setUserActiveTab(newTabs1[0].id);// Set first tab as active if any left
+      //  fetchSpaces();
+      //  fetchTeams();
+      //  fetchTeamData();
+        
     } else {
       setActiveTab(null);
       setUserActiveTab(null);
@@ -616,11 +629,13 @@ const fetchTeamsForTab = async (tabId : number) => {
   const defaultSpaceData = async () => {
     if (!activeTab) return;
     if (!userActiveTab) return;
+    const tabSpace= userActiveTab || activeTab
     const { data, error } = await supabase
       .from("spaces")
       .select("*")
-      .eq("id", activeTab || userActiveTab)
+      .eq("id", tabSpace)
       .single();
+     
 
     if (error) {
       console.error("Error fetching spaces:", error);
@@ -629,7 +644,15 @@ const fetchTeamsForTab = async (tabId : number) => {
 
     if (data) {
       setSpaceId(data.id);
+      console.log(data.id,"Space ID") 
     }
+    // setUserTabActive(false);
+    // setActiveTab(tabSpace);
+    // setUserActiveTab(tabSpace);
+    // fetchTeams(); // Fetch teams for the selected space
+    // setActiveTabName("");
+    // setActiveTabNameUser(data?.space_name);
+    // setSelectedActiveTab(tabSpace)
   };
 
   const fetchTeamData = async () => {
@@ -737,16 +760,26 @@ const fetchTeamsForTab = async (tabId : number) => {
   };
 
   const fetchTeams = async () => {
-    const { error } = await supabase
+    const {data, error } = await supabase
       .from("teams")
       .select("*")
       .eq("is_deleted", false)
       .eq("space_id", spaceId);
+      console.log(spaceId,"Space ID")
 
     if (error) {
-      console.log(error);
+      console.log(error,"error fetch");
       return;
     }
+    if(data)
+    {
+      const teamData = data.map((team) => ({
+        ...team,
+        tasks: [], // Initialize each team with an empty tasks array
+      }));
+     console.log("Team Data",teamData);
+    }
+   
   };
 
   const newFetchTeam = async () => {
@@ -759,6 +792,7 @@ const fetchTeamsForTab = async (tabId : number) => {
       console.log(error);
       return;
     }
+    
 
     return data;
   };
@@ -982,6 +1016,7 @@ const fetchTeamsForTab = async (tabId : number) => {
   useEffect(() => {
     fetchTasks();
     filterFetchTeams();
+    fetchTeams();
   }, [loggedUserData, activeTab, userActiveTab, teamFilterValue, taskStatusFilterValue, dateFilterValue]);
 
   // Filter the tabs based on the logged space ID
@@ -990,11 +1025,12 @@ const fetchTeamsForTab = async (tabId : number) => {
   // Set the first tab as active after filtering
   useEffect(() => {
     if (filteredTabs.length > 0 && userTabActive) {
+      fetchTeams();
       setUserActiveTab(filteredTabs[0].id);
       setActiveTabNameUser(filteredTabs[0].space_name);
+  
     }
-  }, [filteredTabs]);
-
+  }, [filteredTabs,userTabActive]);
   return (
     <>
       <WebNavbar
@@ -1239,7 +1275,7 @@ const fetchTeamsForTab = async (tabId : number) => {
                       className={`space_input max-w-44 min-w-fit relative flex items-center gap-2 rounded-[8px] border pl-3 py-1 pr-8 cursor-pointer h-10 ${
                         userActiveTab === tab.id
                           ? "bg-[#1A56DB] text-white border-none"
-                          : "bg-white border-gray-300"
+                          : "bg-white border-gray-300" 
                       }`}
                     >
                       <span>{tab.space_name.length > 12 ? `${tab.space_name.slice(0, 12)}...` : tab.space_name}</span>
@@ -1519,7 +1555,7 @@ const fetchTeamsForTab = async (tabId : number) => {
                         className="text-gray-500 mt-1.5 h-12 px-2 bg-gray-50 border border-gray-300 rounded-md focus-visible:ring-transparent"
                         onChange={getUserData}
                         value={emailInput}
-                        // onKeyDown={handleKeyDown}
+                        
                       />
 
                       {/* <Button className="absolute right-[30px] bottom-[38px] rounded-[10px] border border-zinc-300 bg-primaryColor-700 text-white text-xs font-medium hover:bg-primaryColor-700">

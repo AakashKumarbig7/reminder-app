@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-// import toast from "react-hot-toast";
 import {
   Dialog,
   DialogContent,
@@ -19,16 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
-// const notify = (message: string, success: boolean) =>
-//   toast[success ? "success" : "error"](message, {
-//     style: {
-//       borderRadius: "10px",
-//       background: "#fff",
-//       color: "#000",
-//     },
-//     position: "top-right",
-//     duration: 3000,
-//   });
+import { set } from "date-fns";
 interface Team {
   id: number;
   team_name: string;
@@ -48,11 +37,8 @@ const TeamCard: React.FC<{
   team: any;
   spaceId: any;
   sendDataToParent: any;
-  setTeamData: any;
-  teamData: any;
-}> = ({ team, spaceId, sendDataToParent,setTeamData,teamData }) => {
-  // const [teamName, setTeamName] = useState(team.team_name);
-  // const [teamNameError, setTeamNameError] = useState(false);
+  sendFetchTeamRequest:any
+}> = ({ team, spaceId, sendDataToParent,sendFetchTeamRequest }) => {
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
   const [emailInput, setEmailInput] = useState("");
@@ -62,33 +48,32 @@ const TeamCard: React.FC<{
   const [addedMembers, setAddedMembers] = useState<any[]>(team.members ?? []);
   const [teamMemberError, setTeamMemberError] = useState(false);
   const [isopen, setIsOpen] = useState(false);
-
   const isDeleting = false;
+  // const fetchTeams = async () => {
+  //   if (!spaceId) return;
+  //   const { data, error } = await supabase
+  //     .from("teams")
+  //     .select("*")
+  //     .eq("is_deleted", false)
+  //     .eq("space_id", spaceId);
 
-  
+  //   if (error) {
+  //     console.log(error);
+  //     return;
+  //   }
+  //   console.log("fetching team");
+  //   if (data) {
+  //     const teamData = data.map((team) => ({
+  //       ...team,
+  //       tasks: [], // Initialize each team with an empty tasks array
+  //     }));
+  //     // setTeams(teamData as Team[]);
+  //       console.log(data)
+  //   }
+    
+  // };
 
-  const fetchTeams = async () => {
-    if (!spaceId) return;
-    const { data, error } = await supabase
-      .from("teams")
-      .select("*")
-      .eq("is_deleted", false)
-      .eq("space_id", spaceId);
-
-    if (error) {
-      console.log(error);
-      return;
-    }
-
-    if (data) {
-      const teamData = data.map((team) => ({
-        ...team,
-        tasks: [], // Initialize each team with an empty tasks array
-      }));
-      setTeams(teamData as Team[]);
-      console.log("checking team data");
-    }
-  };
+    
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     setEmailInput(inputValue);
@@ -121,49 +106,14 @@ const TeamCard: React.FC<{
       console.error("Unexpected error:", err);
     }
   };
-  // const handleUpdateTeam = async (teamId: number, spaceId: number) => {
-  //   console.log(teamId, spaceId);
-  //   if (addedMembers.length === 0) {
-  //     setTeamNameError(true);
-  //     return;
-  //   } else if (addedMembers.length > 0) {
-  //     try {
-  //       const { data, error } = await supabase
-  //         .from("teams")
-  //         .update({  members: addedMembers })
-  //         .eq("id", teamId)
-  //         .eq("space_id", spaceId)
-  //         .single();
-
-  //       if (error) {
-  //         console.error("Error updating team name:", error);
-  //         return;
-  //       }
-
-  //       // if (data) {
-  //       console.log("Team name updated successfully:", data);
-  //       fetchTeams();
-  //       // setTeamNameSheetOpen(false);
-  //       setTeamNameError(false);
-  //       notify("Team updated successfully", true);
-  //       // }
-  //     } catch (error) {
-  //       console.error("Error updating team name:", error);
-  //     }
-  //   }
-  // };
   const handleUserSelect = (user: Tab, teamId: any) => {
     setTeamMemberError(false);
 
     // Check if the user is already added
     const isAlreadyAdded = addedMembers.some((member) => member.id === user.id);
-
     if (isAlreadyAdded) {
-      // notify("User is already added to this team", false);
       return;
     }
-    
-
     setAddedMembers((prevMembers) => [...prevMembers, user]);
     sendDataToParent(user, teamId, "add");
     setEmailInput("");
@@ -181,7 +131,6 @@ const TeamCard: React.FC<{
   };
 
   const handleDeleteTeam = async (teamId: number) => {
-   
     try {
       // Delete tasks associated with the team first
       const { error: taskError } = await supabase
@@ -193,9 +142,7 @@ const TeamCard: React.FC<{
         console.error("Error deleting tasks:", taskError);
         return;
       }
-
       console.log("Tasks deleted successfully.");
-
       // Now delete the team
       const { error: teamError } = await supabase
         .from("teams")
@@ -208,12 +155,13 @@ const TeamCard: React.FC<{
       }
 
       console.log("Team deleted successfully.");
-
+      // fetchTeams();
+      sendFetchTeamRequest();
       // Additional cleanup actions
       setIsOpen(false);
       
       console.log("Delete before Deleting");
-       fetchTeams();
+     
       console.log("Delete after Deleting"); 
      
       toast({
@@ -241,7 +189,6 @@ const TeamCard: React.FC<{
         console.error("Error undoing delete:", error);
         return;
       }
-
       // Now delete the team
       const { error: teamError } = await supabase
         .from("teams")
@@ -252,10 +199,9 @@ const TeamCard: React.FC<{
         console.error("Error deleting team:", teamError);
         return;
       }
-
       // Additional cleanup actions
       setIsOpen(false);
-       fetchTeams();
+       sendFetchTeamRequest();
       toast({
         title: "Undo Successful",
         description: "The deleted team has been restored.",
@@ -295,10 +241,9 @@ const TeamCard: React.FC<{
       handleUserSelect(matchingUsers[highlightedIndex], "");
     }
   };
-  useEffect(() => {
-    fetchTeams();
-  }, [spaceId,teamData,setTeamData]);
-
+  // useEffect(() => {
+  //   fetchTeams();
+  // }, [spaceId, teamData, setTeamData]);
   return (
     <CarouselItem
       key={team.id}
@@ -478,5 +423,4 @@ const TeamCard: React.FC<{
     </CarouselItem>
   );
 };
-
 export default TeamCard;

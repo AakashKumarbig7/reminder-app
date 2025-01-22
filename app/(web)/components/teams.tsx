@@ -126,10 +126,11 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   const [taskDeleteOpen, setTaskDeleteOpen] = useState(false);
   const [updateTaskId, setUpdateTaskId] = useState({ teamId: 0, taskId: 0 });
   const [teamNameError, setTeamNameError] = useState(false);
-
+  const router = useRouter();
   const [mentionTrigger, setMentionTrigger] = useState(false);
   const [role, setRole] = useState("");
   const [loggedTeamId, setLoggedTeamId] = useState<number[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
 
   const fetchTeams = async () => {
     if (!spaceId) return;
@@ -375,6 +376,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       setTeamNameDialogOpen(false);
       fetchTeams();
       filterFetchTeams();
+      filterFetchTeams();
       toast({
         title: "Undo Successful",
         description: "The deleted team has been restored.",
@@ -505,6 +507,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   const getUserData = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmailInput(e.target.value);
     console.log("Input Changed:", setEmailInput);
+    console.log("Input Changed:", setEmailInput);
 
     try {
       // Fetch all users from the database
@@ -602,12 +605,18 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
   }, []);
 
   const filterBySearchValue = (items: any[], searchValue: string) => {
+  const filterBySearchValue = (items: any[], searchValue: string) => {
     // Validate searchValue and convert to lowercase if it's a string
     const lowercasedSearchValue =
       typeof searchValue === "string" ? searchValue.toLowerCase() : "";
 
+
     return items.filter((item) => {
       // Extract and validate task_content and mentions
+      const taskContent =
+        typeof item.task_content === "string"
+          ? item.task_content.toLowerCase()
+          : "";
       const taskContent =
         typeof item.task_content === "string"
           ? item.task_content.toLowerCase()
@@ -616,11 +625,16 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         ? item.mentions.map((mention: any) =>
             typeof mention === "string" ? mention.toLowerCase() : ""
           )
+        ? item.mentions.map((mention: any) =>
+            typeof mention === "string" ? mention.toLowerCase() : ""
+          )
         : [];
+
 
       // Check if searchValue is found in task_content or mentions
       return (
         taskContent.includes(lowercasedSearchValue) ||
+        mentions.some((mention: any) => mention.includes(lowercasedSearchValue))
         mentions.some((mention: any) => mention.includes(lowercasedSearchValue))
       );
     });
@@ -628,8 +642,11 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   const filteredTasks = filterBySearchValue(allTasks, searchValue as string);
 
+
   const handleAddTask = async (teamId: any, spaceId: number) => {
     console.log(loggedUserData?.username, " loggedUserData id");
+    setFilterTeams((prevTeams: any) =>
+      prevTeams.map((team: any) =>
     setFilterTeams((prevTeams: any) =>
       prevTeams.map((team: any) =>
         team.id === teamId
@@ -691,7 +708,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
         console.error(fetchError);
         return;
       }
-
+      filterFetchTeams();
       if (fetchedTasks) {
         console.log(fetchedTasks, "team data");
         // fetchTasks();
@@ -937,6 +954,30 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                                   </span>
                                                 </DialogDescription>
                                               </DialogHeader>
+                                          <Dialog
+                                            open={teamNameDialogOpen}
+                                            onOpenChange={setTeamNameDialogOpen}
+                                          >
+                                            <DialogTrigger asChild>
+                                              <Button
+                                                className="border-none w-1/2 bg-red-600 hover:bg-red-500 hover:text-white text-white"
+                                                variant="outline"
+                                              >
+                                                Delete
+                                              </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-[425px]">
+                                              <DialogHeader>
+                                                <DialogTitle>
+                                                  Delete Team
+                                                </DialogTitle>
+                                                <DialogDescription>
+                                                  Do you want to delete{" "}
+                                                  <span className="font-bold">
+                                                    {team.team_name}?
+                                                  </span>
+                                                </DialogDescription>
+                                              </DialogHeader>
 
                                               <div className="flex justify-center items-center w-full gap-4">
                                                 <Button
@@ -1003,7 +1044,144 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                             </span>
                                           </DialogDescription>
                                         </DialogHeader>
+                                              <div className="flex justify-center items-center w-full gap-4">
+                                                <Button
+                                                  variant="outline"
+                                                  className="w-1/3"
+                                                  type="submit"
+                                                  onClick={() =>
+                                                    setTeamNameDialogOpen(false)
+                                                  }
+                                                >
+                                                  Cancel
+                                                </Button>
+                                                <Button
+                                                  className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                  type="button"
+                                                  onClick={() =>
+                                                    handleDeleteTeam(team.id)
+                                                  }
+                                                >
+                                                  Delete
+                                                </Button>
+                                              </div>
+                                            </DialogContent>
+                                          </Dialog>
+                                          <Button
+                                            className="w-1/2"
+                                            onClick={() =>
+                                              handleUpdateTeam(
+                                                team.id,
+                                                spaceId,
+                                                team.team_name
+                                              )
+                                            }
+                                          >
+                                            Save changes
+                                          </Button>
+                                        </div>
+                                      </SheetContent>
+                                    </Sheet>
+                                  </p>
+                                  <p>
+                                    <Dialog
+                                      open={teamNameDialogOpen}
+                                      onOpenChange={setTeamNameDialogOpen}
+                                    >
+                                      <DialogTrigger
+                                        className="p-0 px-3"
+                                        asChild
+                                      >
+                                        <Button
+                                          className="border-none w-full"
+                                          variant="outline"
+                                        >
+                                          Delete
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                          <DialogTitle>Delete Team</DialogTitle>
+                                          <DialogDescription>
+                                            Do you want to delete{" "}
+                                            <span className="font-bold">
+                                              {team.team_name}?
+                                            </span>
+                                          </DialogDescription>
+                                        </DialogHeader>
 
+                                        <div className="flex justify-center items-center w-full gap-4">
+                                          <Button
+                                            variant="outline"
+                                            className="w-1/3"
+                                            type="submit"
+                                            onClick={() =>
+                                              setTeamNameDialogOpen(false)
+                                            }
+                                          >
+                                            Cancel
+                                          </Button>
+                                          <Button
+                                            className="bg-red-600 hover:bg-red-500 w-1/3"
+                                            type="button"
+                                            onClick={() =>
+                                              handleDeleteTeam(team.id)
+                                            }
+                                          >
+                                            Delete
+                                          </Button>
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
+                                  </p>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
+                          {(loggedUserData?.role === "owner" ||
+                            (loggedUserData?.role === "User" &&
+                              ((loggedUserData?.access?.task !== true &&
+                                loggedUserData?.access?.all === true) ||
+                                loggedUserData?.access?.task === true))) &&
+                            searchValue == "" && (
+                              <Button
+                                variant={"outline"}
+                                className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
+                                onClick={() => {
+                                  console.log("Team ID:", team.id);
+                                  handleAddTask(team.id, spaceId);
+                                }}
+                              >
+                                <Plus size={18} />
+                                Add Task
+                              </Button>
+                            )}
+                        </div>
+                        {loggedUserData?.role === "owner" ? (
+                          (searchValue === "" ? allTasks : filteredTasks)
+                            .length > 0 ? (
+                            <div className="w-full px-4 pb-4">
+                              {(searchValue === ""
+                                ? allTasks
+                                : filteredTasks
+                              ).map(
+                                (task: any) =>
+                                  task.team_id === team.id && (
+                                    <div
+                                      key={task.id}
+                                      className="flex flex-col gap-2.5 mt-3"
+                                    >
+                                      {/* {task.team_id === team.id && ( */}
+                                      <div
+                                        key={task.id}
+                                        className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist hover:border-blue-600 task_box"
+                                      >
+                                        <div className="flex justify-between items-center">
+                                          {/* <p>{task.id}</p> */}
+                                          <p className="text-xs font-semibold text-[#A6A6A7]">
+                                            {formatDate(new Date())}
+                                          </p>
+                                          {/* <Trash2
                                         <div className="flex justify-center items-center w-full gap-4">
                                           <Button
                                             variant="outline"
@@ -1143,7 +1321,124 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                                           this task ?
                                                         </DialogDescription>
                                                       </DialogHeader>
+                                          {(loggedUserData?.role === "owner" ||
+                                            (loggedUserData?.role === "User" &&
+                                              ((loggedUserData?.access?.task !==
+                                                true &&
+                                                loggedUserData?.access?.all ===
+                                                  true) ||
+                                                loggedUserData?.access?.task ===
+                                                  true))) && (
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <Ellipsis
+                                                  size={18}
+                                                  className="cursor-pointer"
+                                                />
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
+                                                <DropdownMenuItem
+                                                  className="px-3 pt-2 pb-0"
+                                                  onClick={() => {
+                                                    handleEditTask(
+                                                      team.id,
+                                                      task.id
+                                                    );
+                                                  }}
+                                                >
+                                                  Edit
+                                                </DropdownMenuItem>
+                                                <p>
+                                                  <Dialog
+                                                    open={taskDeleteOpen}
+                                                    onOpenChange={
+                                                      setTaskDeleteOpen
+                                                    }
+                                                  >
+                                                    <DialogTrigger
+                                                      className="p-0 px-3"
+                                                      asChild
+                                                    >
+                                                      <Button
+                                                        className="border-none w-full"
+                                                        variant="outline"
+                                                      >
+                                                        Delete
+                                                      </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-[425px]">
+                                                      <DialogHeader>
+                                                        <DialogTitle>
+                                                          Delete Task
+                                                        </DialogTitle>
+                                                        <DialogDescription>
+                                                          Do you want to delete
+                                                          this task ?
+                                                        </DialogDescription>
+                                                      </DialogHeader>
 
+                                                      <div className="flex justify-center items-center w-full gap-4">
+                                                        <Button
+                                                          variant="outline"
+                                                          className="w-1/3"
+                                                          type="submit"
+                                                          onClick={() =>
+                                                            setTaskDeleteOpen(
+                                                              false
+                                                            )
+                                                          }
+                                                        >
+                                                          Cancel
+                                                        </Button>
+                                                        <Button
+                                                          className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                          type="button"
+                                                          onClick={() =>
+                                                            handleDeleteTask(
+                                                              team.id,
+                                                              task.id
+                                                            )
+                                                          }
+                                                        >
+                                                          Delete
+                                                        </Button>
+                                                      </div>
+                                                    </DialogContent>
+                                                  </Dialog>
+                                                </p>
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                          )}
+                                        </div>
+                                        <WebMentionInput
+                                          text={text}
+                                          setText={setText}
+                                          taskErrorMessage={taskErrorMessage}
+                                          setTaskErrorMessage={
+                                            setTaskErrorMessage
+                                          }
+                                          allTasks={allTasks}
+                                          teamId={team.id}
+                                          taskId={task.id}
+                                          taskStatus={task.task_created}
+                                          mentionTrigger={mentionTrigger}
+                                          setMentionTrigger={setMentionTrigger}
+                                        />
+                                        <div
+                                          className={`flex justify-between items-center`}
+                                        >
+                                          {/* {loggedUserData?.role === "owner" && ( */}
+                                          <div
+                                            className={`task.${task.id} === true cursor-not-allowed`}
+                                          >
+                                            <TaskDateUpdater
+                                              team={team}
+                                              task={task}
+                                              fetchTasks={fetchTasks}
+                                              taskStatus={task.task_created}
+                                            />
+                                          </div>
+                                          {/* )} */}
                                                       <div className="flex justify-center items-center w-full gap-4">
                                                         <Button
                                                           variant="outline"
@@ -1758,7 +2053,102 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                                     </span>
                                                   </DialogDescription>
                                                 </DialogHeader>
+                                            <Dialog
+                                              open={teamNameDialogOpen}
+                                              onOpenChange={
+                                                setTeamNameDialogOpen
+                                              }
+                                            >
+                                              <DialogTrigger asChild>
+                                                <Button
+                                                  className="border-none w-1/2 bg-red-600 hover:bg-red-500 hover:text-white text-white"
+                                                  variant="outline"
+                                                >
+                                                  Delete
+                                                </Button>
+                                              </DialogTrigger>
+                                              <DialogContent className="sm:max-w-[425px]">
+                                                <DialogHeader>
+                                                  <DialogTitle>
+                                                    Delete Team
+                                                  </DialogTitle>
+                                                  <DialogDescription>
+                                                    Do you want to delete{" "}
+                                                    <span className="font-bold">
+                                                      {team.team_name}?
+                                                    </span>
+                                                  </DialogDescription>
+                                                </DialogHeader>
 
+                                                <div className="flex justify-center items-center w-full gap-4">
+                                                  <Button
+                                                    variant="outline"
+                                                    className="w-1/3"
+                                                    type="submit"
+                                                    onClick={() =>
+                                                      setTeamNameDialogOpen(
+                                                        false
+                                                      )
+                                                    }
+                                                  >
+                                                    Cancel
+                                                  </Button>
+                                                  <Button
+                                                    className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                    type="button"
+                                                    onClick={() =>
+                                                      handleDeleteTeam(team.id)
+                                                    }
+                                                  >
+                                                    Delete
+                                                  </Button>
+                                                </div>
+                                              </DialogContent>
+                                            </Dialog>
+                                            <Button
+                                              className="w-1/2"
+                                              onClick={() =>
+                                                handleUpdateTeam(
+                                                  team.id,
+                                                  spaceId,
+                                                  team.team_name
+                                                )
+                                              }
+                                            >
+                                              Save changes
+                                            </Button>
+                                          </div>
+                                        </SheetContent>
+                                      </Sheet>
+                                    </p>
+                                    <p>
+                                      <Dialog
+                                        open={teamNameDialogOpen}
+                                        onOpenChange={setTeamNameDialogOpen}
+                                      >
+                                        <DialogTrigger
+                                          className="p-0 px-3"
+                                          asChild
+                                        >
+                                          <Button
+                                            className="border-none w-full"
+                                            variant="outline"
+                                          >
+                                            Delete
+                                          </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                          <DialogHeader>
+                                            <DialogTitle>
+                                              Delete Team
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                              Do you want to delete{" "}
+                                              <span className="font-bold">
+                                                {team.team_name}?
+                                              </span>
+                                            </DialogDescription>
+                                          </DialogHeader>
                                                 <div className="flex justify-center items-center w-full gap-4">
                                                   <Button
                                                     variant="outline"
@@ -1901,6 +2291,78 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                               {formatDate(new Date())}
                                             </p>
                                             {/* <Trash2
+                                          <div className="flex justify-center items-center w-full gap-4">
+                                            <Button
+                                              variant="outline"
+                                              className="w-1/3"
+                                              type="submit"
+                                              onClick={() =>
+                                                setTeamNameDialogOpen(false)
+                                              }
+                                            >
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              className="bg-red-600 hover:bg-red-500 w-1/3"
+                                              type="button"
+                                              onClick={() =>
+                                                handleDeleteTeam(team.id)
+                                              }
+                                            >
+                                              Delete
+                                            </Button>
+                                          </div>
+                                        </DialogContent>
+                                      </Dialog>
+                                    </p>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </div>
+                            {(loggedUserData?.role === "owner" ||
+                              (loggedUserData?.role === "User" &&
+                                ((loggedUserData?.access?.task !== true &&
+                                  loggedUserData?.access?.all === true) ||
+                                  loggedUserData?.access?.task === true))) &&
+                              searchValue == "" && (
+                                <Button
+                                  variant={"outline"}
+                                  className="mt-3 border-dashed border-gray-500 text-gray-500 text-sm font-medium w-full"
+                                  onClick={() => {
+                                    console.log("Team ID:", team.id);
+                                    handleAddTask(team.id, spaceId);
+                                  }}
+                                >
+                                  <Plus size={18} />
+                                  Add Task
+                                </Button>
+                              )}
+                          </div>
+                          {loggedUserData?.role === "owner" ? (
+                            (searchValue === "" ? allTasks : filteredTasks)
+                              .length > 0 ? (
+                              <div className="w-full px-4 pb-4">
+                                {(searchValue === ""
+                                  ? allTasks
+                                  : filteredTasks
+                                ).map(
+                                  (task: any) =>
+                                    task.team_id === team.id && (
+                                      <div
+                                        key={task.id}
+                                        className="flex flex-col gap-2.5 mt-3"
+                                      >
+                                        {/* {task.team_id === team.id && ( */}
+                                        <div
+                                          key={task.id}
+                                          className="flex-1 border border-[#ddd] rounded-lg p-3 font-geist hover:border-blue-600 task_box"
+                                        >
+                                          <div className="flex justify-between items-center">
+                                            {/* <p>{task.id}</p> */}
+                                            <p className="text-xs font-semibold text-[#A6A6A7]">
+                                              {formatDate(new Date())}
+                                            </p>
+                                            {/* <Trash2
                                       size={18}
                                       className="text-[#EC4949] cursor-pointer"
                                       onClick={() => {
@@ -1970,7 +2432,128 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
                                                             delete this task ?
                                                           </DialogDescription>
                                                         </DialogHeader>
+                                            {(loggedUserData?.role ===
+                                              "owner" ||
+                                              (loggedUserData?.role ===
+                                                "User" &&
+                                                ((loggedUserData?.access
+                                                  ?.task !== true &&
+                                                  loggedUserData?.access
+                                                    ?.all === true) ||
+                                                  loggedUserData?.access
+                                                    ?.task === true))) && (
+                                              <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                  <Ellipsis
+                                                    size={18}
+                                                    className="cursor-pointer"
+                                                  />
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent className="min-w-6 absolute -top-1 -right-2.5 p-0">
+                                                  <DropdownMenuItem
+                                                    className="px-3 pt-2 pb-0"
+                                                    onClick={() => {
+                                                      handleEditTask(
+                                                        team.id,
+                                                        task.id
+                                                      );
+                                                    }}
+                                                  >
+                                                    Edit
+                                                  </DropdownMenuItem>
+                                                  <p>
+                                                    <Dialog
+                                                      open={taskDeleteOpen}
+                                                      onOpenChange={
+                                                        setTaskDeleteOpen
+                                                      }
+                                                    >
+                                                      <DialogTrigger
+                                                        className="p-0 px-3"
+                                                        asChild
+                                                      >
+                                                        <Button
+                                                          className="border-none w-full"
+                                                          variant="outline"
+                                                        >
+                                                          Delete
+                                                        </Button>
+                                                      </DialogTrigger>
+                                                      <DialogContent className="sm:max-w-[425px]">
+                                                        <DialogHeader>
+                                                          <DialogTitle>
+                                                            Delete Task
+                                                          </DialogTitle>
+                                                          <DialogDescription>
+                                                            Do you want to
+                                                            delete this task ?
+                                                          </DialogDescription>
+                                                        </DialogHeader>
 
+                                                        <div className="flex justify-center items-center w-full gap-4">
+                                                          <Button
+                                                            variant="outline"
+                                                            className="w-1/3"
+                                                            type="submit"
+                                                            onClick={() =>
+                                                              setTaskDeleteOpen(
+                                                                false
+                                                              )
+                                                            }
+                                                          >
+                                                            Cancel
+                                                          </Button>
+                                                          <Button
+                                                            className="bg-red-600 hover:bg-red-500 w-1/3"
+                                                            type="button"
+                                                            onClick={() =>
+                                                              handleDeleteTask(
+                                                                team.id,
+                                                                task.id
+                                                              )
+                                                            }
+                                                          >
+                                                            Delete
+                                                          </Button>
+                                                        </div>
+                                                      </DialogContent>
+                                                    </Dialog>
+                                                  </p>
+                                                </DropdownMenuContent>
+                                              </DropdownMenu>
+                                            )}
+                                          </div>
+                                          <WebMentionInput
+                                            text={text}
+                                            setText={setText}
+                                            taskErrorMessage={taskErrorMessage}
+                                            setTaskErrorMessage={
+                                              setTaskErrorMessage
+                                            }
+                                            allTasks={allTasks}
+                                            teamId={team.id}
+                                            taskId={task.id}
+                                            taskStatus={task.task_created}
+                                            mentionTrigger={mentionTrigger}
+                                            setMentionTrigger={
+                                              setMentionTrigger
+                                            }
+                                          />
+                                          <div
+                                            className={`flex justify-between items-center`}
+                                          >
+                                            {/* {loggedUserData?.role === "owner" && ( */}
+                                            <div
+                                              className={`task.${task.id} === true cursor-not-allowed`}
+                                            >
+                                              <TaskDateUpdater
+                                                team={team}
+                                                task={task}
+                                                fetchTasks={fetchTasks}
+                                                taskStatus={task.task_created}
+                                              />
+                                            </div>
+                                            {/* )} */}
                                                         <div className="flex justify-center items-center w-full gap-4">
                                                           <Button
                                                             variant="outline"
