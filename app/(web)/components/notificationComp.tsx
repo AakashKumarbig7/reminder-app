@@ -23,9 +23,7 @@ interface NotificationProps {
   notificationTrigger: any;
 }
 
-const Notification : React.FC<NotificationProps> = ({
-  notificationTrigger,
-}) => {
+const Notification: React.FC<NotificationProps> = ({ notificationTrigger }) => {
   const { userId } = useGlobalContext();
   const [unNotifiedTask, setUnNotifiedTask] = useState<any[]>([]);
   const [adminTaskNotify, setAdminTaskNotify] = useState<any[]>([]);
@@ -53,7 +51,9 @@ const Notification : React.FC<NotificationProps> = ({
             )
         );
 
-        setAdminTaskNotify(data.filter((item: any) => Array.isArray(item.mentions)));
+        setAdminTaskNotify(
+          data.filter((item: any) => Array.isArray(item.mentions))
+        );
         setUnNotifiedTask(filteredTasks);
       }
     } catch (err) {
@@ -90,36 +90,37 @@ const Notification : React.FC<NotificationProps> = ({
   };
 
   const handleClearNotification = async () => {
-    const notificationIds = [
-      ...adminTaskNotify.map((task: any) => task.id),
-      ...unNotifiedTask.map((task: any) => task.id),
-    ];
+    const tasksToUpdate =
+      userId?.role === "owner" ? adminTaskNotify : unNotifiedTask;
+    const taskIds = tasksToUpdate.map((task: any) => task.id);
 
-    const updatedState = notificationIds.reduce((acc: any, id: any) => {
-      acc[id] = true;
-      return acc;
-    }, {});
-
-    setIsRemoving(updatedState);
+    tasksToUpdate.forEach((task: any) => {
+      setIsRemoving((prev) => ({ ...prev, [task.id]: true }));
+    });
 
     setTimeout(async () => {
       try {
         const { error } = await supabase
           .from("tasks")
           .update({ notify_read: true })
-          .in("id", notificationIds);
+          .in("id", taskIds);
 
         if (error) {
-          console.error("Error updating notify_read:", error);
+          console.error("Error clearing notifications:", error);
           return;
         }
 
-        setAdminTaskNotify([]);
-        setUnNotifiedTask([]);
+        if (userId?.role === "owner") {
+          setAdminTaskNotify([]);
+        } else {
+          setUnNotifiedTask([]);
+        }
+
+        setIsRemoving({});
       } catch (err) {
         console.error("Unexpected error:", err);
       }
-    }, 300);
+    }, 300); // Duration matches the animation time
   };
 
   useEffect(() => {
@@ -203,7 +204,27 @@ const Notification : React.FC<NotificationProps> = ({
               </p>
             )}
           </div>
-          {(unNotifiedTask.length > 0 || adminTaskNotify.length > 0) && (
+
+          {userId?.role === "User" && unNotifiedTask.length > 0 && (
+            <SheetFooter className="w-full flex gap-2 pb-4">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p
+                      className="text-sm text-[#1A56DB] cursor-pointer underline sticky bottom-0"
+                      onClick={handleClearNotification}
+                    >
+                      Clear all
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Mark as read</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </SheetFooter>
+          )}
+          {userId?.role === "owner" && adminTaskNotify.length > 0 && (
             <SheetFooter className="w-full flex gap-2 pb-4">
               <TooltipProvider>
                 <Tooltip>
