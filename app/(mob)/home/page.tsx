@@ -1,14 +1,17 @@
 "use client";
 import NavBar from "@/components/navBar";
-import { useGlobalContext } from "@/context/store";
+import { NewTask } from "@/components/newTask";
+import OverDue from "@/components/overDue";
+import TaskStatus from "@/components/taskStatus";
 
 
 const Home = () => {
-    const {userId} = useGlobalContext();
-
     return ( 
         <>
         <NavBar />
+        <NewTask />
+        <TaskStatus />
+        <OverDue/>
         </>
      );
 }

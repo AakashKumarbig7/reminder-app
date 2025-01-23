@@ -20,6 +20,11 @@ import { Button } from "./ui/button";
 import axios from "axios";
 import MentionInput from "./mentionInput";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import TaskDateUpdater from "@/app/(web)/components/dueDate";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Calendar } from "./ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 type User = {
   id: number;
@@ -57,7 +62,6 @@ const fetchEmployeeList = async () => {
         },
       }
     );
-    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching employee list:", error);
@@ -75,6 +79,7 @@ export function NewTask() {
   const [text, setText] = useState<string>("");
   const [taskStatus, setTaskStatus] = useState<string>("In Progress");
   const [taskErrorMessage, setTaskErrorMessage] = useState(false);
+  const [date, setDate] = React.useState<Date>();
 
   useEffect(() => {
     const getEmployees = async () => {
@@ -209,24 +214,20 @@ export function NewTask() {
   const handleCreateTask = async () => {
     const mentions = text.match(/@\w+/g) || []; // Find all mentions
     const content = text.replace(/@\w+/g, "").trim();
-    console.log(content.length, "content");
-    console.log(typeof content, " content type");
 
-    console.log(text, "text");
+    console.log(formatDate(date || new Date()), "date");
 
     // Check if both content and mentions are non-empty
     if (content.length > 0 && mentions.length > 0) {
       setTaskErrorMessage(false);
       console.log(mentions + " " + content, "text");
 
-      const { data, error } = await supabase
-        .from("tasks")
-        .insert({
-          task_content: content,
-          mentions: mentions,
-          time: formatDate(new Date()),
-          status: taskStatus,
-        });
+      const { data, error } = await supabase.from("tasks").insert({
+        task_content: content,
+        mentions: mentions,
+        time: date,
+        status: taskStatus,
+      });
 
       if (error) throw error;
 
@@ -248,9 +249,9 @@ export function NewTask() {
   };
 
   return (
-    <>
+    <div className="px-[18px]">
       <Drawer>
-        <DrawerTrigger className="w-full bg-teal-500 flex items-center justify-center text-white py-2 rounded-lg">
+        <DrawerTrigger className="w-full bg-[#1A56DB] flex items-center justify-center text-white py-2 rounded-lg">
           <Image
             src={addicon}
             alt="Add Icon"
@@ -258,60 +259,76 @@ export function NewTask() {
             height={20}
             className="mr-2 text-bgwhite "
           />
-         <p className="text-bgwhite font-geist text-[16px] font-semibold"> New Task</p>
+          <p className="text-bgwhite font-geist text-[16px] font-semibold">
+            {" "}
+            New Task
+          </p>
         </DrawerTrigger>
         <DrawerContent className="pb-10">
           <DrawerHeader className="flex items-center justify-between">
             <DrawerTitle>New Task</DrawerTitle>
             <Select
-              defaultValue="To do"
-              onValueChange={(value) => setTaskStatus(value)}
+              defaultValue="todo"
+              onValueChange={(value) => {
+                setTaskStatus(value);
+              }}
             >
               <SelectTrigger className="w-[164px] pt-2 pr-[10px] text-[#9B9B9B] text-center border-[#E2E2E2] bg-[#E2E2E2] rounded-[30px]">
-                <SelectValue placeholder="status" />
+                <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent className="text-[#9B9B9B]">
+                {/* <SelectGroup> */}
                 <SelectItem value="todo">To Do</SelectItem>
                 <SelectItem value="In progress">In Progress</SelectItem>
                 <SelectItem value="Internal feedback">
                   Internal feedback
                 </SelectItem>
+                {/* </SelectGroup> */}
               </SelectContent>
             </Select>
           </DrawerHeader>
           <div className="px-4 border-black rounded-[10px] text-center">
-            {/* <div
-              contentEditable="true"
-              ref={styledInputRef}
-              id="styledInput"
-              className={styles.styledinput}
-
-            ></div>
-            {popupVisible && (
-              <Popup
-                data={suggestedUsers}
-                position={popupPosition}
-                onSelect={handleUserSelect}
-                // className="absolute bg-white border border-gray-300 z-10 max-h-52 overflow-y-auto w-[150px]"
-              />
-            )} */}
             <MentionInput
               text={text}
               setText={setText}
               setTaskErrorMessage={setTaskErrorMessage}
             />
-            <p className="text-red-500 text-left my-1">
+            <p className="text-red-500 text-left my-1 text-sm">
               {taskErrorMessage && "Please fill the message with mentions"}
             </p>
-            <Button
-              className="bg-transparent text-[#14B8A6] hover:bg-transparent font-semibold text-base text-center shadow-none"
-              onClick={handleCreateTask}
-            >
-              Create Task
-            </Button>
+            <div className="w-full flex items-center gap-3 mt-4">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-1/2 justify-center text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    {/* <CalendarIcon /> */}
+                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <Button
+                className="bg-[#1A56DB] text-white hover:bg-[#1A56DB] font-medium text-sm text-center shadow-none w-1/2 rounded-[10px]"
+                onClick={handleCreateTask}
+              >
+                Create
+              </Button>
+            </div>
           </div>
         </DrawerContent>
       </Drawer>
-    </>
+    </div>
   );
 }
