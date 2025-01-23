@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Ellipsis, Plus, Settings, Trash2 } from "lucide-react";
+import { Ellipsis, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WebMentionInput from "./webMentions";
 import { Carousel1, CarouselContent1, CarouselItem1 } from "./webCarousel";
@@ -38,7 +38,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { getLoggedInUserData } from "@/app/(signin-setup)/sign-in/action";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
@@ -270,7 +269,7 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
 
   const resetInputAndFetchUpdates = () => {
     setText(""); // Clear the input text
-    // fetchTasks(); // Refresh task list
+    fetchTasks(); // Refresh task list
     filterFetchTasks();
     fetchTeams(); // Refresh team data
     filterFetchTeams();
@@ -701,6 +700,10 @@ const SpaceTeam: React.FC<SearchBarProps> = ({
       console.error("Error adding or fetching tasks:", error);
     }
   };
+
+  useEffect(() => {
+
+  }, [mentionTrigger, setMentionTrigger]);
 
   return (
     <div className="w-full h-[calc(100vh-142px)]">
