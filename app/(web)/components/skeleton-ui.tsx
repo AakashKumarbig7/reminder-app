@@ -43,5 +43,27 @@ const OverdueSkeleton = () => {
   );
 };
 
+const OverdueListSkeleton = () => {
+  return (
+    <main className="flex flex-col justify-start items-center gap-5 w-full">
+      {Array.from({ length: 5 }, (_, i) => i + 1).map((id) => (
+        <div key={id} className="flex flex-col items-center justify-evenly h-full w-full">
+          <Skeleton className="bg-gray-300 p-3 w-full h-[156px]">
+            <div className="flex items-center justify-between gap-3">
+              <Skeleton className="h-6 w-1/2 rounded-lg -mt-1" />
+              <Skeleton className="h-6 w-1/2 rounded-lg -mt-1" />
+            </div>
+            <Skeleton className="h-16 w-full rounded-lg my-3" />
+            <div className="flex items-center justify-between gap-3">
+              <Skeleton className="h-6 w-1/2 rounded-lg -mt-1" />
+              <Skeleton className="h-6 w-1/2 rounded-lg -mt-1" />
+            </div>
+          </Skeleton>
+        </div>
+      ))}
+    </main>
+  );
+};
+
 export default DefaultSkeleton;
-export { OverdueSkeleton};
+export { OverdueSkeleton, OverdueListSkeleton};

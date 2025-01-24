@@ -16,17 +16,19 @@ export default function Spaces() {
   useEffect(() => {
     const fetchSpace = async () => {
       try {
-        const { data : spaces, error } = await supabase
+        const { data: spaces, error } = await supabase
           .from("spaces")
-          .select("space_name");
-
+          .select("space_name")
+          .eq("is_deleted", false);
         if (error) {
           throw error;
         }
 
         if (spaces) {
           // Extract only space names
-          const names = spaces.map((space: { space_name: string }) => space.space_name);
+          const names = spaces.map(
+            (space: { space_name: string }) => space.space_name
+          );
           setSpaceNames(names);
         }
       } catch (err) {
@@ -39,32 +41,28 @@ export default function Spaces() {
   }, []); // Add empty dependency array to run only once
 
   return (
-    <>
-    <div className="hidden">
-      <span>{error}</span>
-    </div>
+    <main className="w-full px-[18px] py-[18px]">
       <div className="flex justify-between items-center">
         <h4 className="text-lg font-semibold font-geist text-black">Spaces</h4>
-        <p className="text-teal-500  font-geist font-medium  text-sm cursor-pointer">View all</p>
+        <p className="text-[#1A56DB]  font-geist font-medium  text-sm cursor-pointer">
+          View all
+        </p>
       </div>
 
-      <div className="space-y-1">
-        <Carousel opts={{ align: "start" }} className="w-full max-w-sm space-x-2">
-          <div className="flex items-center space-y-3">
-            <CarouselContent>
-              {spaceNames.length > 0 ? (
-                spaceNames.map((spaceName, index) => (
-                  <CarouselItem key={index} className="flex-none">
-                    <Link href={`/task?space=${spaceName}`} className="rounded-[10px] border border-teal-500 bg-white flex items-center justify-center min-w-min h-10 px-4 text-base font-medium  font-geist  text-greyblack">{spaceName}</Link>
-                  </CarouselItem>
-                ))
-              ) : (
-                <p className="text-gray-500">No spaces available</p>
-              )}
-            </CarouselContent>
-          </div>
-        </Carousel>
+      <div className="flex flex-wrap justify-start items-center gap-2 mt-3">
+        {spaceNames.length > 0 ? (
+          spaceNames.map((spaceName, index) => (
+            <p
+              key={index}
+              className="bg-[#294480] text-white py-2 px-4 rounded-lg"
+            >
+              {spaceName}
+            </p>
+          ))
+        ) : (
+          <p className="text-gray-500">No spaces available</p>
+        )}
       </div>
-    </>
+    </main>
   );
 }
