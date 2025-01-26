@@ -9,10 +9,12 @@ import "./style.css";
 import Spaces from "@/components/spaces";
 import Image from "next/image";
 import smile from "@/public/images/smile-img.png";
+import { useGlobalContext } from "@/context/store";
 
 
 const Home = () => {
   const route = useRouter();
+  const { userId } = useGlobalContext();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,7 +59,18 @@ const Home = () => {
     return ( 
         <>
         <NavBar />
-        <NewTask />
+        {
+          (
+            (userId?.role === "owner" ||
+              (userId?.role === "User" &&
+                ((userId?.access?.task !== true &&
+                  userId?.access?.all === true) ||
+                  userId?.access?.task === true))) && (
+                  <NewTask />
+            )
+          )
+        }
+        
         <TaskStatus />
         <OverDue/>
         <Spaces />
