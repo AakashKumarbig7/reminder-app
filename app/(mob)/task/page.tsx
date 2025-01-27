@@ -1,7 +1,7 @@
 "use client";
 import AllTaskFetch from "@/components/allTaskFetch";
 import DateChangePicker from "@/components/dateChangePicker";
-import Emoji from "@/components/emoji";
+
 import DropDown from "@/components/taskDropDown";
 import TaskNavBar from "@/components/taskNavBar";
 import { RiArrowDropDownLine, RiBarChartHorizontalLine } from "react-icons/ri";
@@ -547,7 +547,7 @@ const Task = () => {
           ))}
         </div>
       </div>
-      <Emoji />
+     
     </div>
   );
 };
