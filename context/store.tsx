@@ -13,6 +13,7 @@ interface UserData {
   password: string;
   profile_image: string;
   entity_name: string;
+  access : { space: boolean; team: boolean; task: boolean; all: boolean };
 }
 
 interface ContextProps {

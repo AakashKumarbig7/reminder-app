@@ -4,9 +4,11 @@ import userimage from "@/public/images/Subtract.png";
 import activelogo from "@/public/images/Ellipse 6.png";
 import { useGlobalContext } from "@/context/store";
 import profile from "@/public/images/img-placeholder.svg"
+import { useRouter } from "next/navigation";
 
 export default function NavBar() {
   const {userId} = useGlobalContext();
+  const route = useRouter();
   return (
     <>
       <header className="flex justify-between items-center bg-navbg p-[18px] ">
@@ -26,7 +28,7 @@ export default function NavBar() {
           </div>
         </div>
         {/* Company Logo */}
-        <Image src={logo} className="w-[89.872px] h-11" alt="Company Logo" />
+        <Image src={logo} onClick={() => {route.push("/home")}} className="w-[89.872px] h-11" alt="Company Logo" />
       </header>
     </>
   );

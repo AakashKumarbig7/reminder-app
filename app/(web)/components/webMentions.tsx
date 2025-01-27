@@ -53,12 +53,30 @@ const WebMentionInput: React.FC<Props> = ({
   >([]);
   const editableRef = useRef<HTMLDivElement | null>(null);
 
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*");
+      if (error) throw error;
+      if (data) {
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      return [];
+    }
+  };
+
   useEffect(() => {
+    // if (mentionTrigger) {
+      fetchTasks();
+      handleInput({} as React.FormEvent<HTMLDivElement>);
+    // }
   }, [mentionTrigger, setMentionTrigger]);
 
   // Handle user input to detect mentions and update text
   const handleInput = async (e: React.FormEvent<HTMLDivElement>) => {
-    console.log(e, "event");
     try {
       const { data: memberData, error: memberError } = await supabase
         .from("teams")
