@@ -9,13 +9,9 @@ import "./style.css";
 import { useRouter } from "next/navigation";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +31,7 @@ const OverdueTaskPage = () => {
   const [taskLoading, setTaskLoading] = useState(true);
   const [date, setDate] = useState<Date | undefined>();
   const [openTaskId, setOpenTaskId] = useState<number | null>(null);
-  
+
   const fetchTaskData = async () => {
     try {
       const { data: taskData, error: taskError } = await supabase
@@ -134,17 +130,16 @@ const OverdueTaskPage = () => {
   const handleUpdateTask = async (id: number) => {
     const { data, error } = await supabase
       .from("tasks")
-      .update({ due_date : formatDate(date as Date) })
+      .update({ due_date: formatDate(date as Date) })
       .eq("id", id);
 
     if (error) {
       console.error(error);
     }
 
-    if (data) {
-      fetchTaskData();
-      setOpenTaskId(null);
-    }
+    fetchTaskData();
+    setOpenTaskId(null);
+    setDate(undefined);
   };
 
   useEffect(() => {
@@ -168,6 +163,29 @@ const OverdueTaskPage = () => {
       route.push("/dashboard");
     }
   }, [route]);
+
+  if (taskLoading) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <div id="wifi-loader">
+          <svg className="circle-outer" viewBox="0 0 86 86">
+            <circle className="back" cx="43" cy="43" r="40"></circle>
+            <circle className="front" cx="43" cy="43" r="40"></circle>
+            <circle className="new" cx="43" cy="43" r="40"></circle>
+          </svg>
+          <svg className="circle-middle" viewBox="0 0 60 60">
+            <circle className="back" cx="30" cy="30" r="27"></circle>
+            <circle className="front" cx="30" cy="30" r="27"></circle>
+          </svg>
+          <svg className="circle-inner" viewBox="0 0 34 34">
+            <circle className="back" cx="17" cy="17" r="14"></circle>
+            <circle className="front" cx="17" cy="17" r="14"></circle>
+          </svg>
+          <div className="text" data-text="Loading"></div>
+        </div>
+      </div>
+    ); // Simple loader UI
+  }
 
   return (
     <main className="p-[18px]">
@@ -245,7 +263,10 @@ const OverdueTaskPage = () => {
                 </div>
 
                 {openTaskId === task.id && (
-                  <Drawer open={openTaskId === null ? false : true} onOpenChange={() => setOpenTaskId(null)}>
+                  <Drawer
+                    open={openTaskId === null ? false : true}
+                    onOpenChange={() => setOpenTaskId(null)}
+                  >
                     <DrawerContent className="px-4">
                       <DrawerHeader className="flex justify-between items-center pointer-events-none">
                         <DrawerTitle>Update task</DrawerTitle>
@@ -271,7 +292,9 @@ const OverdueTaskPage = () => {
                           <span className="text-[#5898C6]">
                             @{task.team_name}
                           </span>{" "}
-                          <span className="text-[#518A37]">{task.mentions}</span>{" "}
+                          <span className="text-[#518A37]">
+                            {task.mentions}
+                          </span>{" "}
                           {task.task_content}
                         </p>
                       </div>
