@@ -48,7 +48,7 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
           .select("*")
           .eq("userId", user?.id) // Ensure the key matches the actual column name in your table
           .single();
-
+console.log(data,"userId")
         if (error) {
           console.error("Error fetching user data:", error);
           return;

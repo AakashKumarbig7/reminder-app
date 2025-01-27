@@ -2,6 +2,7 @@
 import "rsuite/dist/rsuite-no-reset.min.css";
 import { Toaster } from "@/components/ui/toaster";
 import { GlobalContextProvider } from "@/context/store";
+import Footer from "./footer/page";
 export default function MobileLayout({
   children,
 }: {
@@ -13,6 +14,7 @@ export default function MobileLayout({
         <Toaster />
         <div className="w-full flex">
           <div className="w-full">
+            <Footer/>
             <GlobalContextProvider>{children}</GlobalContextProvider>
           </div>
         </div>

@@ -24,6 +24,8 @@ const config: Config = {
 			mobbg:"#f4f4f8",
 			reddish:"#EE5A5A",
 			webbg:'#E5ECF6',
+			greywithblack:'#272727',
+			blackshade:'#09090B',
 			primaryColor: { 700: '#1A56DB',},
 			
   			background: 'hsl(var(--background))',
