@@ -22,6 +22,9 @@ import {
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { Toaster } from "@/components/ui/toaster";
+import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const OverdueTaskPage = () => {
   const { userId } = useGlobalContext();
@@ -29,8 +32,9 @@ const OverdueTaskPage = () => {
   const [overdueTasks, setOverdueTasks] = useState<any>([]);
   const [adminOverdueTasks, setAdminOverdueTasks] = useState<any>([]);
   const [taskLoading, setTaskLoading] = useState(true);
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<Date>();
   const [openTaskId, setOpenTaskId] = useState<number | null>(null);
+  const [taskStatus, setTaskStatus] = useState<string>("");
 
   const fetchTaskData = async () => {
     try {
@@ -128,19 +132,78 @@ const OverdueTaskPage = () => {
   };
 
   const handleUpdateTask = async (id: number) => {
-    const { data, error } = await supabase
-      .from("tasks")
-      .update({ due_date: formatDate(date as Date) })
-      .eq("id", id);
-
-    if (error) {
-      console.error(error);
+    try {
+      // Fetch the task data
+      const { data: taskData, error: taskError } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("id", id)
+        .eq("is_deleted", false);
+  
+      if (taskError) throw new Error("Failed to fetch task details");
+  
+      if (!taskData || taskData.length === 0) {
+        console.error("Task not found");
+        return;
+      }
+  
+      const currentTask = taskData[0];
+  
+      // Prepare updated fields
+      const updatedFields: { due_date?: string; task_status?: string } = {};
+  
+      if (date) {
+        updatedFields.due_date = formatDate(date as Date);
+      } else {
+        updatedFields.due_date = currentTask.due_date; // Keep the old value if no new date is provided
+      }
+  
+      if (taskStatus) {
+        updatedFields.task_status = taskStatus;
+      } else {
+        updatedFields.task_status = currentTask.task_status; // Keep the old value if no new status is provided
+      }
+  
+      // Update the task
+      const { error } = await supabase
+        .from("tasks")
+        .update(updatedFields)
+        .eq("id", id);
+  
+      if (error) throw new Error("Failed to update the task");
+  
+      // Refresh task data and reset state
+      fetchTaskData();
+      setOpenTaskId(null);
+      setDate(undefined);
+  
+      // Send a success notification
+      if ("Notification" in window) {
+        if (Notification.permission === "granted") {
+          new Notification("Overdue Task Update", {
+            body: "The overdue task has been updated successfully!",
+            icon: "/path/to/icon.png", // Optional
+          });
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+              new Notification("Overdue Task Update", {
+                body: "The overdue task has been updated successfully!",
+                icon: "/path/to/icon.png", // Optional
+              });
+            }
+          });
+        }
+      }
+    } catch (err : any) {
+      console.error(err);
+      toast({
+        title: "Error",
+        description: err.message || "Something went wrong. Please try again.",
+        duration: 3000,
+      });
     }
-
-    fetchTaskData();
-    setOpenTaskId(null);
-    setDate(undefined);
-  };
+  };  
 
   useEffect(() => {
     fetchTaskData();
@@ -188,7 +251,8 @@ const OverdueTaskPage = () => {
   }
 
   return (
-    <main className="p-[18px]">
+    <main className="p-[18px] pb-0">
+      <Toaster />
       <div className="w-full flex justify-between items-center mb-6">
         <h1 className="text-lg font-semibold">Overdue Task</h1>
         <Image
@@ -200,7 +264,7 @@ const OverdueTaskPage = () => {
         />
       </div>
 
-      <div className="w-full h-[calc(100vh-110px)] overflow-y-scroll playlist-scroll">
+      <div className="w-full h-[calc(100vh-170px)] overflow-y-scroll playlist-scroll">
         {taskLoading ? (
           <OverdueListSkeleton />
         ) : adminOverdueTasks.length === 0 || overdueTasks.length === 0 ? (
@@ -268,21 +332,53 @@ const OverdueTaskPage = () => {
                     onOpenChange={() => setOpenTaskId(null)}
                   >
                     <DrawerContent className="px-4">
-                      <DrawerHeader className="flex justify-between items-center pointer-events-none">
+                      <DrawerHeader className="flex justify-between items-center px-0">
                         <DrawerTitle>Update task</DrawerTitle>
-                        <p
-                          className={`px-3 py-1 pr-[10px] text-center justify-center rounded-[30px] border-none ${
-                            task.task_status === "todo"
-                              ? "text-reddish bg-[#F8DADA]"
-                              : task.task_status === "In progress"
-                              ? "text-[#EEA15A] bg-[#F8F0DA]"
-                              : task.task_status === "feedback"
-                              ? "text-[#142D57] bg-[#DEE9FC]"
-                              : "text-[#3FAD51] bg-[#E5F8DA]"
-                          }`}
-                        >
-                          {task.task_status}
-                        </p>
+                        {
+                          userId?.role === "User" &&
+                          task.task_status === "Completed" ? (
+                          <Button className="w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none text-[#3FAD51] bg-[#E5F8DA] hover:bg-[#E5F8DA] hover:text-[#3FAD51]">
+                            Completed
+                          </Button>
+                        ) : (
+                          <Select
+                            defaultValue={task.task_status || "todo"}
+                            onValueChange={(value) => setTaskStatus(value)}
+                          >
+                            <SelectTrigger
+                              className={`w-[120px] pt-2 pr-[10px] text-center justify-center rounded-[30px] border-none ${
+                                task.task_status === "todo"
+                                  ? "text-reddish bg-[#F8DADA]"
+                                  : task.task_status ===
+                                    "In progress"
+                                  ? "text-[#EEA15A] bg-[#F8F0DA]"
+                                  : task.task_status ===
+                                    "feedback"
+                                  ? "text-[#142D57] bg-[#DEE9FC]"
+                                  : "text-[#3FAD51] bg-[#E5F8DA]"
+                              }`}
+                            >
+                              <SelectValue placeholder="status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="todo">
+                                To Do
+                              </SelectItem>
+                              <SelectItem value="In progress">
+                                In Progress
+                              </SelectItem>
+                              <SelectItem value="feedback">
+                                Feedback
+                              </SelectItem>
+                              {userId?.role ===
+                                "owner" && (
+                                <SelectItem value="Completed">
+                                  Completed
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>)
+                        }
                       </DrawerHeader>
                       <div className="p-4 border border-[#CECECE] rounded-[10px]">
                         <p>

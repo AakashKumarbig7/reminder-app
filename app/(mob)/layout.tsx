@@ -9,7 +9,7 @@ export default function MobileLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen h-full w-full bg-mobbg text-black font-geist">
+    <div className="min-h-screen h-full w-full bg-mobbg text-black font-geist pb-[85px]">
       <main className="w-full">
         <Toaster />
         <div className="w-full flex">
