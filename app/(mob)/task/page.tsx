@@ -371,7 +371,7 @@ const Task = () => {
       <div className="flex justify-between">
         <Drawer open={isTeamDrawerOpen} onOpenChange={setIsTeamDrawerOpen}>
           <DrawerTrigger>
-            <div className="bg-white py-3 rounded-xl border h-[40px] w-[243px] border-gray-300 px-[18px] flex items-center">
+            <div className="bg-white py-3 rounded-xl border h-[40px] w-[243px] xs:w-48  border-gray-300 px-[18px] flex items-center">
               <p>{selectedTeam || "Select a Team"}</p>
               <RiArrowDropDownLine className="w-[18px] h-[18px] text-black ml-auto" />
             </div>
@@ -537,7 +537,7 @@ const Task = () => {
       </div>
 
       <div className="flex justify-between  items-center">
-        <h4 className="font-[600px] font-geist text-[18px] text-black text-center  flex justify-center">
+        <h4 className="font-semibold font-geist text-lg text-black  text-center  ">
           All Task
         </h4>
         <div>
