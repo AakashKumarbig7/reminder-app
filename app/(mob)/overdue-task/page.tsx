@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 import { useGlobalContext } from "@/context/store";
 import Image from "next/image";
 import profile from "@/public/images/img-placeholder.svg";

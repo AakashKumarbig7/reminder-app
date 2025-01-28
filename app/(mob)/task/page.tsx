@@ -15,6 +15,7 @@ import {
   DrawerContent,
   DrawerTrigger,
   DrawerTitle,
+  DrawerHeader,
 } from "@/components/ui/drawer";
 import { Command, CommandList } from "@/components/ui/command";
 import { supabase } from "@/utils/supabase/supabaseClient";
@@ -26,7 +27,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Trash2 } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import clsx from "clsx";
 
 const Task = () => {
   const { userId } = useGlobalContext();
@@ -44,6 +49,10 @@ const Task = () => {
   const [isStatusDrawerOpen, setIsStatusDrawerOpen] = useState(false);
   const [tasks, setAllTasks] = useState<any[]>([]);
   const [error, setError] = useState("");
+  const [date, setDate] = useState<Date>();
+  const[teamData,SetTeamData]=useState<any>([])
+  const[adminspaceData,SetAdminSpaceData]=useState<any>([])
+  const[userSpaceData,setUserSpaceData]=useState<any>([])
 
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null); // Track which task's filter is being edited
 
@@ -79,17 +88,17 @@ const Task = () => {
       const { data, error } = await supabase
         .from("teams")
         .select("*")
-        .eq("is_deleted",false)
+        .eq("is_deleted", false)
         .eq("space_id", spaceId);
-  
+
       if (error) {
         console.error("Error fetching teams:", error.message);
         return;
       }
-  
+
       if (data && data.length > 0) {
         console.log("Fetched teams:", data);
-  
+
         // Set the team data and default selection
         setTeams(data);
         setSelectedTeam(data[0].team_name); // Set the first team as default
@@ -116,15 +125,15 @@ const Task = () => {
   }, [selectedSpaceId]);
 
   // Handle space selection from the drawer
-  const handleSelectedSpace = (spaceId: string, spaceName: string) => {
+  const handleSelectedSpace = ( spaceName: string) => {
     setSelectedSpace(spaceName);
-    setSelectedSpaceId(spaceId);
+    // setSelectedSpaceId(spaceId);
     setIsSpaceDrawerOpen(false);
-    fetchTeams(spaceId); // Fetch teams for the selected space
+    // fetchTeams(); // Fetch teams for the selected space
   };
 
   // Handle team selection from the drawer
-  const handleSelectedTeam = (team:string) => {
+  const handleSelectedTeam = (team: string) => {
     setSelectedTeam(team);
     setIsTeamDrawerOpen(false);
   };
@@ -183,6 +192,123 @@ const Task = () => {
       [id]: direction === "left",
     }));
   };
+  const formatDate = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    };
+
+    return date.toLocaleDateString("en-GB", options); // 'en-GB' gives the format "23 Aug 2024"
+  };
+  const fetchTaskData = async () => {
+    try {
+      const { data: taskData, error: taskError } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("is_deleted", false);
+
+      if (taskError) {
+        console.error(taskError);
+        // setTaskLoading(false);
+        return;
+      }
+
+      if (taskData) {
+        const { data: teamData, error: teamError } = await supabase
+          .from("teams")
+          .select("*")
+          .eq("is_deleted", false);
+
+        if (teamError) {
+          console.error(teamError);
+          // setTaskLoading(false);
+          return;
+        }
+
+        const { data: spaceData, error: spaceError } = await supabase
+          .from("spaces")
+          .select("*")
+          .eq("is_deleted", false);
+          console.log("spaceData details",spaceData)
+          SetAdminSpaceData(spaceData);
+          const filteredTasks = taskData
+          .map((task) => {
+            const team = teamData.find((space) => space.id === task.space_id);
+            if (team && task.mentions?.includes(`@${userId?.entity_name}`)) {
+              return { ...task, space_name: team.space_name };
+            }
+            return null;
+          })
+          .filter(Boolean);
+
+          const uniqueUserSpace = Array.from(
+            new Set(filteredTasks.map((task) => task.space_name))
+          ).map((space_name) =>
+            filteredTasks.find((task) => task.space_name === space_name)
+          );
+          setUserSpaceData(uniqueUserSpace);
+
+
+
+        if (spaceError) {
+          console.error(spaceError);
+          // setTaskLoading(false);
+          return;
+        }
+
+        const now = new Date().getTime();
+
+        // const filteredTasks = taskData
+        //   .map((task) => {
+        //     const team = teamData.find((team) => team.id === task.team_id);
+        //     const space = spaceData.find((space) => space.id === task.space_id);
+        //     if (
+        //       team &&
+        //       space &&
+        //       task.mentions?.includes(`@${userId?.entity_name}`)
+        //     ) {
+        //       return {
+        //         ...task,
+        //         team_name: team.team_name,
+        //         space_name: space.space_name,
+        //       };
+        //     }
+        //     return null;
+        //   })
+        //   .filter(Boolean);
+
+        const overdue = filteredTasks.filter(
+          (task) => new Date(task.due_date).getTime() < now
+        );
+
+        const adminOverdue = taskData
+          .map((task) => {
+            const team = teamData.find((team) => team.id === task.team_id);
+            const space = spaceData.find((space) => space.id === task.space_id);
+            return team && space
+              ? {
+                  ...task,
+                  team_name: team.team_name,
+                  space_name: space.space_name,
+                }
+              : null;
+          })
+          .filter((task) => task && new Date(task.due_date).getTime() < now);
+
+        // setOverdueTasks(overdue);
+        // setAdminOverdueTasks(adminOverdue);
+        // setTaskLoading(false);
+      }
+    } catch (err) {
+      console.error("Error fetching task data:", err);
+      // setTaskLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchTaskData();
+  }, []);
+
 
   return (
     <div className="flex flex-col bg-navbg px-[18px] space-y-[18px] pb-8">
@@ -190,84 +316,38 @@ const Task = () => {
       <header className="flex justify-between items-center bg-navbg pt-[18px]">
         {/* Space Drawer Trigger */}
         <Drawer open={isSpaceDrawerOpen} onOpenChange={setIsSpaceDrawerOpen}>
-  <DrawerTrigger onClick={() => setIsSpaceDrawerOpen(true)}>
-    <div className="flex w-10 h-10 justify-center items-center rounded-[10px] border border-zinc-300 bg-bgwhite">
-      <RiBarChartHorizontalLine className="text-black h-6 w-6" />
-    </div>
-  </DrawerTrigger>
+          <DrawerTrigger onClick={() => setIsSpaceDrawerOpen(true)}>
+            <div className="flex w-10 h-10 justify-center items-center rounded-[10px] border border-zinc-300 bg-bgwhite">
+              <RiBarChartHorizontalLine className="text-black h-6 w-6" />
+            </div>
+          </DrawerTrigger>
 
-  <DrawerContent className="h-[70%]">
-    <DrawerTitle className="pt-[18px] px-5">Spaces</DrawerTitle>
-    <Command>
-      <CommandList>
-        {userId?.role === "owner" ? (
-          <ul className="mt-4 space-y-5 px-5 pt-3">
-            {spacesList.map((space: any) => (
-              <li
-                key={space.id}
-                onClick={() => handleSelectedSpace(space.id, space.space_name)}
-                className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
-                  selectedSpace === space.space_name
-                    ? "text-zinc-950 font-semibold"
-                    : "text-greywithblack"
-                }`}
-              >
-                <span className="w-4 h-4 mr-2 flex justify-center items-center">
-                  {selectedSpace === space.space_name ? (
-                    <FaCheck className="text-blackish" />
-                  ) : (
-                    <span className="w-4 h-4" />
-                  )}
-                </span>
-                <p className="text-lg font-geist text-greywithblack pt-[10px] pr-[10px]">
-                  {space.space_name}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <ul className="mt-4 space-y-5 px-5 pt-3">
-            {spacesList
-              .filter((space: any) =>
-                teams.some(
-                  (team: any) =>
-                    team.space_id === space.id && // Match the team's space ID with the current space's ID
-                    team.members?.some(
-                      (member: { entity_name: string }) =>
-                        member.entity_name === userId?.entity_name // Check if the user is a member of the team
-                    )
-                )
-              )
-              .map((space: any) => (
+          <DrawerContent>
+        <div className="mx-auto w-full max-w-sm">
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Spaces</DrawerTitle>
+          </DrawerHeader>
+          <div className="pb-7">
+            <ul>
+              {(userId?.role === "owner" ? adminspaceData : userSpaceData).map((spaceName:any, index:any) => (
                 <li
-                  key={space.id}
-                  onClick={() => handleSelectedSpace(space.id, space.space_name)}
-                  className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
-                    selectedSpace === space.space_name
-                      ? "text-zinc-950 font-semibold"
-                      : "text-greywithblack"
-                  }`}
-                >
-                  <span className="w-4 h-4 mr-2 flex justify-center items-center">
-                    {selectedSpace === space.space_name ? (
-                      <FaCheck className="text-blackish" />
-                    ) : (
-                      <span className="w-4 h-4" />
-                    )}
-                  </span>
-                  <p className="text-lg font-geist text-greywithblack pt-[10px] pr-[10px]">
-                    {space.space_name}
-                  </p>
-                </li>
+                key={index}
+                className={`flex items-center justify-between text-black py-2 px-4 border-b border-[#D4D4D8] ${
+                  selectedSpace === spaceName.space_name ? "bg-gray-100" : ""
+                }`}
+                onClick={() => {handleSelectedSpace(spaceName.space_name); console.log(spaceName.space_id)}}
+              >
+                <span>{spaceName.space_name}</span>
+                {selectedSpace === spaceName.space_name && (
+                  <Check className="text-black" size={18} />
+                )}
+              </li>
               ))}
-          </ul>
-        )}
-      </CommandList>
-    </Command>
-  </DrawerContent>
-</Drawer>
-
-
+            </ul>
+          </div>
+        </div>
+      </DrawerContent>
+        </Drawer>
 
         {/* Space Title */}
         <div className="w-[180px] h-6 text-center">
@@ -287,101 +367,106 @@ const Task = () => {
       </header>
 
       {/* Team Drawer */}
+
       <div className="flex justify-between">
-      <Drawer open={isTeamDrawerOpen} onOpenChange={setIsTeamDrawerOpen}>
-  <DrawerTrigger>
-    <div className="bg-white py-3 rounded-xl border h-[40px] w-[243px] border-gray-300 px-[18px] flex items-center">
-      <p>{selectedTeam || "Select a Team"}</p>
-      <RiArrowDropDownLine className="w-[18px] h-[18px] text-black ml-auto" />
-    </div>
-  </DrawerTrigger>
-
-  <DrawerContent className="h-[70%]">
-    <DrawerTitle className="pt-[18px] px-5">Teams</DrawerTitle>
-    <Command>
-      <CommandList>
-        <ul className="mt-4 space-y-3 py-5 px-5 pt-3">
-          {userId?.role === "owner" ? (
-            // For owner, show all teams
-            teams.map((team: any) => (
-              <li
-                key={team.id}
-                onClick={() => handleSelectedTeam(team)}
-                className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
-                  selectedTeam === team.name
-                    ? "text-zinc-950 font-semibold"
-                    : "text-blackish"
-                }`}
-              >
-                <span className="w-4 h-4 mr-2 flex justify-center items-center">
-                  {selectedTeam === team.name ? (
-                    <FaCheck className="text-blackish" />
-                  ) : (
-                    <span className="w-4 h-4" />
-                  )}
-                </span>
-                <p className="text-sm pt-[12px] pr-[10px] flex items-center">
-                  {team.name}
-                </p>
-              </li>
-            ))
-          ) : (
-            // For users, filter teams based on selected space and user membership
-            teams
-              .filter((team: any) =>
-                team.space_id === selectedSpaceId && // Match the team's space_id with the selected space's id
-                team.members?.some(
-                  (member: { entity_name: any }) =>
-                    member.entity_name === userId?.entity_name // Check if the user is a member of the team
-                )
-              )
-              .map((team:any, index: number) => (
-                <li
-                  key={team.id}
-                  onClick={() => handleSelectedTeam(team.id)}
-                  className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
-                    selectedTeam === team.name
-                      ? "text-zinc-950 font-semibold"
-                      : "text-blackish"
-                  }`}
-                >
-                  <span className="w-4 h-4 mr-2 flex justify-center items-center">
-                    {selectedTeam === team.name ? (
-                      <FaCheck className="text-blackish" />
-                    ) : (
-                      <span className="w-4 h-4" />
-                    )}
-                  </span>
-                  <p className="text-sm pt-[12px] pr-[10px] flex items-center">
-                    {team.name}
-                  </p>
-                </li>
-              ))
-          )}
-        </ul>
-      </CommandList>
-    </Command>
-  </DrawerContent>
-</Drawer>
-
-        <div className="w-10 h-10">
-          <FiSearch className="absolute mt-3 ml-[12px]  text-zinc-500" />
-          <input
-            type="text"
-            className="w-10 h-10  justify-center items-center gap-[6px] rounded-lg border border-zinc-300 bg-white "
-          />
-        </div>
-        <Drawer open={isFilterDrawerOpen} onOpenChange={setIsFilterDrawerOpen}>
-          <DrawerTrigger onClick={() => setIsFilterDrawerOpen(true)}>
-            <div className="flex w-10 h-10  p-[8px_12px] justify-center items-center gap-[6px] rounded-lg border border-zinc-300 bg-white">
-              <FaEllipsisH className="h-4 w-6" />
+        <Drawer open={isTeamDrawerOpen} onOpenChange={setIsTeamDrawerOpen}>
+          <DrawerTrigger>
+            <div className="bg-white py-3 rounded-xl border h-[40px] w-[243px] border-gray-300 px-[18px] flex items-center">
+              <p>{selectedTeam || "Select a Team"}</p>
+              <RiArrowDropDownLine className="w-[18px] h-[18px] text-black ml-auto" />
             </div>
           </DrawerTrigger>
+
           <DrawerContent className="h-[70%]">
-            <DrawerTitle className="pt-[18px] px-5">Filter</DrawerTitle>
+            <DrawerTitle className="pt-[18px] px-5">Teams</DrawerTitle>
             <Command>
               <CommandList>
-                {/* <ul className="mt-4 space-y-5 px-5 pt-3">
+                <ul className="mt-4 space-y-3 py-5 px-5 pt-3">
+                  {userId?.role === "owner"
+                    ? // For owner, show all teams
+                      teams.map((team: any) => (
+                        <li
+                          key={team.id}
+                          onClick={() => handleSelectedTeam(team)}
+                          className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
+                            selectedTeam === team.name
+                              ? "text-zinc-950 font-semibold"
+                              : "text-blackish"
+                          }`}
+                        >
+                          <span className="w-4 h-4 mr-2 flex justify-center items-center">
+                            {selectedTeam === team.name ? (
+                              <FaCheck className="text-blackish" />
+                            ) : (
+                              <span className="w-4 h-4" />
+                            )}
+                          </span>
+                          <p className="text-sm pt-[12px] pr-[10px] flex items-center">
+                            {team.name}
+                          </p>
+                        </li>
+                      ))
+                    : // For users, filter teams based on selected space and user membership
+                      teams
+                        .filter(
+                          (team: any) =>
+                            team.space_id === selectedSpaceId && // Match the team's space_id with the selected space's id
+                            team.members?.some(
+                              (member: { entity_name: any }) =>
+                                member.entity_name === userId?.entity_name // Check if the user is a member of the team
+                            )
+                        )
+                        .map((team: any, index: number) => (
+                          <li
+                            key={team.id}
+                            onClick={() => handleSelectedTeam(team.id)}
+                            className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
+                              selectedTeam === team.name
+                                ? "text-zinc-950 font-semibold"
+                                : "text-blackish"
+                            }`}
+                          >
+                            <span className="w-4 h-4 mr-2 flex justify-center items-center">
+                              {selectedTeam === team.name ? (
+                                <FaCheck className="text-blackish" />
+                              ) : (
+                                <span className="w-4 h-4" />
+                              )}
+                            </span>
+                            <p className="text-sm pt-[12px] pr-[10px] flex items-center">
+                              {team.name}
+                            </p>
+                          </li>
+                        ))}
+                </ul>
+              </CommandList>
+            </Command>
+          </DrawerContent>
+        </Drawer>
+
+        <div className="flex justify-between">
+          <div className="w-10 h-10">
+            <FiSearch className="absolute mt-3 ml-[12px]  text-zinc-500" />
+            <input
+              type="text"
+              className="w-10 h-10  justify-center items-center gap-[6px] rounded-lg border border-zinc-300 bg-white "
+            />
+          </div>
+
+          <Drawer
+            open={isFilterDrawerOpen}
+            onOpenChange={setIsFilterDrawerOpen}
+          >
+            <DrawerTrigger onClick={() => setIsFilterDrawerOpen(true)}>
+              <div className="flex w-10 h-10  p-[8px_12px] justify-center items-center gap-[6px] rounded-lg border border-zinc-300 bg-white">
+                <FaEllipsisH className="h-4 w-6" />
+              </div>
+            </DrawerTrigger>
+            <DrawerContent className="h-[70%]">
+              <DrawerTitle className="pt-[18px] px-5">Filter</DrawerTitle>
+              <Command>
+                <CommandList>
+                  {/* <ul className="mt-4 space-y-5 px-5 pt-3">
                           {filter.map((sort) => (
                             <li
                               key={sort}
@@ -403,30 +488,10 @@ const Task = () => {
                             </li>
                           ))}
                         </ul> */}
-                <p> {userId?.role}</p>
-                <ul className="mt-4 space-y-5 px-5 pt-3">
-                  {userId?.role === "owner" &&
-                    adminTaskStatusOptions.map((status) => (
-                      <li
-                        key={status.value}
-                        onClick={() => {
-                          setSelectedTaskStatus(status.value);
-                          setIsFilterDrawerOpen(false); // Close the drawer on selection
-                        }}
-                        className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
-                          selectedTaskStatus === status.value
-                            ? "text-zinc-950 font-semibold"
-                            : "text-blackish"
-                        }`}
-                      >
-                        {status.label}
-                      </li>
-                    ))}
-
-                  {userId?.role === "user" &&
-                    taskStatusOptions.map((status: any) => {
-                      console.log("Rendering status:", status.label);
-                      return (
+                  <p> {userId?.role}</p>
+                  <ul className="mt-4 space-y-5 px-5 pt-3">
+                    {userId?.role === "owner" &&
+                      adminTaskStatusOptions.map((status) => (
                         <li
                           key={status.value}
                           onClick={() => {
@@ -441,14 +506,36 @@ const Task = () => {
                         >
                           {status.label}
                         </li>
-                      );
-                    })}
-                </ul>
-              </CommandList>
-            </Command>
-          </DrawerContent>
-        </Drawer>
+                      ))}
+
+                    {userId?.role === "user" &&
+                      taskStatusOptions.map((status: any) => {
+                        console.log("Rendering status:", status.label);
+                        return (
+                          <li
+                            key={status.value}
+                            onClick={() => {
+                              setSelectedTaskStatus(status.value);
+                              setIsFilterDrawerOpen(false); // Close the drawer on selection
+                            }}
+                            className={`flex items-center border-b-[1px] border-zinc-300 cursor-pointer ${
+                              selectedTaskStatus === status.value
+                                ? "text-zinc-950 font-semibold"
+                                : "text-blackish"
+                            }`}
+                          >
+                            {status.label}
+                          </li>
+                        );
+                      })}
+                  </ul>
+                </CommandList>
+              </Command>
+            </DrawerContent>
+          </Drawer>
+        </div>
       </div>
+
       <div className="flex justify-between  items-center">
         <h4 className="font-[600px] font-geist text-[18px] text-black text-center  flex justify-center">
           All Task
@@ -461,10 +548,26 @@ const Task = () => {
             <div>
               <Popover>
                 <PopoverTrigger asChild>
-                  <div className="flex w-[110px] h-[40px] py-3 px-4 font-geist p-[8px_13px] justify-center items-center gap-[6px] rounded-[10px] border border-zinc-300 bg-white text-[#09090B]"></div>
+                  {/* <div className="flex w-[110px] h-[40px] py-3 px-4 font-geist p-[8px_13px] justify-center items-center gap-[6px] rounded-[10px] border border-zinc-300 bg-white text-[#09090B]">
+
+                  </div> */}
+                  <div
+                    className={clsx(
+                      "w-[110px] h-[40px] border  flex py-3 px-4 p-[8px_13px] rounded-[10px] border-zinc-300 bg-white text-[#09090B] justify-center text-left font-normal",
+                      { "text-muted-foreground": !date }
+                    )}
+                  >
+                    {/* <CalendarIcon /> */}
+                    {date ? format(date, "dd MMM yy") : <span> date</span>}
+                  </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar className="w-4 h-4" />
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
             </div>
@@ -514,9 +617,9 @@ const Task = () => {
 
               <div
                 className={`bg-white space-y-2 py-3 rounded-[10px] w-full
-                 h-32 px-4 transition-transform duration-300 ${
-                   swiped[task.id] ? "transform -translate-x-32" : ""
-                 }`}
+                  px-4 transition-transform duration-300 ${
+                    swiped[task.id] ? "transform -translate-x-32" : ""
+                  }`}
               >
                 <div className="overflow-auto w-full playlist-Scroll block top-0">
                   <p className="text-greyshade font-[geist] text-[12px]">
@@ -547,7 +650,6 @@ const Task = () => {
           ))}
         </div>
       </div>
-     
     </div>
   );
 };
